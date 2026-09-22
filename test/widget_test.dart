@@ -1,30 +1,52 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:listix/main.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:listix/src/app.dart';
+import 'package:listix/src/core/storage/app_database.dart';
+import 'package:listix/src/features/ads/data/repositories/mock_admob_service.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    AppDatabase.overrideDbPath = inMemoryDatabasePath;
+    MockAdmobService.defaultLatency = Duration.zero;
   });
+
+  testWidgets(
+    'Listix index test - displays Listix brand name and loads SQLite data',
+    (WidgetTester tester) async {
+      // Ensure database is initialized before pump
+      await tester.runAsync(() async {
+        await AppDatabase.instance.database;
+      });
+
+      await tester.pumpWidget(const ProviderScope(child: ListixApp()));
+
+      // Drain event loop for Riverpod AsyncNotifier
+      await tester.runAsync(() async {
+        await Future.delayed(const Duration(milliseconds: 200));
+      });
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Verify Listix brand name on index
+      expect(find.text('Listix'), findsOneWidget);
+
+      // Verify section title
+      expect(find.text('Mis Listas'), findsOneWidget);
+
+      // Verify initial SQLite seeded lists are rendered
+      expect(find.text('Supermercado semanal'), findsOneWidget);
+      expect(find.text('Ferretería y Hogar'), findsOneWidget);
+      expect(find.text('Ropa para vacaciones'), findsOneWidget);
+
+      // Verify "Nueva lista" FAB is present
+      expect(find.text('Nueva lista'), findsOneWidget);
+
+      // Verify AdMob Banner is rendered at bottom
+      expect(find.text('Ad'), findsOneWidget);
+    },
+  );
 }

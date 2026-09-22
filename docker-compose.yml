@@ -1,0 +1,76 @@
+services:
+  # ========================================================
+  # Production Web Server (Default service)
+  # Run: docker compose up -d
+  # Access: http://localhost:8080
+  # ========================================================
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    image: listix:production
+    container_name: listix-web
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:80/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # ========================================================
+  # Unit & Widget Test Runner
+  # Run: docker compose run --rm test
+  # ========================================================
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: listix:dev
+    container_name: listix-test
+    command: flutter test
+    profiles:
+      - test
+      - ci
+
+  # ========================================================
+  # Static Analysis & Linter Runner
+  # Run: docker compose run --rm analyze
+  # ========================================================
+  analyze:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: listix:dev
+    container_name: listix-analyze
+    command: flutter analyze
+    profiles:
+      - test
+      - ci
+
+  # ========================================================
+  # Interactive Web Dev Server
+  # Run: docker compose --profile dev up dev
+  # Access: http://localhost:8081
+  # ========================================================
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: listix:dev
+    container_name: listix-dev
+    command: flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
+    ports:
+      - "${DEV_PORT:-8081}:8080"
+    volumes:
+      - .:/app
+      - /app/.dart_tool
+      - /app/build
+    profiles:
+      - dev
