@@ -2,7 +2,7 @@
     <application
         android:label="listix"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
         <!--
           Google AdMob App ID (required by google_mobile_ads).
           Value below is Google's official TEST App ID — safe for development.
