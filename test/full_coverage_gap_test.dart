@@ -32,7 +32,13 @@ void main() {
 
   setUpAll(() {
     sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    try {
+      if (databaseFactory != databaseFactoryFfi) {
+        databaseFactory = databaseFactoryFfi;
+      }
+    } catch (_) {
+      databaseFactory = databaseFactoryFfi;
+    }
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 
@@ -204,9 +210,9 @@ void main() {
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        const MethodChannel('plugins.flutter.io/path_provider'),
-        (MethodCall methodCall) async => '/mock/app_support',
-      );
+            const MethodChannel('plugins.flutter.io/path_provider'),
+            (MethodCall methodCall) async => '/mock/app_support',
+          );
       final p1 = await AppDatabase.resolveDatabasePath(isDesktop: true);
       expect(p1, contains('listix.db'));
 
@@ -520,29 +526,15 @@ void main() {
     });
 
     testWidgets('HomeScreen renders loading state', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            listsControllerProvider.overrideWith(
-              () => _LoadingListsController(),
-            ),
-          ],
-          child: const MaterialApp(home: HomeScreen()),
-        ),
-      );
-      await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
-
-    testWidgets('HomeScreen renders error state', (tester) async {
+      final completer = Completer<List<ShoppingList>>();
       final container = ProviderContainer(
         overrides: [
-          listsControllerProvider.overrideWith(() => _ErrorListsController()),
+          listsControllerProvider.overrideWith(
+            () => _LoadingListsController(completer),
+          ),
         ],
       );
-      try {
-        await container.read(listsControllerProvider.future);
-      } catch (_) {}
+      addTearDown(container.dispose);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
@@ -550,7 +542,26 @@ void main() {
           child: const MaterialApp(home: HomeScreen()),
         ),
       );
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      completer.complete([]);
       await tester.pump();
+    });
+
+    testWidgets('HomeScreen renders error state', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => _ErrorListsController()),
+          ],
+          child: const MaterialApp(home: HomeScreen()),
+        ),
+      );
+
+      // _ErrorListsController.build() schedules a Future.microtask that sets
+      // state = AsyncError. Pumping processes that microtask and triggers the
+      // widget rebuild so HomeScreen renders the error branch.
+      await tester.pump();
+
       expect(find.textContaining('Simulated Failure'), findsOneWidget);
     });
 
@@ -738,12 +749,12 @@ void main() {
           final db = await AppDatabase.instance.database;
           await db.insert('todo_items', {
             'id': 'unsynced_gap_item',
-            'list_id': 'supermercado_list',
+            'list_id': 'list-1',
             'title': 'Unsynced Gap Test',
             'is_completed': 0,
             'created_at': DateTime.now().millisecondsSinceEpoch,
             'is_synced': 0,
-            'last_modified': DateTime.now().millisecondsSinceEpoch,
+            'updated_at': DateTime.now().millisecondsSinceEpoch,
           });
 
           // Mid-sync offline trigger with unsynced item present
@@ -759,12 +770,13 @@ void main() {
 
       test(
         'SyncController subscription updates state and cancels onDispose',
-        () {
+        () async {
           final container = ProviderContainer();
           final sub = container.listen(syncControllerProvider, (_, __) {});
           final service = container.read(mockBackendSyncServiceProvider);
 
           service.toggleSimulatedOffline();
+          await Future<void>.delayed(Duration.zero);
           expect(container.read(syncControllerProvider), SyncStatus.offline);
 
           sub.close();
@@ -814,12 +826,27 @@ class _ScreensTestListsController extends ListsController {
 }
 
 class _LoadingListsController extends ListsController {
+  final Completer<List<ShoppingList>> completer;
+  _LoadingListsController([Completer<List<ShoppingList>>? completer])
+    : completer = completer ?? Completer<List<ShoppingList>>();
+
   @override
-  Future<List<ShoppingList>> build() => Completer<List<ShoppingList>>().future;
+  Future<List<ShoppingList>> build() => completer.future;
 }
 
 class _ErrorListsController extends ListsController {
   @override
-  Future<List<ShoppingList>> build() =>
-      Future.error(Exception('Simulated Failure'));
+  Future<List<ShoppingList>> build() async {
+    // Schedule a state override to AsyncError after build() returns.
+    // Throwing directly in build() causes Riverpod to enter a perpetual
+    // AsyncLoading retry cycle, never reaching a stable AsyncError state.
+    Future.microtask(() {
+      state = AsyncError<List<ShoppingList>>(
+        Exception('Simulated Failure'),
+        StackTrace.current,
+      );
+    });
+    // Return a future that never completes so the override above wins.
+    return Completer<List<ShoppingList>>().future;
+  }
 }

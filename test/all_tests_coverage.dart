@@ -17,7 +17,13 @@ import 'sqlite_lists_repository_test.dart' as repo_test;
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    try {
+      if (databaseFactory != databaseFactoryFfi) {
+        databaseFactory = databaseFactoryFfi;
+      }
+    } catch (_) {
+      databaseFactory = databaseFactoryFfi;
+    }
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 

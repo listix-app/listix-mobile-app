@@ -9,7 +9,13 @@ import 'package:listix/src/core/widgets/listix_logo.dart';
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    try {
+      if (databaseFactory != databaseFactoryFfi) {
+        databaseFactory = databaseFactoryFfi;
+      }
+    } catch (_) {
+      databaseFactory = databaseFactoryFfi;
+    }
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 

@@ -78,14 +78,23 @@ lib/
 
 ## 🧪 Testing & Quality Assurance
 
-The test suite covers unit, widget, and integration tests across all features with 100% pass rate:
+The test suite covers unit, widget, and integration tests across all features with a strict **100% test coverage** requirement enforced via CI:
 
 ```bash
-# Run all tests
+# Run all unit and widget tests
 flutter test
 
-# Run code analysis
+# Run test suite and generate coverage profile
+flutter test --coverage test/all_tests_coverage.dart
+
+# Enforce strict 100% test coverage verification
+dart run tool/verify_coverage.dart
+
+# Run static code analysis
 flutter analyze
+
+# Verify code formatting
+dart format --output=none --set-exit-if-changed .
 ```
 
 ---

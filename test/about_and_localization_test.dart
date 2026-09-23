@@ -11,7 +11,13 @@ import 'package:listix/src/features/about/presentation/screens/about_screen.dart
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    try {
+      if (databaseFactory != databaseFactoryFfi) {
+        databaseFactory = databaseFactoryFfi;
+      }
+    } catch (_) {
+      databaseFactory = databaseFactoryFfi;
+    }
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 

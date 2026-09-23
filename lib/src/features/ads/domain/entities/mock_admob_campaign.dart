@@ -31,7 +31,8 @@ class MockAdmobCampaign {
       id: 'camp_supermarket',
       sponsorName: 'MercadoFresh',
       title: 'Descuento del 25% en frutas y verduras',
-      description: 'Haz tu pedido hoy y recibe tus compras en menos de 45 minutos. Envío gratis en tu primera orden.',
+      description:
+          'Haz tu pedido hoy y recibe tus compras en menos de 45 minutos. Envío gratis en tu primera orden.',
       ctaText: 'Comprar ahora',
       icon: Icons.local_grocery_store_rounded,
       primaryColor: Color(0xFF16A34A), // Green 600
@@ -42,7 +43,8 @@ class MockAdmobCampaign {
       id: 'camp_cloud',
       sponsorName: 'SyncCloud Pro',
       title: '50GB de almacenamiento gratis en la nube',
-      description: 'Mantén tus notas, listas y fotos sincronizadas en tiempo real en todos tus dispositivos móviles y desktop.',
+      description:
+          'Mantén tus notas, listas y fotos sincronizadas en tiempo real en todos tus dispositivos móviles y desktop.',
       ctaText: 'Instalar gratis',
       icon: Icons.cloud_done_rounded,
       primaryColor: Color(0xFF2563EB), // Blue 600
@@ -53,7 +55,8 @@ class MockAdmobCampaign {
       id: 'camp_finance',
       sponsorName: 'BolsaSmart Finanzas',
       title: 'Controla tus gastos y ahorra dinero',
-      description: 'La app número 1 para gestionar presupuestos personales y listas de compras familiares con IA.',
+      description:
+          'La app número 1 para gestionar presupuestos personales y listas de compras familiares con IA.',
       ctaText: 'Probar ahora',
       icon: Icons.account_balance_wallet_rounded,
       primaryColor: Color(0xFF7C3AED), // Violet 600
@@ -64,7 +67,8 @@ class MockAdmobCampaign {
       id: 'camp_delivery',
       sponsorName: 'ExpressChef',
       title: 'Cenas gourmet en tu puerta en 30 minutos',
-      description: 'Los mejores restaurantes de tu ciudad en una sola aplicación. Descárgala y recibe 3 envíos sin costo.',
+      description:
+          'Los mejores restaurantes de tu ciudad en una sola aplicación. Descárgala y recibe 3 envíos sin costo.',
       ctaText: 'Ver menú',
       icon: Icons.delivery_dining_rounded,
       primaryColor: Color(0xFFEA580C), // Orange 600

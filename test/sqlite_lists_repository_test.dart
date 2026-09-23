@@ -10,7 +10,13 @@ import 'package:listix/src/features/sync/domain/sync_status.dart';
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
+    try {
+      if (databaseFactory != databaseFactoryFfi) {
+        databaseFactory = databaseFactoryFfi;
+      }
+    } catch (_) {
+      databaseFactory = databaseFactoryFfi;
+    }
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 

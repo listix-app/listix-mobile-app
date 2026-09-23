@@ -62,7 +62,46 @@ void main(List<String> args) {
   stdout.writeln('Files Evaluated        : ${fileCoverage.length}');
   stdout.writeln('========================================================');
 
-  if (uncoveredMap.isNotEmpty || percentage < 100.0) {
+  final isCoverage100 = uncoveredMap.isEmpty && percentage >= 100.0;
+
+  final stepSummaryPath = Platform.environment['GITHUB_STEP_SUMMARY'];
+  if (stepSummaryPath != null && stepSummaryPath.isNotEmpty) {
+    try {
+      final summaryFile = File(stepSummaryPath);
+      final buffer = StringBuffer()
+        ..writeln('## 📊 Test Coverage Report')
+        ..writeln()
+        ..writeln('| Metric | Value |')
+        ..writeln('| :--- | :--- |')
+        ..writeln('| **Total Executable Lines** | `$totalLines` |')
+        ..writeln('| **Total Lines Covered** | `$hitLines` |')
+        ..writeln(
+          '| **Coverage Percentage** | **`${percentage.toStringAsFixed(2)}%`** |',
+        )
+        ..writeln('| **Files Evaluated** | `${fileCoverage.length}` |')
+        ..writeln();
+
+      if (!isCoverage100) {
+        buffer
+          ..writeln('### ❌ Coverage Check Failed: Strict 100% Required')
+          ..writeln(
+            'The following files have uncovered lines and do not meet the 100% threshold:',
+          )
+          ..writeln();
+        for (final entry in uncoveredMap.entries) {
+          buffer.writeln('- `${entry.key}`: lines `${entry.value}`');
+        }
+      } else {
+        buffer.writeln('### ✅ 100.00% Unit Test Coverage Check Passed!');
+      }
+
+      summaryFile.writeAsStringSync(buffer.toString(), mode: FileMode.append);
+    } catch (_) {
+      // Ignore failure writing step summary
+    }
+  }
+
+  if (!isCoverage100) {
     stderr.writeln('FAILURE: Codebase coverage is below 100.0%!');
     stderr.writeln('Uncovered files and lines:');
     for (final entry in uncoveredMap.entries) {

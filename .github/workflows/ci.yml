@@ -35,7 +35,7 @@ jobs:
         run: flutter analyze
 
   test:
-    name: Unit & Widget Tests
+    name: Unit & Widget Tests (100% Coverage)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -51,7 +51,10 @@ jobs:
         run: flutter pub get
 
       - name: Run test suite with coverage
-        run: flutter test --coverage
+        run: flutter test --coverage test/all_tests_coverage.dart
+
+      - name: Verify 100% unit test coverage
+        run: dart run tool/verify_coverage.dart
 
       - name: Upload test coverage report
         uses: actions/upload-artifact@v4
