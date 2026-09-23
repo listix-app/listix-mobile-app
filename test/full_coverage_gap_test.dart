@@ -1,3 +1,5 @@
+import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
+import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +19,6 @@ import 'package:listix/src/features/lists/presentation/controllers/lists_control
 import 'package:listix/src/features/lists/presentation/screens/create_edit_list_screen.dart';
 import 'package:listix/src/features/lists/presentation/screens/home_screen.dart';
 import 'package:listix/src/features/lists/presentation/screens/list_detail_screen.dart';
-import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.dart';
 import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
 import 'package:listix/src/features/sync/domain/sync_status.dart';
 import 'package:listix/src/features/sync/presentation/sync_controller.dart';
@@ -109,6 +110,21 @@ void main() {
         expect(tr.privacyStatement, isNotEmpty);
         expect(tr.offlineFirstStatement, isNotEmpty);
         expect(tr.termsStatement, isNotEmpty);
+        expect(tr.themeTitle, isNotEmpty);
+        expect(tr.themeSystem, isNotEmpty);
+        expect(tr.themeLight, isNotEmpty);
+        expect(tr.themeDark, isNotEmpty);
+        expect(tr.shareWhatsApp, isNotEmpty);
+        expect(tr.shareGmail, isNotEmpty);
+        expect(tr.copyListText, isNotEmpty);
+        expect(tr.listCopied, isNotEmpty);
+        expect(tr.shareSubject('Test'), contains('Test'));
+        expect(tr.sharedWithListix, isNotEmpty);
+        expect(tr.offlineNoticeDesc, isNotEmpty);
+        expect(tr.shareWhatsAppDesc, isNotEmpty);
+        expect(tr.shareGmailDesc, isNotEmpty);
+        expect(tr.copyListTextDesc, isNotEmpty);
+        expect(tr.offlineNotice, isNotEmpty);
       }
     });
 
@@ -491,33 +507,45 @@ void main() {
       },
     );
 
-    testWidgets('ShareListSheet onFieldSubmitted keyboard invite', (
+    testWidgets('AboutScreen and TodoItemTile dark mode coverage', (
       tester,
     ) async {
-      final fakeController = _ScreensTestListsController([]);
-      final list = ShoppingList(
-        id: 'test_sheet',
-        name: 'Test Sheet',
-        createdAt: now,
-      );
-
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            shoppingListProvider('test_sheet').overrideWithValue(list),
-            listsControllerProvider.overrideWith(() => fakeController),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(body: ShareListSheet(listId: 'test_sheet')),
+          child: MaterialApp(
+            theme: ThemeData.dark(),
+            darkTheme: ThemeData.dark(),
+            themeMode: ThemeMode.dark,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: AboutScreen()),
           ),
         ),
       );
+      await tester.pumpAndSettle();
+      expect(find.byType(AboutScreen), findsOneWidget);
+      await tester.tap(find.byIcon(Icons.dark_mode_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.light_mode_rounded));
+      await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField), 'invitee@test.com');
-      await tester.testTextInput.receiveAction(TextInputAction.send);
-      await tester.pump();
-
-      expect(fakeController.collaboratorsAdded.isNotEmpty, isTrue);
+      final item = TodoItem(
+        id: 'dark_item',
+        listId: 'l1',
+        title: 'Dark Mode Item',
+        isCompleted: false,
+        createdAt: now,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(
+            body: TodoItemTile(item: item, onToggle: () {}, onDelete: () {}),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Dark Mode Item'), findsOneWidget);
     });
   });
 
@@ -586,6 +614,7 @@ class _ScreensTestListsController extends ListsController {
   final List<String> deletedItemIds = [];
   final List<String> toggledItemIds = [];
   final List<String> collaboratorsAdded = [];
+  final List<String> syncedListIds = [];
 
   _ScreensTestListsController(this._lists);
 
@@ -615,6 +644,11 @@ class _ScreensTestListsController extends ListsController {
   @override
   Future<void> addCollaborator(String listId, String email) async {
     collaboratorsAdded.add(email);
+  }
+
+  @override
+  Future<void> syncListOnShare(String listId) async {
+    syncedListIds.add(listId);
   }
 }
 

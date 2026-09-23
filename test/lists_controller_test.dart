@@ -121,6 +121,16 @@ class FakeFailingListsRepository implements ListsRepository {
       );
     }
   }
+
+  @override
+  Future<void> syncList(String listId) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        isSynced: true,
+      );
+    }
+  }
 }
 
 class FakeBackendSyncService extends MockBackendSyncService {
@@ -371,23 +381,24 @@ void main() {
       },
     );
 
-    test('manualSync calls sync service and refreshes state', () async {
+    test('manualSync refreshes state from repository', () async {
       await container.read(listsControllerProvider.future);
       await container.read(listsControllerProvider.notifier).manualSync();
-      expect(fakeSync.syncCallCount, 1);
+      final lists = container.read(listsControllerProvider).value!;
+      expect(lists.length, 1);
+      expect(lists.first.name, 'Compras iniciales');
     });
 
-    test('background sync debounce triggers after delay', () async {
-      await container.read(listsControllerProvider.future);
-      await container
-          .read(listsControllerProvider.notifier)
-          .createList('Debounced Sync List');
-
-      expect(fakeSync.syncCallCount, 0);
-
-      // Wait for debounce timer (1200ms)
-      await Future.delayed(const Duration(milliseconds: 1300));
-      expect(fakeSync.syncCallCount, greaterThanOrEqualTo(1));
-    });
+    test(
+      'syncListOnShare calls repo.syncList and updates list state',
+      () async {
+        await container.read(listsControllerProvider.future);
+        await container
+            .read(listsControllerProvider.notifier)
+            .syncListOnShare('list_1');
+        final list = container.read(shoppingListProvider('list_1'))!;
+        expect(list.isSynced, isTrue);
+      },
+    );
   });
 }

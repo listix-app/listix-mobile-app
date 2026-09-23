@@ -15,6 +15,8 @@ import 'widget_test.dart' as widget_test;
 import 'widgets_presentation_test.dart' as widgets_test;
 import 'full_coverage_gap_test.dart' as gap_test;
 import 'sqlite_lists_repository_test.dart' as repo_test;
+import 'settings_and_theme_test.dart' as settings_test;
+import 'share_service_test.dart' as share_test;
 
 void main() {
   setUpAll(() {
@@ -46,4 +48,6 @@ void main() {
   widgets_test.main();
   gap_test.main();
   repo_test.main();
+  settings_test.main();
+  share_test.main();
 }

@@ -337,15 +337,82 @@ class ItemsScreen extends ConsumerWidget {
    - `ref.read()` in event handlers / user interactions.
    - Use `AsyncValue.guard()` for asynchronous mutations.
    - Use `ref.invalidate()` or `ref.refresh()` to reload data.
-5. **Testing Requirements**:
+5. **Testing & 100% Line Coverage Requirements**:
+   - Maintain strict 100.0% line test coverage across all production code in `lib/src/` (`dart run tool/verify_coverage.dart`).
    - Data sources: test HTTP/database failure modes and successful JSON decoding.
    - Repositories: test offline caching fallback, DTO-to-entity mapping, and error translation.
    - Controllers: test state transitions (`loading` -> `data` / `error`).
    - Widgets: test UI rendering with `ProviderScope(overrides: [...])`.
 6. **Code Cleanliness & Analysis**:
-   - Run `flutter analyze` after making changes and resolve all errors and warnings.
-   - Follow Flutter and Dart formatting guidelines (`dart format .`).
-7. **Commit & PR Conventions**:
-   - Commits and PR titles must adhere to **Conventional Commits**: `<type>(<optional scope>): <description>`.
+   - Run `flutter analyze` after making changes and resolve all errors and warnings (0 issues).
+   - Follow Flutter and Dart formatting guidelines (`dart format --output=none --set-exit-if-changed .`).
+7. **Strictly No Comments on Code**:
+   - **Do NOT add comments on code**: Do not write comments in production or test files. No inline comments, explanatory comments, block comments, decorative banners, or doc-comments on self-explanatory code.
+   - **Self-Documenting Code**: Code must be inherently self-documenting. Use clear, intention-revealing names for classes, methods, parameters, and variables.
+   - Never leave commented-out code; delete unused code completely.
+8. **Strict Git Prohibitions — Never Run `git add .`, `git commit`, Nor `git push`**:
+   - **Never run `git add .`**: Do NOT run `git add .` or blanket staging commands under any circumstance. Blanket staging risks staging untracked temp files, cache artifacts, credentials, or unintended modifications.
+   - **Never run `git commit`**: AI agents must NEVER execute `git commit` to create commits. Commits must remain solely under the user's manual control and review. The agent's responsibility is to prepare, test, analyze, and verify code changes, leaving git commit actions entirely to the user.
+   - **Never run `git push`**: AI agents must NEVER execute `git push` or publish branches to remote repositories. Pushing code is strictly reserved for the human user.
+   - **No Automated Git Mutations**: Agents must not stage, commit, or push changes autonomously. The agent's role is strictly limited to authoring, formatting, analyzing, and verifying code in the local working directory.
+9. **Commit & PR Conventions**:
+   - Commit messages and PR titles must adhere to **Conventional Commits**: `<type>(<optional scope>): <description>`.
    - Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
    - Keep pull requests small and focused (< 500 lines of reviewed changes) to facilitate rapid, effective code reviews.
+10. **Pull Request Protocol**:
+   - When the user asks for a **"pull request"** (or writes "pull request"), immediately produce a comprehensive Pull Request description formatted in Markdown following the template in Section 6.
+
+---
+
+## 5. Agent Skills Directory (`.agents/skills/`)
+
+Specialized domain skills are installed under `.agents/skills/`. Agents must consult and follow the respective `SKILL.md` when performing relevant tasks:
+
+| Skill | Path | Description & Responsibilities |
+| :--- | :--- | :--- |
+| **`flutter`** | [`.agents/skills/flutter/SKILL.md`](file:///.agents/skills/flutter/SKILL.md) | Dart 3, Riverpod 2.x, clean architecture, responsive widgets, declarative routing (GoRouter), profiling, and CLI tooling. |
+| **`mobile-expert`** | [`.agents/skills/mobile-expert/SKILL.md`](file:///.agents/skills/mobile-expert/SKILL.md) | Native platform integration (Android & iOS manifests, queries, intent filters), offline-first synchronization, SQLite persistence, memory & battery efficiency, security, and app release configs. |
+| **`frontend-design`** | [`.agents/skills/frontend-design/SKILL.md`](file:///.agents/skills/frontend-design/SKILL.md) | Intentional visual design, typography, layout rhythm, distinctive themes, and micro-interactions avoiding cookie-cutter UI defaults. |
+| **`impeccable`** | [`.agents/skills/impeccable/SKILL.md`](file:///.agents/skills/impeccable/SKILL.md) | Frontend craft, interface audits, responsive adaptation, light/dark theming, accessibility, error states, and UX copy clarity. |
+| **`aso`** | [`.agents/skills/aso/SKILL.md`](file:///.agents/skills/aso/SKILL.md) | App Store Optimization for Google Play and App Store listings: keyword research, conversion copy, localized metadata, and competitive audits. |
+| **`find-skills`** | [`.agents/skills/find-skills/SKILL.md`](file:///.agents/skills/find-skills/SKILL.md) | Discovering and installing new agent skills for extending capabilities. |
+
+---
+
+## 6. Pull Request Markdown Template
+
+When writing a pull request upon request, use the following standardized Markdown format:
+
+```markdown
+# <type>(<scope>): <concise title>
+
+## Overview
+<High-level summary of changes and context for why this change was made.>
+
+## Type of Change
+- [ ] 🚀 New feature (`feat`)
+- [ ] 🐛 Bug fix (`fix`)
+- [ ] ♻️ Refactoring (`refactor`)
+- [ ] ⚡ Performance improvement (`perf`)
+- [ ] 📝 Documentation (`docs`)
+- [ ] 🧪 Tests (`test`)
+- [ ] 🔧 Build / CI (`build`, `ci`)
+
+## Key Changes
+- **<Component/Area>**: Description of implementation detail.
+- **<Component/Area>**: Description of implementation detail.
+
+## Architecture & Code Quality
+- Clean Architecture compliance (Presentation -> Domain -> Data separation)
+- Self-documenting code with zero comments in code files
+- Adheres to git directives: zero `git add .`, zero `git commit`, and zero `git push` run by AI agents
+
+## Testing & Coverage Verification
+- [x] Unit & widget test suite passes: `flutter test`
+- [x] 100.0% line coverage verified: `flutter test --coverage && dart run tool/verify_coverage.dart`
+- [x] Static analysis clean (0 issues): `flutter analyze`
+- [x] Formatting verified: `dart format --output=none --set-exit-if-changed .`
+
+## Screenshots / Demos (if applicable)
+<Before/After or feature preview>
+```

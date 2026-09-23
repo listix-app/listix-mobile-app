@@ -7,7 +7,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/listix_logo.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
-import '../../../sync/presentation/widgets/sync_status_badge.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/list_card.dart';
 
@@ -18,6 +17,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final listsAsync = ref.watch(listsControllerProvider);
     final tr = ref.watch(stringsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -25,14 +25,11 @@ class HomeScreen extends ConsumerWidget {
         title: const ListixLogo(size: 28, showWordmark: true, fontSize: 22),
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline_rounded, size: 22),
-            tooltip: tr.aboutApp,
-            onPressed: () => context.push('/about'),
+            icon: const Icon(Icons.settings_outlined, size: 22),
+            tooltip: tr.settings,
+            onPressed: () => context.push('/settings'),
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: SyncStatusBadge(),
-          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: listsAsync.when(
@@ -55,17 +52,18 @@ class HomeScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
-                // Section header
                 Padding(
                   padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
                   child: Row(
                     children: [
                       Text(
                         tr.myLists,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimary,
                           letterSpacing: -0.3,
                         ),
                       ),
@@ -76,15 +74,19 @@ class HomeScreen extends ConsumerWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.borderLight,
+                          color: isDark
+                              ? AppColors.cardDark
+                              : AppColors.borderLight,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           '${lists.length}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textSecondary,
+                            color: isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -92,7 +94,6 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // List items
                 ...lists.map((list) {
                   return Dismissible(
                     key: Key(list.id),

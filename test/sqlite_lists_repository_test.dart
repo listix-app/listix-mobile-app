@@ -1,82 +1,70 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/features/lists/data/repositories/sqlite_lists_repository.dart';
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
 import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
 import 'package:listix/src/features/sync/domain/sync_status.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
-    try {
-      if (databaseFactory != databaseFactoryFfi) {
-        databaseFactory = databaseFactoryFfi;
-      }
-    } catch (_) {
-      databaseFactory = databaseFactoryFfi;
-    }
+    databaseFactory = databaseFactoryFfi;
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 
-  tearDownAll(() async {
-    await AppDatabase.instance.close();
-  });
-
-  group('SqliteListsRepository & MockBackendSyncService', () {
+  group('SqliteListsRepository & Database Integration Tests', () {
     late SqliteListsRepository repository;
     late MockBackendSyncService syncService;
 
     setUp(() async {
+      // Re-initialize a clean in-memory database per test run
+      AppDatabase.overrideDbPath = inMemoryDatabasePath;
+      final db = await AppDatabase.instance.database;
+      await db.delete('todo_items');
+      await db.delete('collaborators');
+      await db.delete('shopping_lists');
+
       repository = SqliteListsRepository();
       syncService = MockBackendSyncService();
-      // Ensure DB created and seeded
-      await AppDatabase.instance.database;
     });
 
-    test('getLists returns seeded lists from SQLite', () async {
+    test('Initial database has 0 lists when cleared', () async {
       final lists = await repository.getLists();
-      expect(lists.length, greaterThanOrEqualTo(3));
-      expect(lists.any((l) => l.name == 'Supermercado semanal'), isTrue);
+      expect(lists, isEmpty);
     });
 
-    test('getListById returns null for unknown ID', () async {
-      final notFound = await repository.getListById('unknown-999');
-      expect(notFound, isNull);
-    });
-
-    test('createList creates list with is_synced = false', () async {
-      final created = await repository.createList('Lista de prueba');
-      expect(created.name, 'Lista de prueba');
+    test('createList, getListById, updateListName, and deleteList', () async {
+      // 1. Create
+      final created = await repository.createList('Supermercado');
+      expect(created.name, 'Supermercado');
+      expect(created.items, isEmpty);
       expect(created.isSynced, isFalse);
 
-      final lists = await repository.getLists();
-      expect(lists.any((l) => l.id == created.id), isTrue);
-    });
+      // 2. Fetch by ID
+      final fetched = await repository.getListById(created.id);
+      expect(fetched, isNotNull);
+      expect(fetched!.name, 'Supermercado');
 
-    test('updateListName updates list and throws if not found', () async {
-      final list = await repository.createList('Lista original');
+      // 3. Update name
       final updated = await repository.updateListName(
-        list.id,
-        'Lista renombrada',
+        created.id,
+        'Supermercado Semanal',
       );
-      expect(updated.name, 'Lista renombrada');
-
+      expect(updated.name, 'Supermercado Semanal');
       expect(
         () => repository.updateListName('non-existent-id', 'Nuevo nombre'),
-        throwsA(isA<Exception>()),
+        throwsException,
       );
+
+      // 4. Delete
+      await repository.deleteList(created.id);
+      final afterDelete = await repository.getListById(created.id);
+      expect(afterDelete, isNull);
     });
 
-    test('deleteList removes list from database', () async {
-      final list = await repository.createList('Lista a eliminar');
-      await repository.deleteList(list.id);
-      final check = await repository.getListById(list.id);
-      expect(check, isNull);
-    });
-
-    test('addItem and toggleItemCompletion mutate SQLite state', () async {
+    test('addItem, toggleItemCompletion, and deleteItem', () async {
       final list = await repository.createList('Lista para items');
       final item = await repository.addItem(list.id, 'Manzanas rojas');
 
@@ -114,9 +102,27 @@ void main() {
       },
     );
 
+    test('syncList marks list and all its items as synced', () async {
+      final list = await repository.createList('Lista para sincronizar');
+      await repository.addItem(list.id, 'Item 1');
+      await repository.addItem(list.id, 'Item 2');
+
+      final beforeSync = await repository.getListById(list.id);
+      expect(beforeSync!.isSynced, isFalse);
+      expect(beforeSync.items.every((i) => !i.isSynced), isTrue);
+
+      await repository.syncList(list.id);
+
+      final afterSync = await repository.getListById(list.id);
+      expect(afterSync!.isSynced, isTrue);
+      expect(afterSync.items.every((i) => i.isSynced), isTrue);
+    });
+
     test(
       'ListsController adds items in real-time immediately to state',
       () async {
+        await repository.createList('Lista inicial');
+
         final container = ProviderContainer();
         addTearDown(container.dispose);
 

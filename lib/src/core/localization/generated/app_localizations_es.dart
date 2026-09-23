@@ -13,20 +13,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appTagline =>
-      'Listas de compras y pendientes rápidas, colaborativas y offline-first.';
+      'Listas de compras y tareas rápidas, privadas y 100% offline.';
 
   @override
   String get myLists => 'Mis Listas';
 
   @override
-  String get emptyListsTitle => 'Aún no tienes listas';
+  String get emptyListsTitle => 'Tus listas, siempre contigo';
 
   @override
   String get emptyListsMessage =>
-      'Crea una lista para organizar tus compras del supermercado, ropa o pendientes del hogar.';
+      'Crea tu lista de supermercado o pendientes en segundos. Funciona completamente offline.';
 
   @override
-  String get createFirstList => 'Crea tu primera lista';
+  String get createFirstList => 'Crear mi primera lista';
 
   @override
   String get newList => 'Nueva lista';
@@ -84,11 +84,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get emptyItemsTitle => 'Lista vacía';
+  String get emptyItemsTitle => 'Lista sin items aún';
 
   @override
   String get emptyItemsMessage =>
-      'Escribe tu primer item en la barra inferior y presiona enter.';
+      'Escribe tu primer item abajo para agregarlo al instante.';
 
   @override
   String get quickAddHint => 'Agregar item';
@@ -116,7 +116,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editListSubheading =>
-      'El nuevo nombre se guardará en SQLite local y se sincronizará automáticamente.';
+      'El nuevo nombre se guardará al instante y de forma segura en tu dispositivo.';
 
   @override
   String get createListSubheading =>
@@ -126,7 +126,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get listNameLabel => 'Nombre de la lista';
 
   @override
-  String get listNameHint => 'Ej. Despensa mensual';
+  String get listNameHint => 'Ej. Despensa semanal';
 
   @override
   String get listNameValidation => 'Por favor ingresa un nombre';
@@ -142,13 +142,50 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shareListSubheading =>
-      'Invita a otras personas a ver y tachar items en tiempo real.';
+      'Envía esta lista al instante por WhatsApp o Gmail.';
+
+  @override
+  String get shareWhatsApp => 'Compartir por WhatsApp';
+
+  @override
+  String get shareWhatsAppDesc => 'Enviar lista formateada por chat';
+
+  @override
+  String get shareGmail => 'Compartir por Gmail';
+
+  @override
+  String get shareGmailDesc => 'Enviar lista completa por correo';
+
+  @override
+  String get copyListText => 'Copiar texto de la lista';
+
+  @override
+  String get copyListTextDesc => 'Copiar contenido al portapapeles';
+
+  @override
+  String get listCopied => '¡Lista copiada al portapapeles!';
+
+  @override
+  String shareSubject(String name) {
+    return 'Listix: $name';
+  }
+
+  @override
+  String get sharedWithListix =>
+      'Creado con Listix — Listas rápidas y 100% offline';
+
+  @override
+  String get offlineNotice => 'Almacenamiento Local Offline';
+
+  @override
+  String get offlineNoticeDesc =>
+      'Tus datos se guardan de forma local en tu dispositivo con SQLite. La lista se sincroniza únicamente al compartir.';
 
   @override
   String get copyInviteLink => 'Copiar enlace de invitación';
 
   @override
-  String get linkCopied => 'Enlace de invitación copiado al portapapeles';
+  String get linkCopied => 'Enlace copiado al portapapeles';
 
   @override
   String get inviteByEmail => 'O invitar por correo';
@@ -218,6 +255,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aboutApp => 'Acerca de Listix';
 
   @override
+  String get settings => 'Configuración';
+
+  @override
+  String get themeTitle => 'Tema';
+
+  @override
+  String get themeSystem => 'Sistema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Oscuro';
+
+  @override
   String get version => 'Versión';
 
   @override
@@ -249,7 +301,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get offlineFirstStatement =>
-      'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose de manera segura en segundo plano.';
+      'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose únicamente al compartir.';
 
   @override
   String get termsStatement =>

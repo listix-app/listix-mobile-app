@@ -5,9 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
-import '../../../../core/widgets/sync_indicator.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
-import '../../../sync/presentation/widgets/sync_status_badge.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
@@ -29,6 +27,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   Widget build(BuildContext context) {
     final list = ref.watch(shoppingListProvider(widget.listId));
     final tr = ref.watch(stringsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (list == null) {
       return Scaffold(
@@ -44,9 +43,11 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             children: [
               Text(
                 tr.listNotFound,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -73,23 +74,16 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           tooltip: tr.back,
           onPressed: () => context.pop(),
         ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                list.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 6),
-            SyncIndicator(isSynced: list.isSynced),
-          ],
+        title: Text(
+          list.name,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
@@ -98,56 +92,24 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             onPressed: () => context.push('/list/${list.id}/edit'),
           ),
           IconButton(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.person_add_outlined, size: 21),
-                if (list.isShared)
-                  Positioned(
-                    top: -2,
-                    right: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 14,
-                        minHeight: 14,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${list.collaborators.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            icon: const Icon(Icons.share_outlined, size: 21),
             tooltip: tr.shareList,
             onPressed: () => ShareListSheet.show(context, list.id),
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 12.0, left: 4.0),
-            child: SyncStatusBadge(),
-          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // Sub-header with pending count & progress bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceLight,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
               border: Border(
-                bottom: BorderSide(color: AppColors.borderLight, width: 1),
+                bottom: BorderSide(
+                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                  width: 1,
+                ),
               ),
             ),
             child: Column(
@@ -161,10 +123,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                               list.pendingCount,
                               list.totalCount,
                             ),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondary,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -172,10 +136,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                     if (list.totalCount > 0)
                       Text(
                         tr.percentCompleted((progress * 100).toInt()),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textMuted,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
                         ),
                       ),
                   ],
@@ -186,7 +152,9 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: progress,
-                      backgroundColor: AppColors.borderLight,
+                      backgroundColor: isDark
+                          ? AppColors.borderDark
+                          : AppColors.borderLight,
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         AppColors.primary,
                       ),
@@ -198,7 +166,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             ),
           ),
 
-          // Main list content
           Expanded(
             child: list.items.isEmpty
                 ? EmptyStateWidget(
@@ -219,7 +186,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                         vertical: 12,
                       ),
                       children: [
-                        // Pending items
                         ...pendingItems.map(
                           (item) => TodoItemTile(
                             item: item,
@@ -236,7 +202,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                           ),
                         ),
 
-                        // Completed items section grouped at the bottom
                         if (completedItems.isNotEmpty) ...[
                           const SizedBox(height: 12),
                           InkWell(
@@ -258,15 +223,19 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                                         ? Icons.expand_more
                                         : Icons.chevron_right,
                                     size: 18,
-                                    color: AppColors.textMuted,
+                                    color: isDark
+                                        ? AppColors.textMutedDark
+                                        : AppColors.textMuted,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     tr.completedGroup(completedItems.length),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textMuted,
+                                      color: isDark
+                                          ? AppColors.textMutedDark
+                                          : AppColors.textMuted,
                                     ),
                                   ),
                                 ],
@@ -295,7 +264,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                   ),
           ),
 
-          // Bottom Quick Add Input
           QuickAddInput(
             autoFocus: false,
             hintText: tr.quickAddHint,

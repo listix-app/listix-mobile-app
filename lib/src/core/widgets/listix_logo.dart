@@ -78,7 +78,6 @@ class _ListixLogoPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final strokeWidth = size.width * 0.11;
 
-    // Paint for checkmark
     final checkPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
@@ -86,21 +85,18 @@ class _ListixLogoPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    // Paint for horizontal list bars
     final linePaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.85)
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth * 0.85
       ..strokeCap = StrokeCap.round;
 
-    // Checkmark path on the left
     final checkPath = Path();
     checkPath.moveTo(size.width * 0.24, size.height * 0.50);
     checkPath.lineTo(size.width * 0.40, size.height * 0.66);
     checkPath.lineTo(size.width * 0.76, size.height * 0.30);
     canvas.drawPath(checkPath, checkPaint);
 
-    // Bottom decorative companion line
     canvas.drawLine(
       Offset(size.width * 0.30, size.height * 0.78),
       Offset(size.width * 0.70, size.height * 0.78),

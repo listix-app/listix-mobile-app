@@ -13,17 +13,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTagline =>
-      'Fast, collaborative, offline-first shopping and todo lists.';
+      'Fast, private, offline-first shopping and todo lists.';
 
   @override
   String get myLists => 'My Lists';
 
   @override
-  String get emptyListsTitle => 'No lists yet';
+  String get emptyListsTitle => 'Your lists, always with you';
 
   @override
   String get emptyListsMessage =>
-      'Create a list to organize your groceries, clothing, or household tasks.';
+      'Create your grocery or task list in seconds. It works completely offline.';
 
   @override
   String get createFirstList => 'Create your first list';
@@ -88,7 +88,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emptyItemsMessage =>
-      'Type your first item in the bottom bar and press enter.';
+      'Type your first item below to add it instantly.';
 
   @override
   String get quickAddHint => 'Add item';
@@ -116,7 +116,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editListSubheading =>
-      'The updated name is saved locally in SQLite and synced automatically.';
+      'The updated name is saved instantly and securely on your device.';
 
   @override
   String get createListSubheading =>
@@ -126,7 +126,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listNameLabel => 'List name';
 
   @override
-  String get listNameHint => 'e.g. Monthly Pantry';
+  String get listNameHint => 'e.g. Weekly Groceries';
 
   @override
   String get listNameValidation => 'Please enter a name';
@@ -142,7 +142,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareListSubheading =>
-      'Invite others to view and check off items in real time.';
+      'Send this list instantly via WhatsApp or Gmail.';
+
+  @override
+  String get shareWhatsApp => 'Share via WhatsApp';
+
+  @override
+  String get shareWhatsAppDesc => 'Send formatted list directly in chat';
+
+  @override
+  String get shareGmail => 'Share via Gmail';
+
+  @override
+  String get shareGmailDesc => 'Send complete list via email';
+
+  @override
+  String get copyListText => 'Copy list text';
+
+  @override
+  String get copyListTextDesc => 'Copy list content to clipboard';
+
+  @override
+  String get listCopied => 'List copied to clipboard!';
+
+  @override
+  String shareSubject(String name) {
+    return 'Listix: $name';
+  }
+
+  @override
+  String get sharedWithListix =>
+      'Created with Listix — Fast & 100% Offline Lists';
+
+  @override
+  String get offlineNotice => 'Offline Local Storage';
+
+  @override
+  String get offlineNoticeDesc =>
+      'Your data is stored locally on your device with SQLite. The list is synchronized only when sharing.';
 
   @override
   String get copyInviteLink => 'Copy invitation link';
@@ -218,6 +255,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutApp => 'About Listix';
 
   @override
+  String get settings => 'Settings';
+
+  @override
+  String get themeTitle => 'Appearance';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
   String get version => 'Version';
 
   @override
@@ -249,7 +301,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offlineFirstStatement =>
-      'Offline-First Architecture: Every creation, check-off, and edit occurs at native speed with zero latency on local storage, syncing securely in the background.';
+      'Offline-First Architecture: Every creation, check-off, and edit occurs at native speed with zero latency on local storage, syncing only when sharing.';
 
   @override
   String get termsStatement =>

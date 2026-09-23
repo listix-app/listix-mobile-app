@@ -181,8 +181,8 @@ void main() {
 
         await tester.pumpAndSettle();
 
-        expect(find.text('Aún no tienes listas'), findsOneWidget);
-        await tester.tap(find.text('Crea tu primera lista'));
+        expect(find.text('Tus listas, siempre contigo'), findsOneWidget);
+        await tester.tap(find.text('Crear mi primera lista'));
         await tester.pumpAndSettle();
 
         expect(find.text('New List Screen'), findsOneWidget);
@@ -204,8 +204,8 @@ void main() {
           routes: [
             GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
             GoRoute(
-              path: '/about',
-              builder: (ctx, state) => const Text('About Screen Target'),
+              path: '/settings',
+              builder: (ctx, state) => const Text('Settings Screen Target'),
             ),
             GoRoute(
               path: '/list/:id',
@@ -264,10 +264,10 @@ void main() {
         await tester.pumpAndSettle();
         expect(fakeController.deletedListIds, contains('l1'));
 
-        // Tap info icon in AppBar
-        await tester.tap(find.byIcon(Icons.info_outline_rounded));
+        // Tap settings icon in AppBar
+        await tester.tap(find.byIcon(Icons.settings_outlined));
         await tester.pumpAndSettle();
-        expect(find.text('About Screen Target'), findsOneWidget);
+        expect(find.text('Settings Screen Target'), findsOneWidget);
 
         router.go('/');
         await tester.pumpAndSettle();
@@ -495,6 +495,11 @@ void main() {
       container.read(appRouterProvider).go(AppRoutes.about);
       await tester.pumpAndSettle();
       expect(find.text('Listix'), findsOneWidget);
+
+      // Go to /settings
+      container.read(appRouterProvider).go(AppRoutes.settings);
+      await tester.pumpAndSettle();
+      expect(find.text('Configuración'), findsWidgets);
     });
   });
 }

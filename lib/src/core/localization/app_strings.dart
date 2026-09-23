@@ -67,6 +67,17 @@ class AppStrings {
   // Share List Sheet
   String get shareHeading => _l10n.shareHeading;
   String get shareListSubheading => _l10n.shareListSubheading;
+  String get shareWhatsApp => _l10n.shareWhatsApp;
+  String get shareWhatsAppDesc => _l10n.shareWhatsAppDesc;
+  String get shareGmail => _l10n.shareGmail;
+  String get shareGmailDesc => _l10n.shareGmailDesc;
+  String get copyListText => _l10n.copyListText;
+  String get copyListTextDesc => _l10n.copyListTextDesc;
+  String get listCopied => _l10n.listCopied;
+  String shareSubject(String name) => _l10n.shareSubject(name);
+  String get sharedWithListix => _l10n.sharedWithListix;
+  String get offlineNotice => _l10n.offlineNotice;
+  String get offlineNoticeDesc => _l10n.offlineNoticeDesc;
   String get copyInviteLink => _l10n.copyInviteLink;
   String get linkCopied => _l10n.linkCopied;
   String get inviteByEmail => _l10n.inviteByEmail;
@@ -91,6 +102,13 @@ class AppStrings {
   String get statusOffline => _l10n.statusOffline;
   String get statusPending => _l10n.statusPending;
   String get statusSynced => _l10n.statusSynced;
+
+  // Settings & Theme
+  String get settings => _l10n.settings;
+  String get themeTitle => _l10n.themeTitle;
+  String get themeSystem => _l10n.themeSystem;
+  String get themeLight => _l10n.themeLight;
+  String get themeDark => _l10n.themeDark;
 
   // About, Policy & Privacy
   String get aboutApp => _l10n.aboutApp;

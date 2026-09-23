@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v1.0.0)'
+        required: false
+        default: ''
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify code formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Run static analysis
+        run: flutter analyze
+
+      - name: Run test suite with coverage
+        run: flutter test --coverage test/all_tests_coverage.dart
+
+      - name: Verify 100% test coverage
+        run: dart run tool/verify_coverage.dart
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Build Android App Bundle (AAB)
+        run: flutter build appbundle --release
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          name: Release ${{ github.event.inputs.tag_name || github.ref_name }}
+          generate_release_notes: true
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab

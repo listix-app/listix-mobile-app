@@ -14,4 +14,6 @@ abstract interface class ListsRepository {
 
   Future<void> addCollaborator(String listId, String email);
   Future<void> removeCollaborator(String listId, String collaboratorId);
+
+  Future<void> syncList(String listId);
 }

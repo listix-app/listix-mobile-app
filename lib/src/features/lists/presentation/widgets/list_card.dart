@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/sync_indicator.dart';
 import '../../domain/entities/collaborator.dart';
 import '../../domain/entities/shopping_list.dart';
 
@@ -23,18 +22,30 @@ class ListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tr = strings ?? AppStrings(AppLanguage.es);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final badgeText = list.totalCount == 0
         ? tr.noItemsBadge
         : list.pendingCount == 0
         ? tr.allDoneBadge
         : tr.pendingBadge(list.progressText);
 
+    final cardBg = isDark ? AppColors.cardDark : AppColors.cardLight;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textTitleColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimary;
+    final badgeBg = list.pendingCount == 0 && list.totalCount > 0
+        ? AppColors.syncDone.withValues(alpha: 0.16)
+        : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight);
+
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
+      color: cardBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.borderLight),
+        side: BorderSide(color: borderColor),
       ),
       child: InkWell(
         onTap: onTap,
@@ -50,38 +61,33 @@ class ListCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       list.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: textTitleColor,
                         letterSpacing: -0.2,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  SyncIndicator(isSynced: list.isSynced),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  // Progress badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: list.pendingCount == 0 && list.totalCount > 0
-                          ? AppColors.syncDone.withValues(alpha: 0.12)
-                          : AppColors.surfaceLight,
+                      color: badgeBg,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: list.pendingCount == 0 && list.totalCount > 0
-                            ? AppColors.syncDone.withValues(alpha: 0.3)
-                            : AppColors.borderLight,
+                            ? AppColors.syncDone.withValues(alpha: 0.35)
+                            : borderColor,
                       ),
                     ),
                     child: Text(
@@ -91,20 +97,23 @@ class ListCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: list.pendingCount == 0 && list.totalCount > 0
                             ? AppColors.syncDone
-                            : AppColors.textSecondary,
+                            : (isDark
+                                  ? AppColors.textSecondaryDark
+                                  : AppColors.textSecondary),
                       ),
                     ),
                   ),
                   const Spacer(),
-                  // Collaborator avatars / icon
                   if (list.isShared) ...[
                     _CollaboratorAvatars(collaborators: list.collaborators),
                   ],
                   const SizedBox(width: 6),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
                     size: 20,
-                    color: AppColors.textMuted,
+                    color: isDark
+                        ? AppColors.textMutedDark
+                        : AppColors.textMuted,
                   ),
                 ],
               ),

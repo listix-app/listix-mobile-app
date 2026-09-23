@@ -34,7 +34,6 @@ abstract final class AppTheme {
         iconTheme: IconThemeData(color: AppColors.textPrimary),
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
-      // Clean single-declaration elevation: crisp border, no ghost shadow
       cardTheme: CardThemeData(
         color: AppColors.cardLight,
         elevation: 0,
@@ -55,7 +54,6 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
-      // Themed cursor, selection and handles from our palette
       textSelectionTheme: const TextSelectionThemeData(
         cursorColor: AppColors.primary,
         selectionColor: AppColors.primaryLight,

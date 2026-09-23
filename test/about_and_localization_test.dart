@@ -7,6 +7,7 @@ import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/core/widgets/listix_logo.dart';
 import 'package:listix/src/features/about/presentation/screens/about_screen.dart';
+import 'package:listix/src/features/settings/presentation/screens/settings_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -56,6 +57,32 @@ void main() {
         en.inviteSent('maria@test.com'),
         'Invitation sent to maria@test.com',
       );
+
+      // New Theme strings
+      expect(es.themeTitle, 'Tema');
+      expect(en.themeTitle, 'Appearance');
+      expect(es.themeSystem, 'Sistema');
+      expect(en.themeSystem, 'System');
+      expect(es.themeLight, 'Claro');
+      expect(en.themeLight, 'Light');
+      expect(es.themeDark, 'Oscuro');
+      expect(en.themeDark, 'Dark');
+
+      // New Share strings
+      expect(es.shareWhatsApp, 'Compartir por WhatsApp');
+      expect(en.shareWhatsApp, 'Share via WhatsApp');
+      expect(es.shareGmail, 'Compartir por Gmail');
+      expect(en.shareGmail, 'Share via Gmail');
+      expect(es.copyListText, 'Copiar texto de la lista');
+      expect(en.copyListText, 'Copy list text');
+      expect(es.listCopied, '¡Lista copiada al portapapeles!');
+      expect(en.listCopied, 'List copied to clipboard!');
+      expect(es.shareSubject('Compras'), 'Listix: Compras');
+      expect(en.shareSubject('Groceries'), 'Listix: Groceries');
+      expect(es.sharedWithListix, contains('Listix'));
+      expect(en.sharedWithListix, contains('Listix'));
+      expect(es.offlineNoticeDesc, contains('SQLite'));
+      expect(es.offlineNoticeDesc, contains('SQLite'));
 
       expect(es.versionLabel('1.0.0', '1'), contains('1.0.0'));
       expect(en.versionLabel('1.0.0', '1'), contains('1.0.0'));
@@ -173,7 +200,7 @@ void main() {
     );
 
     testWidgets(
-      'HomeScreen allows navigating to AboutScreen and shows Listix logo',
+      'HomeScreen allows navigating to SettingsScreen and shows Listix logo',
       (tester) async {
         tester.view.physicalSize = const Size(800, 1600);
         tester.view.devicePixelRatio = 1.0;
@@ -194,14 +221,14 @@ void main() {
         // Verify logo in AppBar
         expect(find.byType(ListixLogo), findsOneWidget);
 
-        // Tap info/about icon
-        final infoIconFinder = find.byIcon(Icons.info_outline_rounded);
-        expect(infoIconFinder, findsOneWidget);
-        await tester.tap(infoIconFinder);
+        // Tap settings icon
+        final settingsIconFinder = find.byIcon(Icons.settings_outlined);
+        expect(settingsIconFinder, findsOneWidget);
+        await tester.tap(settingsIconFinder);
         await tester.pumpAndSettle();
 
-        // Verify we navigated to AboutScreen
-        expect(find.byType(AboutScreen), findsOneWidget);
+        // Verify we navigated to SettingsScreen
+        expect(find.byType(SettingsScreen), findsOneWidget);
         expect(find.text('Política de Privacidad'), findsOneWidget);
       },
     );

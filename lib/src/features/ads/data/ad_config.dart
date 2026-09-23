@@ -14,10 +14,6 @@ import 'package:flutter/foundation.dart';
 ///              "com.google.android.gms.ads.APPLICATION_ID")
 ///   • iOS:     ios/Runner/Info.plist  (key "GADApplicationIdentifier")
 abstract final class AdConfig {
-  // ───────────────────────────────────────────────────────────────────────────
-  // App IDs  (Google test App IDs — safe for development)
-  // ───────────────────────────────────────────────────────────────────────────
-
   /// Google test AdMob App ID for Android.
   /// Replace with your real Android App ID for production.
   static const String androidAppId = 'ca-app-pub-3940256099942544~3347511713';
@@ -25,10 +21,6 @@ abstract final class AdConfig {
   /// Google test AdMob App ID for iOS.
   /// Replace with your real iOS App ID for production.
   static const String iosAppId = 'ca-app-pub-3940256099942544~1458002511';
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Banner Ad Unit IDs  (Google test Ad Unit IDs — safe for development)
-  // ───────────────────────────────────────────────────────────────────────────
 
   /// Google test Banner Ad Unit ID for Android.
   /// Replace with your real Android Banner Ad Unit ID for production.
@@ -39,18 +31,12 @@ abstract final class AdConfig {
   /// Replace with your real iOS Banner Ad Unit ID for production.
   static const String _iosBannerId = 'ca-app-pub-3940256099942544/2934735716';
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Helpers
-  // ───────────────────────────────────────────────────────────────────────────
-
   /// Returns the correct Banner Ad Unit ID for the current platform.
   static String get bannerId {
     if (kIsWeb) return _androidBannerId;
     try {
       if (Platform.isIOS) return _iosBannerId;
-    } catch (_) {
-      // Non-standard environment (e.g., desktop tests) — fall through.
-    }
+    } catch (_) {}
     return _androidBannerId;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/core/widgets/empty_state_widget.dart';
 import 'package:listix/src/core/widgets/sync_indicator.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
@@ -8,9 +9,51 @@ import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
 import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.dart';
+import 'package:listix/src/features/lists/presentation/services/share_service.dart';
 import 'package:listix/src/features/lists/presentation/widgets/collaborator_tile.dart';
 import 'package:listix/src/features/lists/presentation/widgets/list_card.dart';
 import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
+
+class _FakeListsController extends ListsController {
+  final List<ShoppingList> _initial;
+  final List<String> syncedListIds = [];
+
+  _FakeListsController(this._initial);
+
+  @override
+  Future<List<ShoppingList>> build() async => _initial;
+
+  @override
+  Future<void> syncListOnShare(String listId) async {
+    syncedListIds.add(listId);
+  }
+}
+
+class _FakeShareService extends ShareService {
+  bool whatsAppShared = false;
+  bool gmailShared = false;
+  bool copied = false;
+
+  @override
+  Future<bool> shareToWhatsApp(String text) async {
+    whatsAppShared = true;
+    return true;
+  }
+
+  @override
+  Future<bool> shareToGmail({
+    required String subject,
+    required String body,
+  }) async {
+    gmailShared = true;
+    return true;
+  }
+
+  @override
+  Future<void> copyToClipboard(String text) async {
+    copied = true;
+  }
+}
 
 void main() {
   group('EmptyStateWidget Tests', () {
@@ -29,22 +72,25 @@ void main() {
 
       expect(find.text('Vacío'), findsOneWidget);
       expect(find.text('Nada por aquí'), findsOneWidget);
-      expect(find.byType(FilledButton), findsNothing);
+      expect(find.byType(ElevatedButton), findsNothing);
     });
 
     testWidgets('renders action button and triggers onAction callback', (
       tester,
     ) async {
-      bool actionTapped = false;
+      var actionTriggered = false;
+
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: EmptyStateWidget(
               icon: Icons.add,
-              title: 'Crea tu lista',
-              message: 'Comienza ahora',
+              title: 'Nueva lista',
+              message: 'Crea tu primera lista',
               actionLabel: 'Crear ahora',
-              onAction: () => actionTapped = true,
+              onAction: () {
+                actionTriggered = true;
+              },
             ),
           ),
         ),
@@ -52,41 +98,41 @@ void main() {
 
       expect(find.text('Crear ahora'), findsOneWidget);
       await tester.tap(find.text('Crear ahora'));
-      await tester.pump();
-      expect(actionTapped, isTrue);
+      expect(actionTriggered, isTrue);
     });
   });
 
   group('CollaboratorTile Tests', () {
     testWidgets('renders owner badge when isOwner is true', (tester) async {
-      const collab = Collaborator(
+      final collaborator = Collaborator(
         id: 'c1',
-        name: 'Maria Duena',
-        email: 'maria@test.com',
+        name: 'Ana García',
+        email: 'ana@ejemplo.com',
         isOwner: true,
       );
 
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: CollaboratorTile(collaborator: collab)),
+        MaterialApp(
+          home: Scaffold(
+            body: CollaboratorTile(collaborator: collaborator, onRemove: () {}),
+          ),
         ),
       );
 
+      expect(find.text('Ana García'), findsOneWidget);
+      expect(find.text('ana@ejemplo.com'), findsOneWidget);
       expect(find.text('Dueño'), findsOneWidget);
-      expect(find.text('MD'), findsOneWidget);
-      expect(find.text('Maria Duena'), findsOneWidget);
-      expect(find.text('maria@test.com'), findsOneWidget);
-      expect(find.byType(IconButton), findsNothing);
+      expect(find.byIcon(Icons.remove_circle_outline), findsNothing);
     });
 
     testWidgets('renders remove button and triggers onRemove when not owner', (
       tester,
     ) async {
-      bool removed = false;
-      const collab = Collaborator(
+      var removeCalled = false;
+      final collaborator = Collaborator(
         id: 'c2',
-        name: 'Juan Perez',
-        email: 'juan@test.com',
+        name: 'Carlos López',
+        email: 'carlos@ejemplo.com',
         isOwner: false,
       );
 
@@ -94,19 +140,23 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: CollaboratorTile(
-              collaborator: collab,
-              onRemove: () => removed = true,
+              collaborator: collaborator,
+              onRemove: () {
+                removeCalled = true;
+              },
             ),
           ),
         ),
       );
 
+      expect(find.text('Carlos López'), findsOneWidget);
       expect(find.text('Dueño'), findsNothing);
-      expect(find.byType(IconButton), findsOneWidget);
 
-      await tester.tap(find.byType(IconButton));
-      await tester.pump();
-      expect(removed, isTrue);
+      final removeBtn = find.byIcon(Icons.close);
+      expect(removeBtn, findsOneWidget);
+
+      await tester.tap(removeBtn);
+      expect(removeCalled, isTrue);
     });
   });
 
@@ -116,13 +166,13 @@ void main() {
     testWidgets('tap triggers onToggle and swipe triggers onDelete', (
       tester,
     ) async {
-      bool toggled = false;
-      bool deleted = false;
+      var toggleCalled = false;
+      var deleteCalled = false;
 
       final item = TodoItem(
         id: 'item_1',
-        listId: 'l1',
-        title: 'Comprar leche de almendras',
+        listId: 'list_1',
+        title: 'Manzanas orgánicas',
         isCompleted: false,
         createdAt: now,
       );
@@ -132,31 +182,37 @@ void main() {
           home: Scaffold(
             body: TodoItemTile(
               item: item,
-              onToggle: () => toggled = true,
-              onDelete: () => deleted = true,
+              onToggle: () {
+                toggleCalled = true;
+              },
+              onDelete: () {
+                deleteCalled = true;
+              },
             ),
           ),
         ),
       );
 
-      expect(find.text('Comprar leche de almendras'), findsOneWidget);
+      expect(find.text('Manzanas orgánicas'), findsOneWidget);
 
       // Tap to toggle
-      await tester.tap(find.byType(TodoItemTile));
-      await tester.pump();
-      expect(toggled, isTrue);
+      await tester.tap(find.text('Manzanas orgánicas'));
+      expect(toggleCalled, isTrue);
 
-      // Swipe to delete
-      await tester.drag(find.byType(TodoItemTile), const Offset(-500, 0));
+      // Swipe dismissible to delete
+      await tester.drag(
+        find.text('Manzanas orgánicas'),
+        const Offset(-500.0, 0.0),
+      );
       await tester.pumpAndSettle();
-      expect(deleted, isTrue);
+      expect(deleteCalled, isTrue);
     });
 
     testWidgets('renders completed style with lineThrough', (tester) async {
-      final completedItem = TodoItem(
+      final item = TodoItem(
         id: 'item_2',
-        listId: 'l1',
-        title: 'Item completado',
+        listId: 'list_1',
+        title: 'Leche de almendras',
         isCompleted: true,
         createdAt: now,
       );
@@ -164,15 +220,19 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: TodoItemTile(
-              item: completedItem,
-              onToggle: () {},
-              onDelete: () {},
-            ),
+            body: TodoItemTile(item: item, onToggle: () {}, onDelete: () {}),
           ),
         ),
       );
 
+      final textFinder = find.ancestor(
+        of: find.text('Leche de almendras'),
+        matching: find.byType(AnimatedDefaultTextStyle),
+      );
+      final hasLineThrough = tester
+          .widgetList<AnimatedDefaultTextStyle>(textFinder)
+          .any((w) => w.style.decoration == TextDecoration.lineThrough);
+      expect(hasLineThrough, isTrue);
       expect(find.byIcon(Icons.check), findsOneWidget);
     });
   });
@@ -181,7 +241,12 @@ void main() {
     final now = DateTime(2026, 9, 22);
 
     testWidgets('renders Sin items when empty', (tester) async {
-      final list = ShoppingList(id: '1', name: 'Lista vacía', createdAt: now);
+      final list = ShoppingList(
+        id: 'l1',
+        name: 'Lista Vacía',
+        items: const [],
+        createdAt: now,
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -191,6 +256,7 @@ void main() {
         ),
       );
 
+      expect(find.text('Lista Vacía'), findsOneWidget);
       expect(find.text('Sin items'), findsOneWidget);
     });
 
@@ -198,13 +264,13 @@ void main() {
       tester,
     ) async {
       final list = ShoppingList(
-        id: '2',
-        name: 'Todo hecho',
+        id: 'l2',
+        name: 'Lista Completa',
         items: [
           TodoItem(
-            id: 't1',
-            listId: '2',
-            title: 'Item',
+            id: 'i1',
+            listId: 'l2',
+            title: 'Pan',
             isCompleted: true,
             createdAt: now,
           ),
@@ -226,50 +292,52 @@ void main() {
     testWidgets('renders progress text, handles >3 collaborators, and taps', (
       tester,
     ) async {
-      bool tapped = false;
-      final collabs = List.generate(
-        5,
-        (i) => Collaborator(id: '$i', name: 'User $i', email: 'u$i@test.com'),
-      );
+      var tapped = false;
       final list = ShoppingList(
-        id: '3',
-        name: 'Supermercado',
+        id: 'l3',
+        name: 'Asado con amigos',
         items: [
           TodoItem(
-            id: 't1',
-            listId: '3',
-            title: 'Pan',
+            id: 'i1',
+            listId: 'l3',
+            title: 'Carne',
             isCompleted: false,
             createdAt: now,
           ),
           TodoItem(
-            id: 't2',
-            listId: '3',
-            title: 'Agua',
+            id: 'i2',
+            listId: 'l3',
+            title: 'Carbón',
             isCompleted: true,
             createdAt: now,
           ),
         ],
-        collaborators: collabs,
+        collaborators: [
+          Collaborator(id: 'c1', name: 'Ana', email: 'ana@a.com'),
+          Collaborator(id: 'c2', name: 'Beto', email: 'beto@b.com'),
+          Collaborator(id: 'c3', name: 'Carlos', email: 'carlos@c.com'),
+          Collaborator(id: 'c4', name: 'Diana', email: 'diana@d.com'),
+        ],
         createdAt: now,
       );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ListCard(list: list, onTap: () => tapped = true),
+            body: ListCard(
+              list: list,
+              onTap: () {
+                tapped = true;
+              },
+            ),
           ),
         ),
       );
 
       expect(find.text('1 de 2 pendientes'), findsOneWidget);
-      expect(
-        find.text('+3'),
-        findsOneWidget,
-      ); // 5 collaborators - 2 visible = 3 remaining
+      expect(find.text('+2'), findsOneWidget);
 
-      await tester.tap(find.byType(ListCard));
-      await tester.pump();
+      await tester.tap(find.text('Asado con amigos'));
       expect(tapped, isTrue);
     });
   });
@@ -304,7 +372,7 @@ void main() {
       await tester.pumpWidget(
         const ProviderScope(
           child: MaterialApp(
-            home: Scaffold(body: ShareListSheet(listId: 'non-existent')),
+            home: Scaffold(body: ShareListSheet(listId: 'unknown_id')),
           ),
         ),
       );
@@ -313,102 +381,88 @@ void main() {
     });
 
     testWidgets(
-      'renders sheet, copies link, and invites email with validation',
+      'renders sheet, shares via WhatsApp, Gmail, and copies to clipboard',
       (tester) async {
         final list = ShoppingList(
           id: 'share_list',
           name: 'Asado familiar',
-          collaborators: const [
-            Collaborator(
-              id: 'owner',
-              name: 'Dueño',
-              email: 'owner@test.com',
-              isOwner: true,
-            ),
-            Collaborator(
-              id: 'c1',
-              name: 'Invitado',
-              email: 'inv@test.com',
-              isOwner: false,
+          items: [
+            TodoItem(
+              id: 'i1',
+              listId: 'share_list',
+              title: 'Carne',
+              isCompleted: false,
+              createdAt: now,
             ),
           ],
           createdAt: now,
         );
 
+        final fakeController = _FakeListsController([list]);
+        final fakeShare = _FakeShareService();
+
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
               shoppingListProvider('share_list').overrideWithValue(list),
-              listsControllerProvider.overrideWith(
-                () => _FakeListsController([list]),
-              ),
+              listsControllerProvider.overrideWith(() => fakeController),
+              shareServiceProvider.overrideWithValue(fakeShare),
             ],
             child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(body: ShareListSheet(listId: 'share_list')),
             ),
           ),
         );
-
+        await tester.pumpAndSettle();
         expect(find.text('Compartir "Asado familiar"'), findsOneWidget);
-        expect(find.text('Copiar enlace de invitación'), findsOneWidget);
-        expect(find.text('Colaboradores (2)'), findsOneWidget);
+        expect(find.text('Compartir por WhatsApp'), findsOneWidget);
+        expect(find.text('Compartir por Gmail'), findsOneWidget);
+        expect(find.text('Copiar texto de la lista'), findsOneWidget);
 
-        // Copy link
-        await tester.tap(find.text('Copiar enlace de invitación'));
+        // Share via WhatsApp
+        await tester.tap(find.text('Compartir por WhatsApp'));
         await tester.pumpAndSettle();
-        expect(
-          find.text('Enlace de invitación copiado al portapapeles'),
-          findsOneWidget,
-        );
+        expect(fakeShare.whatsAppShared, isTrue);
+        expect(fakeController.syncedListIds, contains('share_list'));
 
-        // Submit empty email validation
-        await tester.tap(find.text('Invitar'));
+        // Share via Gmail
+        await tester.tap(find.text('Compartir por Gmail'));
         await tester.pumpAndSettle();
-        expect(find.text('Ingresa un correo'), findsOneWidget);
+        expect(fakeShare.gmailShared, isTrue);
 
-        // Submit invalid email
-        await tester.enterText(find.byType(TextFormField), 'bademail');
-        await tester.tap(find.text('Invitar'));
+        // Copy list
+        await tester.tap(find.text('Copiar texto de la lista'));
         await tester.pumpAndSettle();
-        expect(find.text('Correo no válido'), findsOneWidget);
-
-        // Submit valid email
-        await tester.enterText(find.byType(TextFormField), 'valido@correo.com');
-        await tester.tap(find.text('Invitar'));
-        await tester.pumpAndSettle();
-        expect(
-          find.text('Invitación enviada a valido@correo.com'),
-          findsOneWidget,
-        );
-
-        // Remove collaborator
-        expect(find.byTooltip('Quitar colaborador'), findsOneWidget);
-        await tester.tap(find.byTooltip('Quitar colaborador'));
-        await tester.pumpAndSettle();
+        expect(fakeShare.copied, isTrue);
+        expect(find.text('¡Lista copiada al portapapeles!'), findsOneWidget);
       },
     );
 
     testWidgets(
-      'renders empty collaborators text and ShareListSheet.show helper',
+      'ShareListSheet.show helper renders modal properly and actions pop',
       (tester) async {
-        final emptyCollabList = ShoppingList(
+        final list = ShoppingList(
           id: 'no_collab',
           name: 'Lista sola',
-          collaborators: const [],
+          items: const [],
           createdAt: now,
         );
+        final fakeShare = _FakeShareService();
 
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              shoppingListProvider(
-                'no_collab',
-              ).overrideWithValue(emptyCollabList),
+              shoppingListProvider('no_collab').overrideWithValue(list),
               listsControllerProvider.overrideWith(
-                () => _FakeListsController([emptyCollabList]),
+                () => _FakeListsController([list]),
               ),
+              shareServiceProvider.overrideWithValue(fakeShare),
             ],
             child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
               home: Builder(
                 builder: (ctx) => Scaffold(
                   body: ElevatedButton(
@@ -421,28 +475,28 @@ void main() {
           ),
         );
 
+        // WhatsApp tap and pop
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
+        expect(find.text('Compartir "Lista sola"'), findsOneWidget);
+        await tester.tap(find.text('Compartir por WhatsApp'));
+        await tester.pumpAndSettle();
+        expect(fakeShare.whatsAppShared, isTrue);
 
-        expect(
-          find.text('Aún no hay colaboradores en esta lista.'),
-          findsOneWidget,
-        );
+        // Gmail tap and pop
+        await tester.tap(find.text('Open Modal'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Compartir por Gmail'));
+        await tester.pumpAndSettle();
+        expect(fakeShare.gmailShared, isTrue);
+
+        // Copy tap and pop
+        await tester.tap(find.text('Open Modal'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Copiar texto de la lista'));
+        await tester.pumpAndSettle();
+        expect(fakeShare.copied, isTrue);
       },
     );
   });
-}
-
-class _FakeListsController extends ListsController {
-  final List<ShoppingList> _initial;
-  _FakeListsController(this._initial);
-
-  @override
-  Future<List<ShoppingList>> build() async => _initial;
-
-  @override
-  Future<void> addCollaborator(String listId, String email) async {}
-
-  @override
-  Future<void> removeCollaborator(String listId, String collaboratorId) async {}
 }

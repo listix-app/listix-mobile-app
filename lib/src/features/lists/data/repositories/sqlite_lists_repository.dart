@@ -20,7 +20,6 @@ class SqliteListsRepository implements ListsRepository {
   Future<List<ShoppingList>> getLists() async {
     final db = await _db;
 
-    // Fetch lists
     final listMaps = await db.query(
       'shopping_lists',
       where: 'deleted_at IS NULL',
@@ -32,7 +31,6 @@ class SqliteListsRepository implements ListsRepository {
     final listIds = listMaps.map((m) => m['id'] as String).toList();
     final inPlaceholders = List.filled(listIds.length, '?').join(',');
 
-    // Fetch items for all active lists
     final itemMaps = await db.query(
       'todo_items',
       where: 'list_id IN ($inPlaceholders) AND deleted_at IS NULL',
@@ -40,14 +38,12 @@ class SqliteListsRepository implements ListsRepository {
       orderBy: 'created_at DESC',
     );
 
-    // Fetch collaborators for all active lists
     final collabMaps = await db.query(
       'collaborators',
       where: 'list_id IN ($inPlaceholders)',
       whereArgs: listIds,
     );
 
-    // Group items by list_id
     final itemsByList = <String, List<TodoItem>>{};
     for (final row in itemMaps) {
       final listId = row['list_id'] as String;
@@ -64,7 +60,6 @@ class SqliteListsRepository implements ListsRepository {
       itemsByList.putIfAbsent(listId, () => []).add(item);
     }
 
-    // Group collaborators by list_id
     final collabsByList = <String, List<Collaborator>>{};
     for (final row in collabMaps) {
       final listId = row['list_id'] as String;
@@ -77,7 +72,6 @@ class SqliteListsRepository implements ListsRepository {
       collabsByList.putIfAbsent(listId, () => []).add(collab);
     }
 
-    // Map into domain ShoppingList entities
     return listMaps.map((row) {
       final id = row['id'] as String;
       return ShoppingList(
@@ -112,7 +106,7 @@ class SqliteListsRepository implements ListsRepository {
     await db.insert('shopping_lists', {
       'id': id,
       'name': name.trim(),
-      'is_synced': 0, // Pending sync in local-first
+      'is_synced': 0, // Pending sync until shared
       'created_at': now,
       'updated_at': now,
     });
@@ -167,7 +161,6 @@ class SqliteListsRepository implements ListsRepository {
         'updated_at': now,
       });
 
-      // Mark parent list as updated and pending sync
       await txn.update(
         'shopping_lists',
         {'is_synced': 0, 'updated_at': now},
@@ -296,6 +289,28 @@ class SqliteListsRepository implements ListsRepository {
         'shopping_lists',
         {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
+        whereArgs: [listId],
+      );
+    });
+  }
+
+  @override
+  Future<void> syncList(String listId) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'shopping_lists',
+        {'is_synced': 1, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+
+      await txn.update(
+        'todo_items',
+        {'is_synced': 1, 'updated_at': now},
+        where: 'list_id = ?',
         whereArgs: [listId],
       );
     });

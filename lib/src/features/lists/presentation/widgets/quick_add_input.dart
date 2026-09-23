@@ -49,7 +49,6 @@ class _QuickAddInputState extends State<QuickAddInput> {
     _controller.clear();
     setState(() => _canSubmit = false);
     widget.onAdd(text);
-    // Keep focus so the user can quickly type multiple items
     _focusNode.requestFocus();
   }
 
@@ -62,13 +61,25 @@ class _QuickAddInputState extends State<QuickAddInput> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final barBg = isDark ? AppColors.cardDark : Colors.white;
+    final inputBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textTitleColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimary;
+    final unselectedButtonBg = isDark
+        ? AppColors.surfaceDark
+        : AppColors.surfaceLight;
+    final unselectedIconColor = isDark
+        ? AppColors.textMutedDark
+        : AppColors.textMuted;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(
-          top: BorderSide(color: AppColors.borderLight, width: 1),
-        ),
+        color: barBg,
+        border: Border(top: BorderSide(color: borderColor, width: 1)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -89,10 +100,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 textInputAction: TextInputAction.done,
                 textCapitalization: TextCapitalization.sentences,
                 onSubmitted: (_) => _submit(),
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textPrimary,
-                ),
+                style: TextStyle(fontSize: 15, color: textTitleColor),
                 decoration: InputDecoration(
                   hintText: widget.hintText ?? 'Agregar item',
                   isDense: true,
@@ -103,7 +111,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
                   ),
                   prefixIconConstraints: const BoxConstraints(minWidth: 38),
                   filled: true,
-                  fillColor: AppColors.surfaceLight,
+                  fillColor: inputBg,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 12,
@@ -132,7 +140,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: _canSubmit ? AppColors.primary : AppColors.surfaceLight,
+                color: _canSubmit ? AppColors.primary : unselectedButtonBg,
                 shape: BoxShape.circle,
               ),
               child: IconButton(
@@ -140,7 +148,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 icon: Icon(
                   Icons.check,
                   size: 22,
-                  color: _canSubmit ? Colors.white : AppColors.textMuted,
+                  color: _canSubmit ? Colors.white : unselectedIconColor,
                 ),
                 splashRadius: 24,
                 tooltip: widget.tooltip ?? 'Agregar item',
