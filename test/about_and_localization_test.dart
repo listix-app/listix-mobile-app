@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/app.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/core/widgets/listix_logo.dart';
 import 'package:listix/src/features/about/presentation/screens/about_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   setUpAll(() {
@@ -41,6 +41,21 @@ void main() {
 
       expect(es.removeCollaborator, 'Quitar colaborador');
       expect(en.removeCollaborator, 'Remove collaborator');
+
+      expect(es.noItemsBadge, 'Sin items');
+      expect(en.noItemsBadge, 'No items');
+      expect(es.allDoneBadge, 'Todo listo ✓');
+      expect(en.allDoneBadge, 'All done ✓');
+      expect(es.pendingBadge('1/2'), '1/2 pendientes');
+      expect(en.pendingBadge('1/2'), '1/2 pending');
+      expect(
+        es.inviteSent('maria@test.com'),
+        'Invitación enviada a maria@test.com',
+      );
+      expect(
+        en.inviteSent('maria@test.com'),
+        'Invitation sent to maria@test.com',
+      );
 
       expect(es.versionLabel('1.0.0', '1'), contains('1.0.0'));
       expect(en.versionLabel('1.0.0', '1'), contains('1.0.0'));

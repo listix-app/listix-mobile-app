@@ -56,7 +56,7 @@ abstract final class AppTheme {
         ),
       ),
       // Themed cursor, selection and handles from our palette
-      textSelectionTheme: TextSelectionThemeData(
+      textSelectionTheme: const TextSelectionThemeData(
         cursorColor: AppColors.primary,
         selectionColor: AppColors.primaryLight,
         selectionHandleColor: AppColors.primary,
@@ -150,7 +150,7 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
       ),
-      textSelectionTheme: TextSelectionThemeData(
+      textSelectionTheme: const TextSelectionThemeData(
         cursorColor: AppColors.primary,
         selectionColor: AppColors.primaryDark,
         selectionHandleColor: AppColors.primary,
@@ -193,7 +193,10 @@ abstract final class AppTheme {
           color: AppColors.textPrimaryDark,
           fontSize: 14,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.borderDark, width: 1),
+        ),
         behavior: SnackBarBehavior.floating,
       ),
     );

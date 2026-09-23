@@ -1,0 +1,2 @@
+# Tell GitHub Linguist to treat agent skills and internal scripts as vendored
+.agents/** linguist-vendored

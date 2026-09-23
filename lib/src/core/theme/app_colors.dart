@@ -8,13 +8,13 @@ abstract final class AppColors {
   static const Color primarySubtle = Color(0xFFF0FDFA); // Teal 50
   static const Color onPrimary = Colors.white;
 
-  // Backgrounds & Surfaces
+  // Backgrounds & Surfaces (Light)
   static const Color surfaceLight = Color(0xFFF8FAFC); // Slate 50
   static const Color cardLight = Colors.white;
   static const Color borderLight = Color(0xFFE2E8F0); // Slate 200
   static const Color borderFocus = Color(0xFF0D9488); // Teal 600
 
-  // Dark mode surfaces & text
+  // Backgrounds & Surfaces (Dark)
   static const Color surfaceDark = Color(0xFF0F172A); // Slate 900
   static const Color cardDark = Color(0xFF1E293B); // Slate 800
   static const Color borderDark = Color(0xFF334155); // Slate 700

@@ -6,8 +6,16 @@ import '../../../../core/theme/app_colors.dart';
 class QuickAddInput extends StatefulWidget {
   final ValueChanged<String> onAdd;
   final bool autoFocus;
+  final String? hintText;
+  final String? tooltip;
 
-  const QuickAddInput({super.key, required this.onAdd, this.autoFocus = true});
+  const QuickAddInput({
+    super.key,
+    required this.onAdd,
+    this.autoFocus = true,
+    this.hintText,
+    this.tooltip,
+  });
 
   @override
   State<QuickAddInput> createState() => _QuickAddInputState();
@@ -55,12 +63,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 10,
-        bottom: 10 + MediaQuery.of(context).viewPadding.bottom,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         border: const Border(
@@ -91,7 +94,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
                   color: AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Agregar item rápido...',
+                  hintText: widget.hintText ?? 'Agregar item rápido...',
                   isDense: true,
                   prefixIcon: const Icon(
                     Icons.add,
@@ -126,8 +129,8 @@ class _QuickAddInputState extends State<QuickAddInput> {
             const SizedBox(width: 8),
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
                 color: _canSubmit ? AppColors.primary : AppColors.surfaceLight,
                 shape: BoxShape.circle,
@@ -136,11 +139,11 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 onPressed: _canSubmit ? _submit : null,
                 icon: Icon(
                   Icons.check,
-                  size: 20,
+                  size: 22,
                   color: _canSubmit ? Colors.white : AppColors.textMuted,
                 ),
-                splashRadius: 22,
-                tooltip: 'Agregar item',
+                splashRadius: 24,
+                tooltip: widget.tooltip ?? 'Agregar item',
               ),
             ),
           ],
