@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../ads/presentation/controllers/admob_controller.dart';
 import '../controllers/lists_controller.dart';
 
 class CreateEditListScreen extends ConsumerStatefulWidget {
@@ -60,11 +59,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
       } else {
         final created = await notifier.createList(name);
         if (mounted) {
-          // Trigger AdMob Interstitial ad before opening created list
-          await ref.read(admobControllerProvider).showInterstitial(context);
-          if (mounted) {
-            context.pushReplacement('/list/${created.id}');
-          }
+          context.pushReplacement('/list/${created.id}');
         }
       }
     } finally {

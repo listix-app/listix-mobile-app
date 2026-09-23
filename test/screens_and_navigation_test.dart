@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:listix/src/features/ads/data/repositories/mock_admob_service.dart';
-import 'package:listix/src/features/ads/presentation/controllers/admob_controller.dart';
-import 'package:listix/src/features/ads/presentation/widgets/admob_interstitial_dialog.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
@@ -20,68 +17,50 @@ void main() {
   final now = DateTime(2026, 9, 22);
 
   group('CreateEditListScreen widget tests', () {
-    testWidgets(
-      'create list mode validates input and creates list with interstitial',
-      (tester) async {
-        final mockAdmob = MockAdmobService(simulatedLatency: Duration.zero);
-        await mockAdmob.initialize();
-        final fakeController = _ScreensTestListsController([]);
+    testWidgets('create list mode validates input and creates list', (
+      tester,
+    ) async {
+      final fakeController = _ScreensTestListsController([]);
 
-        final router = GoRouter(
-          initialLocation: '/lists/new',
-          routes: [
-            GoRoute(
-              path: '/lists/new',
-              builder: (context, state) => const CreateEditListScreen(),
-            ),
-            GoRoute(
-              path: '/list/:id',
-              builder: (context, state) =>
-                  Text('List: ${state.pathParameters['id']}'),
-            ),
+      final router = GoRouter(
+        initialLocation: '/lists/new',
+        routes: [
+          GoRoute(
+            path: '/lists/new',
+            builder: (context, state) => const CreateEditListScreen(),
+          ),
+          GoRoute(
+            path: '/list/:id',
+            builder: (context, state) =>
+                Text('List: ${state.pathParameters['id']}'),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
           ],
-        );
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
 
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              admobServiceProvider.overrideWithValue(mockAdmob),
-              listsControllerProvider.overrideWith(() => fakeController),
-            ],
-            child: MaterialApp.router(routerConfig: router),
-          ),
-        );
+      // Verify create title and submit empty to see validation error
+      expect(find.text('Crear lista'), findsOneWidget); // Button text
+      expect(find.text('Nueva lista'), findsOneWidget); // AppBar text
+      await tester.tap(find.text('Crear lista'));
+      await tester.pump();
+      expect(find.text('Por favor ingresa un nombre'), findsOneWidget);
 
-        // Verify create title and submit empty to see validation error
-        expect(find.text('Crear lista'), findsOneWidget); // Button text
-        expect(find.text('Nueva lista'), findsOneWidget); // AppBar text
-        await tester.tap(find.text('Crear lista'));
-        await tester.pump();
-        expect(find.text('Por favor ingresa un nombre'), findsOneWidget);
+      // Enter name and submit
+      await tester.enterText(find.byType(TextFormField), 'Nueva Despensa');
+      await tester.tap(find.text('Crear lista'));
+      await tester.pumpAndSettle();
 
-        // Enter name and submit
-        await tester.enterText(find.byType(TextFormField), 'Nueva Despensa');
-        await tester.tap(find.text('Crear lista'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        expect(find.byType(AdmobInterstitialDialog), findsOneWidget);
-
-        // Interact with interstitial CTA button to complete ad interaction
-        await tester.tap(
-          find.descendant(
-            of: find.byType(AdmobInterstitialDialog),
-            matching: find.byType(FilledButton),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        expect(fakeController.createdNames, contains('Nueva Despensa'));
-        expect(find.text('List: created_new'), findsOneWidget);
-
-        mockAdmob.dispose();
-      },
-    );
+      expect(fakeController.createdNames, contains('Nueva Despensa'));
+      expect(find.text('List: created_new'), findsOneWidget);
+    });
 
     testWidgets('edit list mode populates name and saves changes', (
       tester,

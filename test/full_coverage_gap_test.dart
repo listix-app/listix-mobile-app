@@ -9,10 +9,7 @@ import 'package:listix/src/core/localization/locale_controller.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/core/widgets/listix_logo.dart';
 import 'package:listix/src/features/about/presentation/screens/about_screen.dart';
-import 'package:listix/src/features/ads/data/repositories/mock_admob_service.dart';
-import 'package:listix/src/features/ads/domain/entities/mock_admob_campaign.dart';
-import 'package:listix/src/features/ads/presentation/controllers/admob_controller.dart';
-import 'package:listix/src/features/ads/presentation/widgets/admob_interstitial_dialog.dart';
+import 'package:listix/src/features/ads/data/ad_config.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
@@ -237,172 +234,11 @@ void main() {
     });
   });
 
-  group('Coverage Gaps - AdMob Controller & Service', () {
-    test(
-      'Default latency and shouldSimulateErrors in MockAdmobService',
-      () async {
-        expect(
-          MockAdmobService.defaultLatency,
-          const Duration(milliseconds: 350),
-        );
-        final errorService = MockAdmobService(
-          simulatedLatency: const Duration(milliseconds: 1),
-          shouldSimulateErrors: true,
-        );
-        await errorService.initialize();
-        await errorService.loadBannerAd();
-        await errorService.loadInterstitialAd();
-        errorService.dispose();
-      },
-    );
-
-    testWidgets('interstitialAdStateProvider and showInterstitialAd action', (
-      tester,
-    ) async {
-      final service = MockAdmobService(simulatedLatency: Duration.zero);
-      await service.initialize();
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [admobServiceProvider.overrideWithValue(service)],
-          child: MaterialApp(
-            home: Consumer(
-              builder: (context, ref, _) {
-                ref.watch(interstitialAdStateProvider);
-                return Scaffold(
-                  body: Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        ref
-                            .read(admobControllerProvider)
-                            .showInterstitial(context, onAdClicked: () {});
-                      },
-                      child: const Text('Show Interstitial'),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      );
-
-      await tester.pump();
-      await tester.tap(find.text('Show Interstitial'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.byType(AdmobInterstitialDialog), findsOneWidget);
-
-      // Tap CTA button
-      await tester.tap(
-        find.descendant(
-          of: find.byType(AdmobInterstitialDialog),
-          matching: find.byType(FilledButton),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      service.dispose();
-    });
-
-    testWidgets(
-      'MockAdmobService showInterstitialAd dialog onClose triggers pop',
-      (tester) async {
-        final service = MockAdmobService(simulatedLatency: Duration.zero);
-        await service.initialize();
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: ElevatedButton(
-                  onPressed: () => service.showInterstitialAd(context),
-                  child: const Text('Open Ad'),
-                ),
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('Open Ad'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.pump(const Duration(milliseconds: 200));
-
-        expect(find.byType(AdmobInterstitialDialog), findsOneWidget);
-
-        // Find the dialog and trigger onClose
-        final dialogFinder = find.byType(AdmobInterstitialDialog);
-        final dialogWidget = tester.widget<AdmobInterstitialDialog>(
-          dialogFinder,
-        );
-        dialogWidget.onClose();
-        await tester.pumpAndSettle();
-
-        expect(find.byType(AdmobInterstitialDialog), findsNothing);
-        service.dispose();
-      },
-    );
-
-    testWidgets(
-      'MockAdmobService showInterstitialAd error simulation returns false',
-      (tester) async {
-        final errorService = MockAdmobService(
-          simulatedLatency: Duration.zero,
-          shouldSimulateErrors: true,
-        );
-
-        await tester.pumpWidget(
-          MaterialApp(
-            home: Builder(
-              builder: (context) => Scaffold(
-                body: ElevatedButton(
-                  onPressed: () async {
-                    final ok = await errorService.showInterstitialAd(context);
-                    expect(ok, isFalse);
-                  },
-                  child: const Text('Try Show Error Ad'),
-                ),
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('Try Show Error Ad'));
-        await tester.pumpAndSettle();
-        errorService.dispose();
-      },
-    );
-
-    testWidgets('AdmobInterstitialDialog unmounted timer cancel', (
-      tester,
-    ) async {
-      final campaign = MockAdmobCampaign.sampleCampaigns.first;
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: AdmobInterstitialDialog(
-              campaign: campaign,
-              adUnitId: 'test_unit',
-              countdownSeconds: 5,
-              onClose: () {},
-              onAction: () {},
-            ),
-          ),
-        ),
-      );
-
-      expect(find.byType(AdmobInterstitialDialog), findsOneWidget);
-
-      // Replace widget with empty container to unmount AdmobInterstitialDialog
-      await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: SizedBox())),
-      );
-
-      // Advance periodic timer so !mounted branch executes
-      await tester.pump(const Duration(seconds: 1));
-      await tester.pump();
+  group('Coverage Gaps - AdConfig', () {
+    test('AdConfig provides valid IDs', () {
+      expect(AdConfig.androidAppId, isNotEmpty);
+      expect(AdConfig.iosAppId, isNotEmpty);
+      expect(AdConfig.bannerId, isNotEmpty);
     });
   });
 
@@ -442,8 +278,6 @@ void main() {
       tester,
     ) async {
       final fakeController = _ScreensTestListsController([]);
-      final mockAdmob = MockAdmobService(simulatedLatency: Duration.zero);
-      await mockAdmob.initialize();
 
       final router = GoRouter(
         initialLocation: '/lists/new',
@@ -463,7 +297,6 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            admobServiceProvider.overrideWithValue(mockAdmob),
             listsControllerProvider.overrideWith(() => fakeController),
           ],
           child: MaterialApp.router(routerConfig: router),
@@ -472,57 +305,10 @@ void main() {
 
       await tester.enterText(find.byType(TextFormField), 'Enter List');
       await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-
-      expect(find.byType(AdmobInterstitialDialog), findsOneWidget);
-      await tester.tap(
-        find.descendant(
-          of: find.byType(AdmobInterstitialDialog),
-          matching: find.byType(FilledButton),
-        ),
-      );
       await tester.pumpAndSettle();
 
       expect(fakeController.createdNames, contains('Enter List'));
-      mockAdmob.dispose();
-    });
-
-    testWidgets('HomeScreen loading, error, and ad button', (tester) async {
-      final mockAdmob = MockAdmobService(simulatedLatency: Duration.zero);
-      await mockAdmob.initialize();
-
-      final fakeController = _ScreensTestListsController([
-        ShoppingList(id: 'l1', name: 'Home Test List', createdAt: now),
-      ]);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            admobServiceProvider.overrideWithValue(mockAdmob),
-            listsControllerProvider.overrideWith(() => fakeController),
-          ],
-          child: const MaterialApp(home: HomeScreen()),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // Tap ad button in AppBar
-      await tester.tap(find.byIcon(Icons.ads_click_rounded));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byType(AdmobInterstitialDialog), findsOneWidget);
-
-      await tester.tap(
-        find.descendant(
-          of: find.byType(AdmobInterstitialDialog),
-          matching: find.byType(FilledButton),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      mockAdmob.dispose();
+      expect(find.text('List: created_new'), findsOneWidget);
     });
 
     testWidgets('HomeScreen renders loading state', (tester) async {
@@ -689,9 +475,16 @@ void main() {
         await tester.tap(find.text('Go Missing'));
         await tester.pumpAndSettle();
 
+        // Tap leading back button on ListDetailScreen
+        await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+        await tester.pumpAndSettle();
+        expect(find.text('Go Missing'), findsOneWidget);
+
+        // Navigate again to test FilledButton 'Volver'
+        await tester.tap(find.text('Go Missing'));
+        await tester.pumpAndSettle();
         expect(find.text('Lista no encontrada'), findsOneWidget);
 
-        // Tap FilledButton 'Volver'
         await tester.tap(find.widgetWithText(FilledButton, 'Volver'));
         await tester.pumpAndSettle();
         expect(find.text('Go Missing'), findsOneWidget);

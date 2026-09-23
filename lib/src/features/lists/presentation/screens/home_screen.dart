@@ -6,8 +6,7 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/listix_logo.dart';
-import '../../../ads/presentation/controllers/admob_controller.dart';
-import '../../../ads/presentation/widgets/admob_banner_widget.dart';
+import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../sync/presentation/widgets/sync_status_badge.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/list_card.dart';
@@ -29,13 +28,6 @@ class HomeScreen extends ConsumerWidget {
             icon: const Icon(Icons.info_outline_rounded, size: 22),
             tooltip: tr.aboutApp,
             onPressed: () => context.push('/about'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.ads_click_rounded, size: 21),
-            tooltip: 'Probar Anuncio Interstitial',
-            onPressed: () {
-              ref.read(admobControllerProvider).showInterstitial(context);
-            },
           ),
           const Padding(
             padding: EdgeInsets.only(right: 16.0),
@@ -166,10 +158,7 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ),
-      bottomNavigationBar: const SafeArea(
-        top: false,
-        child: AdmobBannerWidget(),
-      ),
+      bottomNavigationBar: const BannerAdWidget(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/lists/new'),
         icon: const Icon(Icons.add_rounded),

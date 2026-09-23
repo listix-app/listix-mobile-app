@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:listix/src/features/ads/domain/entities/admob_ad_state.dart';
-import 'package:listix/src/features/ads/domain/entities/admob_banner_size.dart';
-import 'package:listix/src/features/ads/domain/entities/mock_admob_campaign.dart';
+import 'package:listix/src/features/ads/presentation/controllers/banner_ad_controller.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
@@ -170,86 +168,12 @@ void main() {
     });
   });
 
-  group('AdmobAdState Entity', () {
-    test('status getters and copyWith', () {
-      const state = AdmobAdState();
-      expect(state.isLoading, isFalse);
-      expect(state.isLoaded, isFalse);
-      expect(state.isFailed, isFalse);
-      expect(state.isOpened, isFalse);
-      expect(state.isDismissed, isFalse);
-
-      final loading = state.copyWith(status: AdLoadStatus.loading);
-      expect(loading.isLoading, isTrue);
-
-      final loaded = state.copyWith(
-        status: AdLoadStatus.loaded,
-        adUnitId: 'test-unit',
-      );
-      expect(loaded.isLoaded, isTrue);
-      expect(loaded.adUnitId, 'test-unit');
-
-      final failed = state.copyWith(
-        status: AdLoadStatus.failed,
-        errorMessage: 'Err',
-      );
-      expect(failed.isFailed, isTrue);
-      expect(failed.errorMessage, 'Err');
-
-      final opened = state.copyWith(
-        status: AdLoadStatus.opened,
-        impressionsCount: 2,
-        clicksCount: 1,
-      );
-      expect(opened.isOpened, isTrue);
-      expect(opened.impressionsCount, 2);
-      expect(opened.clicksCount, 1);
-
-      final dismissed = state.copyWith(status: AdLoadStatus.dismissed);
-      expect(dismissed.isDismissed, isTrue);
-
-      final defaultCopy = state.copyWith();
-      expect(defaultCopy, equals(state));
-    });
-
-    test('equality and hashCode', () {
-      const s1 = AdmobAdState(
-        status: AdLoadStatus.loaded,
-        adUnitId: 'u1',
-        impressionsCount: 1,
-      );
-      const s2 = AdmobAdState(
-        status: AdLoadStatus.loaded,
-        adUnitId: 'u1',
-        impressionsCount: 1,
-      );
-      const s3 = AdmobAdState(status: AdLoadStatus.failed);
-
-      expect(s1, equals(s2));
-      expect(s1.hashCode, equals(s2.hashCode));
-      expect(s1 == s3, isFalse);
-      expect(s1 == Object(), isFalse);
-    });
-  });
-
-  group('AdmobBannerSize & MockCampaigns & SyncStatus', () {
-    test('all banner sizes have valid dimensions', () {
-      for (final size in AdmobBannerSize.values) {
-        expect(size.height, greaterThan(0));
-        expect(size.label, isNotEmpty);
-      }
-      expect(AdmobBannerSize.standard.width, 320);
-      expect(AdmobBannerSize.large.height, 100);
-      expect(AdmobBannerSize.mediumRectangle.width, 300);
-      expect(AdmobBannerSize.adaptive.width, double.infinity);
-    });
-
-    test('campaigns sample list is not empty', () {
-      expect(MockAdmobCampaign.sampleCampaigns, isNotEmpty);
-      for (final campaign in MockAdmobCampaign.sampleCampaigns) {
-        expect(campaign.title, isNotEmpty);
-        expect(campaign.ctaText, isNotEmpty);
-      }
+  group('BannerAdStatus & SyncStatus', () {
+    test('banner ad status enum values', () {
+      expect(BannerAdStatus.values.length, 3);
+      expect(BannerAdStatus.loading, isNotNull);
+      expect(BannerAdStatus.loaded, isNotNull);
+      expect(BannerAdStatus.failed, isNotNull);
     });
 
     test('sync status enum values', () {

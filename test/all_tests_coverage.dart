@@ -1,11 +1,13 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_mobile_ads/src/ad_instance_manager.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 
 import 'about_and_localization_test.dart' as about_test;
+import 'banner_ad_widget_test.dart' as banner_ad_test;
 import 'domain_entities_test.dart' as domain_test;
 import 'lists_controller_test.dart' as lists_controller_test;
-import 'mock_admob_service_test.dart' as admob_test;
 import 'mock_sync_service_and_controller_test.dart' as sync_test;
 import 'screens_and_navigation_test.dart' as screens_test;
 import 'theme_and_routes_test.dart' as theme_test;
@@ -25,12 +27,18 @@ void main() {
       databaseFactory = databaseFactoryFfi;
     }
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+          instanceManager.channel,
+          (MethodCall call) async => null,
+        );
   });
 
   about_test.main();
+  banner_ad_test.main();
   domain_test.main();
   lists_controller_test.main();
-  admob_test.main();
   sync_test.main();
   screens_test.main();
   theme_test.main();

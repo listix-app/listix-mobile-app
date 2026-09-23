@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/theme/app_colors.dart';
 import 'package:listix/src/core/theme/app_theme.dart';
-import 'package:listix/src/features/ads/data/datasources/admob_unit_ids.dart';
+import 'package:listix/src/features/ads/data/ad_config.dart';
 import 'package:listix/src/routing/routes.dart';
 
 void main() {
@@ -47,7 +47,7 @@ void main() {
     });
   });
 
-  group('AppRoutes & AdmobUnitIds', () {
+  group('AppRoutes & AdConfig', () {
     test('AppRoutes helper paths format correctly', () {
       expect(AppRoutes.home, '/');
       expect(AppRoutes.newList, '/lists/new');
@@ -58,16 +58,10 @@ void main() {
       expect(AppRoutes.editListPath('list-456'), '/list/list-456/edit');
     });
 
-    test('AdmobUnitIds returns sample ad unit strings', () {
-      expect(AdmobUnitIds.androidBanner, isNotEmpty);
-      expect(AdmobUnitIds.androidInterstitial, isNotEmpty);
-      expect(AdmobUnitIds.androidRewarded, isNotEmpty);
-      expect(AdmobUnitIds.iosBanner, isNotEmpty);
-      expect(AdmobUnitIds.iosInterstitial, isNotEmpty);
-      expect(AdmobUnitIds.iosRewarded, isNotEmpty);
-
-      expect(AdmobUnitIds.bannerTestUnitId, isNotEmpty);
-      expect(AdmobUnitIds.interstitialTestUnitId, isNotEmpty);
+    test('AdConfig returns official test IDs', () {
+      expect(AdConfig.androidAppId, isNotEmpty);
+      expect(AdConfig.iosAppId, isNotEmpty);
+      expect(AdConfig.bannerId, isNotEmpty);
     });
   });
 }

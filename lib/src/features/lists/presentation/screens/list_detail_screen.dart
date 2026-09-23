@@ -6,7 +6,7 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/sync_indicator.dart';
-import '../../../ads/presentation/widgets/admob_banner_widget.dart';
+import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../sync/presentation/widgets/sync_status_badge.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
@@ -306,10 +306,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const SafeArea(
-        top: false,
-        child: AdmobBannerWidget(),
-      ),
+      bottomNavigationBar: const BannerAdWidget(),
     );
   }
 }
