@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/listix_logo.dart';
 import '../../../ads/presentation/controllers/admob_controller.dart';
 import '../../../ads/presentation/widgets/admob_banner_widget.dart';
 import '../../../sync/presentation/widgets/sync_status_badge.dart';
@@ -16,37 +18,18 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listsAsync = ref.watch(listsControllerProvider);
+    final tr = ref.watch(stringsProvider);
 
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(
-                Icons.check_circle_outline_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'Listix',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.6,
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ],
-        ),
+        title: const ListixLogo(size: 28, showWordmark: true, fontSize: 22),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline_rounded, size: 22),
+            tooltip: tr.aboutApp,
+            onPressed: () => context.push('/about'),
+          ),
           IconButton(
             icon: const Icon(Icons.ads_click_rounded, size: 21),
             tooltip: 'Probar Anuncio Interstitial',
@@ -65,9 +48,9 @@ class HomeScreen extends ConsumerWidget {
           if (lists.isEmpty) {
             return EmptyStateWidget(
               icon: Icons.checklist_rounded,
-              title: 'Aún no tienes listas',
-              message: 'Crea una lista para organizar tus compras del supermercado, ropa o pendientes del hogar.',
-              actionLabel: 'Crea tu primera lista',
+              title: tr.emptyListsTitle,
+              message: tr.emptyListsMessage,
+              actionLabel: tr.createFirstList,
               onAction: () => context.push('/lists/new'),
             );
           }
@@ -85,9 +68,9 @@ class HomeScreen extends ConsumerWidget {
                   padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
                   child: Row(
                     children: [
-                      const Text(
-                        'Mis Listas',
-                        style: TextStyle(
+                      Text(
+                        tr.myLists,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: AppColors.textPrimary,
@@ -126,21 +109,19 @@ class HomeScreen extends ConsumerWidget {
                       return await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: const Text('¿Eliminar lista?'),
-                              content: Text(
-                                'Se eliminará "${list.name}" y todos sus items de forma permanente.',
-                              ),
+                              title: Text(tr.deleteListTitle),
+                              content: Text(tr.deleteListMessage(list.name)),
                               actions: [
                                 TextButton(
                                   onPressed: () => ctx.pop(false),
-                                  child: const Text('Cancelar'),
+                                  child: Text(tr.cancel),
                                 ),
                                 FilledButton(
                                   onPressed: () => ctx.pop(true),
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.delete,
                                   ),
-                                  child: const Text('Eliminar'),
+                                  child: Text(tr.delete),
                                 ),
                               ],
                             ),
@@ -181,17 +162,23 @@ class HomeScreen extends ConsumerWidget {
         error: (err, stack) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Text('Error al cargar datos locales: $err'),
+            child: Text('Error: $err'),
           ),
         ),
       ),
-      bottomNavigationBar: const SafeArea(child: AdmobBannerWidget()),
+      bottomNavigationBar: const SafeArea(
+        top: false,
+        child: AdmobBannerWidget(),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/lists/new'),
         icon: const Icon(Icons.add_rounded),
-        label: const Text(
-          'Nueva lista',
-          style: TextStyle(fontWeight: FontWeight.w600, letterSpacing: -0.2),
+        label: Text(
+          tr.newList,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
     );

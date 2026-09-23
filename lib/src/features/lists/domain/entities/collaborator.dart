@@ -16,21 +16,7 @@ class Collaborator {
     if (parts.length >= 2) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    return name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
-  }
-
-  Collaborator copyWith({
-    String? id,
-    String? name,
-    String? email,
-    bool? isOwner,
-  }) {
-    return Collaborator(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      email: email ?? this.email,
-      isOwner: isOwner ?? this.isOwner,
-    );
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
   @override
@@ -38,8 +24,11 @@ class Collaborator {
       identical(this, other) ||
       other is Collaborator &&
           runtimeType == other.runtimeType &&
-          id == other.id;
+          id == other.id &&
+          name == other.name &&
+          email == other.email &&
+          isOwner == other.isOwner;
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hash(id, name, email, isOwner);
 }

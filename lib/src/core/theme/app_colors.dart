@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AppColors {
-  AppColors._();
-
+abstract final class AppColors {
   // Primary palette (Refined Forest Teal & Slate)
   static const Color primary = Color(0xFF0D9488); // Teal 600
   static const Color primaryDark = Color(0xFF0F766E); // Teal 700

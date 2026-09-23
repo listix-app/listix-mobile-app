@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../ads/presentation/controllers/admob_controller.dart';
 import '../controllers/lists_controller.dart';
@@ -19,13 +20,15 @@ class CreateEditListScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
-  final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _nameController = TextEditingController();
+
     if (widget.isEditing) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final list = ref.read(shoppingListProvider(widget.listId!));
@@ -42,7 +45,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
     super.dispose();
   }
 
-  Future<void> _save() async {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -71,10 +74,11 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.isEditing ? 'Renombrar lista' : 'Nueva lista';
+    final tr = ref.watch(stringsProvider);
+    final title = widget.isEditing ? tr.renameListTitle : tr.newListTitle;
     final actionButtonText = widget.isEditing
-        ? 'Guardar cambios'
-        : 'Crear lista';
+        ? tr.saveChanges
+        : tr.createListAction;
 
     return Scaffold(
       appBar: AppBar(
@@ -93,9 +97,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  widget.isEditing
-                      ? 'Edita el nombre de tu lista'
-                      : '¿Qué vas a comprar o preparar hoy?',
+                  widget.isEditing ? tr.editListHeading : tr.createListHeading,
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w700,
@@ -106,8 +108,8 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                 const SizedBox(height: 8),
                 Text(
                   widget.isEditing
-                      ? 'El nuevo nombre se guardará en SQLite local y se sincronizará automáticamente.'
-                      : 'Escribe un nombre claro (ej. Supermercado semanal, Ferretería, Farmacia).',
+                      ? tr.editListSubheading
+                      : tr.createListSubheading,
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
@@ -120,33 +122,24 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                   autofocus: true,
                   textInputAction: TextInputAction.done,
                   textCapitalization: TextCapitalization.sentences,
-                  onFieldSubmitted: (_) => _save(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                  onFieldSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                    labelText: tr.listNameLabel,
+                    hintText: tr.listNameHint,
+                    prefixIcon: const Icon(Icons.edit_note_rounded),
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre de la lista',
-                    hintText: 'Ej. Despensa mensual',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Por favor ingresa un nombre';
+                  validator: (val) {
+                    if (val == null || val.trim().isEmpty) {
+                      return tr.listNameValidation;
                     }
                     return null;
                   },
                 ),
                 const Spacer(),
                 FilledButton(
-                  onPressed: _isLoading ? null : _save,
+                  onPressed: _isLoading ? null : _submit,
                   style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                   ),
                   child: _isLoading
                       ? const SizedBox(
@@ -162,7 +155,6 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            letterSpacing: -0.2,
                           ),
                         ),
                 ),

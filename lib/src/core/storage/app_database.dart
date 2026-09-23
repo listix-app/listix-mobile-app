@@ -5,14 +5,15 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+/// SQLite Database manager with offline-first synchronization metadata.
 class AppDatabase {
-  static AppDatabase? _instance;
+  AppDatabase._internal();
+  static final AppDatabase instance = AppDatabase._internal();
+
   static Database? _database;
+
+  /// Optional override for testing purposes (e.g. inMemoryDatabasePath).
   static String? overrideDbPath;
-
-  AppDatabase._();
-
-  static AppDatabase get instance => _instance ??= AppDatabase._();
 
   Future<Database> get database async {
     if (_database != null && _database!.isOpen) return _database!;
@@ -20,25 +21,38 @@ class AppDatabase {
     return _database!;
   }
 
+  /// Resolves the database file path according to the current platform.
+  static Future<String> resolveDatabasePath({
+    String? override,
+    bool isDesktop = false,
+    Future<String> Function()? getDocDir,
+    Future<String> Function()? getDefaultDatabasesPath,
+  }) async {
+    if (override != null) return override;
+    if (isDesktop) {
+      final docPath = await (getDocDir != null
+          ? getDocDir()
+          : getApplicationSupportDirectory().then((d) => d.path));
+      return p.join(docPath, 'listix.db');
+    }
+    final defaultPath = await (getDefaultDatabasesPath != null
+        ? getDefaultDatabasesPath()
+        : getDatabasesPath());
+    return p.join(defaultPath, 'listix.db');
+  }
+
   Future<Database> _initDatabase() async {
-    // Enable FFI for Linux, Windows, macOS, or unit tests
-    if (!kIsWeb &&
-        (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
+    final isDesktop =
+        !kIsWeb && (Platform.isLinux || Platform.isWindows || Platform.isMacOS);
+    if (isDesktop) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
 
-    String dbPath;
-    if (overrideDbPath != null) {
-      dbPath = overrideDbPath!;
-    } else if (!kIsWeb &&
-        (Platform.isLinux || Platform.isWindows || Platform.isMacOS)) {
-      final docDir = await getApplicationSupportDirectory();
-      dbPath = p.join(docDir.path, 'listix.db');
-    } else {
-      final defaultDatabasesPath = await getDatabasesPath();
-      dbPath = p.join(defaultDatabasesPath, 'listix.db');
-    }
+    final dbPath = await resolveDatabasePath(
+      override: overrideDbPath,
+      isDesktop: isDesktop,
+    );
 
     return await openDatabase(
       dbPath,
@@ -228,6 +242,7 @@ class AppDatabase {
     });
   }
 
+  /// Closes database instance for resetting state in testing.
   Future<void> close() async {
     final db = _database;
     if (db != null) {

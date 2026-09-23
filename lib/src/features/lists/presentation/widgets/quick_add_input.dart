@@ -38,8 +38,9 @@ class _QuickAddInputState extends State<QuickAddInput> {
     if (text.isEmpty) return;
 
     HapticFeedback.lightImpact();
-    widget.onAdd(text);
     _controller.clear();
+    setState(() => _canSubmit = false);
+    widget.onAdd(text);
     // Keep focus so the user can quickly type multiple items
     _focusNode.requestFocus();
   }

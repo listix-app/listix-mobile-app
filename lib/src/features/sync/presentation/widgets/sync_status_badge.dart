@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/sync_status.dart';
 import '../sync_controller.dart';
@@ -12,31 +13,32 @@ class SyncStatusBadge extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(syncControllerProvider);
     final syncController = ref.read(syncControllerProvider.notifier);
+    final tr = ref.watch(stringsProvider);
 
     final (bg, fg, icon, label) = switch (status) {
       SyncStatus.syncing => (
         AppColors.primarySubtle,
         AppColors.primary,
         Icons.sync_rounded,
-        'Sincronizando...',
+        tr.statusSyncing,
       ),
       SyncStatus.offline => (
         AppColors.offlineSubtle,
         AppColors.offline,
         Icons.cloud_off_rounded,
-        'Offline',
+        tr.statusOffline,
       ),
       SyncStatus.pendingChanges => (
         AppColors.syncPendingSubtle,
         AppColors.syncPending,
         Icons.sync_problem_rounded,
-        'Pendiente',
+        tr.statusPending,
       ),
       SyncStatus.synced => (
         AppColors.syncDoneSubtle,
         AppColors.syncDone,
         Icons.cloud_done_rounded,
-        'Sincronizado',
+        tr.statusSynced,
       ),
     };
 
@@ -45,14 +47,14 @@ class SyncStatusBadge extends ConsumerWidget {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: const Text('Estado de Sincronización'),
+            title: Text(tr.syncStatusTitle),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Listix opera bajo arquitectura Offline-First con persistencia local en SQLite.',
-                  style: TextStyle(
+                Text(
+                  tr.syncStatusDescription,
+                  style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
@@ -81,10 +83,8 @@ class SyncStatusBadge extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Simular Modo Offline'),
-                  subtitle: const Text(
-                    'Comprueba cómo la app guarda localmente sin conexión',
-                  ),
+                  title: Text(tr.simulateOffline),
+                  subtitle: Text(tr.simulateOfflineSubtitle),
                   value: syncController.isOffline,
                   contentPadding: EdgeInsets.zero,
                   activeThumbColor: AppColors.primary,
@@ -98,7 +98,7 @@ class SyncStatusBadge extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(ctx).pop(),
-                child: const Text('Cerrar'),
+                child: Text(tr.close),
               ),
               FilledButton.icon(
                 onPressed: () async {
@@ -106,20 +106,19 @@ class SyncStatusBadge extends ConsumerWidget {
                   await syncController.syncNow();
                 },
                 icon: const Icon(Icons.sync, size: 16),
-                label: const Text('Sincronizar ahora'),
+                label: Text(tr.syncNow),
               ),
             ],
           ),
         );
       },
       borderRadius: BorderRadius.circular(20),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+      child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: fg.withValues(alpha: 0.25)),
+          border: Border.all(color: fg.withValues(alpha: 0.25), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -128,7 +127,10 @@ class SyncStatusBadge extends ConsumerWidget {
               SizedBox(
                 width: 12,
                 height: 12,
-                child: CircularProgressIndicator(strokeWidth: 2, color: fg),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(fg),
+                ),
               )
             else
               Icon(icon, size: 13, color: fg),
@@ -136,9 +138,9 @@ class SyncStatusBadge extends ConsumerWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
                 color: fg,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
                 letterSpacing: -0.2,
               ),
             ),

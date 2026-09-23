@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'collaborator.dart';
 import 'todo_item.dart';
 
@@ -49,8 +51,18 @@ class ShoppingList {
       identical(this, other) ||
       other is ShoppingList &&
           runtimeType == other.runtimeType &&
-          id == other.id;
+          id == other.id &&
+          name == other.name &&
+          isSynced == other.isSynced &&
+          listEquals(items, other.items) &&
+          listEquals(collaborators, other.collaborators);
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hash(
+    id,
+    name,
+    isSynced,
+    Object.hashAll(items),
+    Object.hashAll(collaborators),
+  );
 }

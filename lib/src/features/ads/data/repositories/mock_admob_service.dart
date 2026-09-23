@@ -157,9 +157,7 @@ class MockAdmobService implements AdmobService {
       pageBuilder: (dialogContext, animation, secondaryAnimation) {
         return AdmobInterstitialDialog(
           campaign: campaign,
-          adUnitId:
-              _interstitialState.adUnitId ??
-              AdmobUnitIds.interstitialTestUnitId,
+          adUnitId: _interstitialState.adUnitId ?? AdmobUnitIds.interstitialTestUnitId,
           onClose: () {
             Navigator.of(dialogContext).pop(false);
           },
@@ -170,7 +168,9 @@ class MockAdmobService implements AdmobService {
               ),
             );
             onAdClicked?.call();
-            Navigator.of(dialogContext).pop(true);
+            if (Navigator.of(dialogContext).canPop()) {
+              Navigator.of(dialogContext).pop(true);
+            }
           },
         );
       },

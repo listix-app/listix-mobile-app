@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/mock_admob_campaign.dart';
 
-/// Full-screen modal simulating a Google AdMob Interstitial Ad.
-/// Features AdMob test badges, countdown skip timer, rich mock creative,
-/// star ratings, and a clear call-to-action button.
+/// Full-screen interactive dialog simulating the Google AdMob Interstitial experience.
+///
+/// Features:
+/// - Official AdMob test styling and layout
+/// - 5-second countdown skip timer with clear countdown badge
+/// - Smooth entry and exit transitions
+/// - Realistic campaign metadata with call-to-action button
+/// - Impression & Click tracking hooks
 class AdmobInterstitialDialog extends StatefulWidget {
   final MockAdmobCampaign campaign;
   final String adUnitId;
@@ -19,7 +23,7 @@ class AdmobInterstitialDialog extends StatefulWidget {
     super.key,
     required this.campaign,
     required this.adUnitId,
-    this.countdownSeconds = 4,
+    this.countdownSeconds = 5,
     required this.onClose,
     required this.onAction,
   });
@@ -30,8 +34,8 @@ class AdmobInterstitialDialog extends StatefulWidget {
 }
 
 class _AdmobInterstitialDialogState extends State<AdmobInterstitialDialog> {
-  late int _secondsRemaining;
   Timer? _timer;
+  late int _secondsRemaining;
   late bool _canSkip;
 
   @override
@@ -74,11 +78,6 @@ class _AdmobInterstitialDialogState extends State<AdmobInterstitialDialog> {
 
     return PopScope(
       canPop: _canSkip,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          widget.onClose();
-        }
-      },
       child: Material(
         color: Colors.transparent,
         child: SafeArea(
@@ -163,31 +162,31 @@ class _AdmobInterstitialDialogState extends State<AdmobInterstitialDialog> {
                         else
                           InkWell(
                             onTap: widget.onClose,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(12),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.deleteBackground,
+                                color: const Color(0xFFE2E8F0),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    Icons.close_rounded,
-                                    size: 16,
-                                    color: AppColors.delete,
+                                    Icons.close,
+                                    size: 14,
+                                    color: Color(0xFF475569),
                                   ),
                                   SizedBox(width: 4),
                                   Text(
                                     'Cerrar',
                                     style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.delete,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF475569),
                                     ),
                                   ),
                                 ],
@@ -198,152 +197,54 @@ class _AdmobInterstitialDialogState extends State<AdmobInterstitialDialog> {
                     ),
                   ),
 
-                  // Main Interactive Creative
+                  // Campaign Visual Banner
                   Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
+                    flex: 3,
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            campaign.primaryColor.withValues(alpha: 0.85),
+                            campaign.primaryColor,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 12),
-                          // Hero Visual / App Icon
                           Container(
-                            width: 84,
-                            height: 84,
+                            padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: campaign.primaryColor.withValues(
-                                alpha: 0.12,
-                              ),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: campaign.primaryColor.withValues(
-                                  alpha: 0.3,
-                                ),
-                                width: 2,
-                              ),
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
                             ),
-                            child: Center(
-                              child: Icon(
-                                campaign.icon,
-                                size: 46,
-                                color: campaign.primaryColor,
-                              ),
+                            child: Icon(
+                              campaign.icon,
+                              size: 64,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 16),
-
-                          // Sponsor & Title
-                          Text(
-                            campaign.sponsorName,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            campaign.title,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              height: 1.25,
-                              letterSpacing: -0.4,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-
-                          // Rating and Reviews
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                size: 18,
-                                color: Color(0xFFF59E0B),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${campaign.rating}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 13,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '(${campaign.reviewsCount} reseñas)',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Description
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceLight,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.borderLight),
+                              color: Colors.black.withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              campaign.description,
-                              textAlign: TextAlign.center,
+                              campaign.sponsorName.toUpperCase(),
                               style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
-                                height: 1.45,
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Simulated preview graphic
-                          Container(
-                            height: 120,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  campaign.primaryColor.withValues(alpha: 0.08),
-                                  campaign.primaryColor.withValues(alpha: 0.2),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: campaign.primaryColor.withValues(
-                                  alpha: 0.2,
-                                ),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.bolt_rounded,
-                                  size: 32,
-                                  color: campaign.primaryColor,
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'Experiencia optimizada para móviles',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: campaign.primaryColor,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ],
@@ -351,54 +252,62 @@ class _AdmobInterstitialDialogState extends State<AdmobInterstitialDialog> {
                     ),
                   ),
 
-                  // Bottom Action Section
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(color: AppColors.borderLight),
+                  // Campaign Details & CTA
+                  Expanded(
+                    flex: 2,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        FilledButton(
-                          onPressed: widget.onAction,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: campaign.primaryColor,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            campaign.ctaText,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            campaign.title,
+                            textAlign: TextAlign.center,
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: -0.2,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF0F172A),
+                              letterSpacing: -0.4,
                             ),
                           ),
-                        ),
-                        if (_canSkip) ...[
-                          const SizedBox(height: 8),
-                          TextButton(
-                            onPressed: widget.onClose,
-                            child: const Text(
-                              'Omitir anuncio',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textSecondary,
+                          const SizedBox(height: 6),
+                          Text(
+                            campaign.description,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                              height: 1.3,
+                            ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: widget.onAction,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: campaign.primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                              child: Text(
+                                campaign.ctaText,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ],

@@ -4,7 +4,7 @@ import '../entities/admob_ad_state.dart';
 import '../entities/mock_admob_campaign.dart';
 
 /// Contract interface defining AdMob services (Banner and Interstitial ads).
-abstract class AdmobService {
+abstract interface class AdmobService {
   /// Initializes the AdMob SDK or mock environment.
   Future<void> initialize();
 
@@ -33,7 +33,7 @@ abstract class AdmobService {
   bool get isInterstitialReady;
 
   /// Shows the loaded interstitial ad as an interactive full-screen experience.
-  /// Returns `true` if shown, `false` if not ready or dismissed.
+  /// Returns `true` if shown, `false` if not ready or dismissed.\
   Future<bool> showInterstitialAd(
     BuildContext context, {
     VoidCallback? onDismissed,

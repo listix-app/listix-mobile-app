@@ -14,6 +14,10 @@ void main() {
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 
+  tearDownAll(() async {
+    await AppDatabase.instance.close();
+  });
+
   group('SqliteListsRepository & MockBackendSyncService', () {
     late SqliteListsRepository repository;
     late MockBackendSyncService syncService;
@@ -31,6 +35,11 @@ void main() {
       expect(lists.any((l) => l.name == 'Supermercado semanal'), isTrue);
     });
 
+    test('getListById returns null for unknown ID', () async {
+      final notFound = await repository.getListById('unknown-999');
+      expect(notFound, isNull);
+    });
+
     test('createList creates list with is_synced = false', () async {
       final created = await repository.createList('Lista de prueba');
       expect(created.name, 'Lista de prueba');
@@ -38,6 +47,27 @@ void main() {
 
       final lists = await repository.getLists();
       expect(lists.any((l) => l.id == created.id), isTrue);
+    });
+
+    test('updateListName updates list and throws if not found', () async {
+      final list = await repository.createList('Lista original');
+      final updated = await repository.updateListName(
+        list.id,
+        'Lista renombrada',
+      );
+      expect(updated.name, 'Lista renombrada');
+
+      expect(
+        () => repository.updateListName('non-existent-id', 'Nuevo nombre'),
+        throwsA(isA<Exception>()),
+      );
+    });
+
+    test('deleteList removes list from database', () async {
+      final list = await repository.createList('Lista a eliminar');
+      await repository.deleteList(list.id);
+      final check = await repository.getListById(list.id);
+      expect(check, isNull);
     });
 
     test('addItem and toggleItemCompletion mutate SQLite state', () async {
@@ -58,6 +88,25 @@ void main() {
       final listAfterDelete = await repository.getListById(list.id);
       expect(listAfterDelete!.items.isEmpty, isTrue);
     });
+
+    test(
+      'addCollaborator and removeCollaborator update list collaborators',
+      () async {
+        final list = await repository.createList('Lista colaborativa');
+        await repository.addCollaborator(list.id, 'carlos@ejemplo.com');
+
+        final listWithCollab = await repository.getListById(list.id);
+        expect(listWithCollab!.collaborators.length, 1);
+        final addedCollab = listWithCollab.collaborators.first;
+        expect(addedCollab.name, 'Carlos');
+        expect(addedCollab.email, 'carlos@ejemplo.com');
+        expect(addedCollab.isOwner, isFalse);
+
+        await repository.removeCollaborator(list.id, addedCollab.id);
+        final listWithoutCollab = await repository.getListById(list.id);
+        expect(listWithoutCollab!.collaborators.isEmpty, isTrue);
+      },
+    );
 
     test(
       'ListsController adds items in real-time immediately to state',
@@ -106,6 +155,36 @@ void main() {
       final syncedList = await repository.getListById(list.id);
       expect(syncedList!.isSynced, isTrue);
       expect(syncedList.items.first.isSynced, isTrue);
+    });
+
+    test(
+      'MockBackendSyncService handles empty sync and offline mode',
+      () async {
+        // Empty sync: nothing left to sync
+        final secondSync = await syncService.synchronize();
+        expect(secondSync, isTrue);
+        expect(syncService.currentStatus, SyncStatus.synced);
+
+        // Offline mode
+        syncService.toggleSimulatedOffline();
+        expect(syncService.isSimulatedOffline, isTrue);
+        expect(syncService.currentStatus, SyncStatus.offline);
+
+        final failedSync = await syncService.synchronize();
+        expect(failedSync, isFalse);
+
+        syncService.toggleSimulatedOffline();
+        expect(syncService.isSimulatedOffline, isFalse);
+        expect(syncService.currentStatus, SyncStatus.synced);
+
+        syncService.dispose();
+      },
+    );
+
+    test('AppDatabase close and reopen', () async {
+      await AppDatabase.instance.close();
+      final reopenedDb = await AppDatabase.instance.database;
+      expect(reopenedDb.isOpen, isTrue);
     });
   });
 }

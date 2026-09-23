@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/sync_indicator.dart';
+import '../../../ads/presentation/widgets/admob_banner_widget.dart';
 import '../../../sync/presentation/widgets/sync_status_badge.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
@@ -26,30 +28,49 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final list = ref.watch(shoppingListProvider(widget.listId));
+    final tr = ref.watch(stringsProvider);
 
     if (list == null) {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () => context.pop(),
           ),
         ),
-        body: const Center(child: Text('Lista no encontrada.')),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                tr.listNotFound,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () => context.pop(),
+                child: Text(tr.back),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
     final pendingItems = list.items.where((i) => !i.isCompleted).toList();
     final completedItems = list.items.where((i) => i.isCompleted).toList();
-    final progress = list.totalCount > 0
-        ? (list.completedCount / list.totalCount)
-        : 0.0;
+    final progress = list.totalCount == 0
+        ? 0.0
+        : list.completedCount / list.totalCount;
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
-          tooltip: 'Volver',
+          tooltip: tr.back,
           onPressed: () => context.pop(),
         ),
         title: Row(
@@ -73,7 +94,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined, size: 20),
-            tooltip: 'Renombrar',
+            tooltip: tr.rename,
             onPressed: () => context.push('/list/${list.id}/edit'),
           ),
           IconButton(
@@ -109,7 +130,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                   ),
               ],
             ),
-            tooltip: 'Compartir lista',
+            tooltip: tr.shareList,
             onPressed: () => ShareListSheet.show(context, list.id),
           ),
           const Padding(
@@ -135,8 +156,11 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                   children: [
                     Text(
                       list.items.isEmpty
-                          ? 'Sin items aún'
-                          : '${list.progressText} pendientes',
+                          ? tr.noItemsYet
+                          : tr.pendingCountText(
+                              list.pendingCount,
+                              list.totalCount,
+                            ),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -147,7 +171,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                     const Spacer(),
                     if (list.totalCount > 0)
                       Text(
-                        '${(progress * 100).toInt()}% completado',
+                        tr.percentCompleted((progress * 100).toInt()),
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -177,10 +201,10 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           // Main list content
           Expanded(
             child: list.items.isEmpty
-                ? const EmptyStateWidget(
+                ? EmptyStateWidget(
                     icon: Icons.add_task_rounded,
-                    title: 'Lista vacía',
-                    message: 'Escribe tu primer item en la barra inferior y presiona enter.',
+                    title: tr.emptyItemsTitle,
+                    message: tr.emptyItemsMessage,
                   )
                 : RefreshIndicator(
                     onRefresh: () async {
@@ -224,27 +248,26 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                             borderRadius: BorderRadius.circular(8),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 8,
+                                vertical: 6.0,
+                                horizontal: 4.0,
                               ),
                               child: Row(
                                 children: [
+                                  Icon(
+                                    _isCompletedExpanded
+                                        ? Icons.expand_more
+                                        : Icons.chevron_right,
+                                    size: 18,
+                                    color: AppColors.textMuted,
+                                  ),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'Completados (${completedItems.length})',
+                                    tr.completedGroup(completedItems.length),
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textSecondary,
-                                      letterSpacing: -0.2,
+                                      color: AppColors.textMuted,
                                     ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    _isCompletedExpanded
-                                        ? Icons.keyboard_arrow_up_rounded
-                                        : Icons.keyboard_arrow_down_rounded,
-                                    size: 18,
-                                    color: AppColors.textSecondary,
                                   ),
                                 ],
                               ),
@@ -282,6 +305,10 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             },
           ),
         ],
+      ),
+      bottomNavigationBar: const SafeArea(
+        top: false,
+        child: AdmobBannerWidget(),
       ),
     );
   }

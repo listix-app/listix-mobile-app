@@ -1,7 +1,7 @@
 import '../entities/shopping_list.dart';
 import '../entities/todo_item.dart';
 
-abstract class ListsRepository {
+abstract interface class ListsRepository {
   Future<List<ShoppingList>> getLists();
   Future<ShoppingList?> getListById(String id);
   Future<ShoppingList> createList(String name);

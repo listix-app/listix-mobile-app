@@ -3,9 +3,7 @@ import 'package:flutter/services.dart';
 
 import 'app_colors.dart';
 
-class AppTheme {
-  AppTheme._();
-
+abstract final class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

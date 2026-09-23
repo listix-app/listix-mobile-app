@@ -7,9 +7,7 @@ import 'package:flutter/foundation.dart';
 /// See AdMob documentation:
 /// https://developers.google.com/admob/android/test-ads
 /// https://developers.google.com/admob/ios/test-ads
-class AdmobUnitIds {
-  AdmobUnitIds._();
-
+abstract final class AdmobUnitIds {
   // Android Test Ad Units
   static const String androidBanner = 'ca-app-pub-3940256099942544/6300978111';
   static const String androidInterstitial =

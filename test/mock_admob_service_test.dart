@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/features/ads/data/datasources/admob_unit_ids.dart';
 import 'package:listix/src/features/ads/data/repositories/mock_admob_service.dart';
+import 'package:listix/src/features/ads/domain/entities/admob_ad_state.dart';
 import 'package:listix/src/features/ads/domain/entities/mock_admob_campaign.dart';
 import 'package:listix/src/features/ads/presentation/controllers/admob_controller.dart';
 import 'package:listix/src/features/ads/presentation/widgets/admob_banner_widget.dart';
@@ -34,6 +35,10 @@ void main() {
         service.interstitialState.adUnitId,
         AdmobUnitIds.interstitialTestUnitId,
       );
+
+      // Re-initialize is a no-op
+      await service.initialize();
+      expect(service.isInitialized, isTrue);
     });
 
     test('recordBannerClick increments banner click count', () async {
@@ -83,9 +88,20 @@ void main() {
       final camp2 = service.getCurrentCampaign(next: true);
       expect(camp1.id, isNot(equals(camp2.id)));
     });
+
+    test('AdmobController delegates methods correctly', () async {
+      final controller = AdmobController(service);
+      expect(controller.isInterstitialReady, isFalse);
+
+      await controller.reloadBanner();
+      expect(service.bannerState.isLoaded, isTrue);
+
+      controller.recordBannerClick();
+      expect(service.bannerState.clicksCount, 1);
+    });
   });
 
-  group('AdMob Presentation Widgets', () {
+  group('AdMob Presentation Widgets & Dialogs', () {
     testWidgets('AdmobBannerWidget renders ad badge and campaign metadata', (
       tester,
     ) async {
@@ -118,6 +134,60 @@ void main() {
       service.dispose();
     });
 
+    testWidgets('AdmobBannerWidget renders loading state', (tester) async {
+      final service = MockAdmobService(simulatedLatency: Duration.zero);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            admobServiceProvider.overrideWithValue(service),
+            bannerAdStateProvider.overrideWith(
+              (ref) => Stream.value(
+                const AdmobAdState(status: AdLoadStatus.loading),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: AdmobBannerWidget())),
+        ),
+      );
+
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.text('Cargando AdMob Banner...'), findsOneWidget);
+      service.dispose();
+    });
+
+    testWidgets('AdmobBannerWidget renders failed state and retries', (
+      tester,
+    ) async {
+      final service = MockAdmobService(simulatedLatency: Duration.zero);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            admobServiceProvider.overrideWithValue(service),
+            bannerAdStateProvider.overrideWith(
+              (ref) => Stream.value(
+                const AdmobAdState(
+                  status: AdLoadStatus.failed,
+                  errorMessage: 'Error simulated',
+                ),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: Scaffold(body: AdmobBannerWidget())),
+        ),
+      );
+
+      await tester.pump();
+      expect(find.text('No se pudo cargar el banner de AdMob'), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+
+      await tester.tap(find.text('Reintentar'));
+      await tester.pump();
+      service.dispose();
+    });
+
     testWidgets(
       'AdmobInterstitialDialog displays countdown and can be skipped',
       (tester) async {
@@ -142,24 +212,126 @@ void main() {
 
         await tester.pump();
 
-        // Verify AdMob header and campaign content
         expect(find.text('Google AdMob • Test Interstitial'), findsOneWidget);
-        expect(find.text(campaign.sponsorName), findsOneWidget);
+        expect(find.text(campaign.sponsorName.toUpperCase()), findsOneWidget);
         expect(find.text(campaign.title), findsOneWidget);
         expect(find.text(campaign.ctaText), findsOneWidget);
 
-        // Verify Close button is present (since countdownSeconds was 0)
         expect(find.text('Cerrar'), findsOneWidget);
         await tester.tap(find.text('Cerrar'));
         await tester.pump();
 
         expect(closed, isTrue);
 
-        // Tap CTA button
         await tester.tap(find.text(campaign.ctaText));
         await tester.pump();
 
         expect(actionTaken, isTrue);
+      },
+    );
+
+    testWidgets('AdmobInterstitialDialog countdown timer ticks and completes', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: AdmobInterstitialDialog(
+              campaign: MockAdmobCampaign.sampleCampaigns[0],
+              adUnitId: AdmobUnitIds.androidInterstitial,
+              countdownSeconds: 2,
+              onClose: () {},
+              onAction: () {},
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Saltar en 2s'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Saltar en 1s'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('Cerrar'), findsOneWidget);
+    });
+
+    testWidgets(
+      'showInterstitialAd flow presents dialog and triggers callbacks',
+      (tester) async {
+        final service = MockAdmobService(simulatedLatency: Duration.zero);
+        await service.initialize();
+
+        bool dismissed = false;
+        bool clicked = false;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      service.showInterstitialAd(
+                        context,
+                        onDismissed: () => dismissed = true,
+                        onAdClicked: () => clicked = true,
+                      );
+                    },
+                    child: const Text('Show Ad'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Ad'));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AdmobInterstitialDialog), findsOneWidget);
+
+        // Tap CTA inside interstitial
+        final campaign = service.getCurrentCampaign();
+        await tester.tap(find.text(campaign.ctaText));
+        await tester.pumpAndSettle();
+
+        expect(clicked, isTrue);
+        expect(dismissed, isTrue);
+        service.dispose();
+      },
+    );
+
+    testWidgets(
+      'showInterstitialAd returns false when service fails to load ad',
+      (tester) async {
+        final failingService = MockAdmobService(
+          simulatedLatency: Duration.zero,
+          shouldSimulateErrors: true,
+        );
+
+        bool? result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Builder(
+              builder: (context) => Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      result = await failingService.showInterstitialAd(context);
+                    },
+                    child: const Text('Show Failing Ad'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Failing Ad'));
+        await tester.pumpAndSettle();
+
+        expect(result, isFalse);
+        failingService.dispose();
       },
     );
   });

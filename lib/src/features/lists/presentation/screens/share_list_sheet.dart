@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../controllers/lists_controller.dart';
@@ -20,7 +21,7 @@ class ShareListSheet extends ConsumerStatefulWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => ShareListSheet(listId: listId),
+      builder: (ctx) => ShareListSheet(listId: listId),
     );
   }
 
@@ -29,8 +30,14 @@ class ShareListSheet extends ConsumerStatefulWidget {
 }
 
 class _ShareListSheetState extends ConsumerState<ShareListSheet> {
-  final _emailController = TextEditingController();
+  late final TextEditingController _emailController;
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController();
+  }
 
   @override
   void dispose() {
@@ -39,14 +46,17 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
   }
 
   void _invite() {
-    if (_formKey.currentState?.validate() ?? false) {
-      final email = _emailController.text.trim();
-      ref
-          .read(listsControllerProvider.notifier)
-          .addCollaborator(widget.listId, email);
-      _emailController.clear();
-      FocusScope.of(context).unfocus();
+    if (!_formKey.currentState!.validate()) return;
 
+    final email = _emailController.text.trim();
+    ref
+        .read(listsControllerProvider.notifier)
+        .addCollaborator(widget.listId, email);
+
+    _emailController.clear();
+    FocusScope.of(context).unfocus();
+
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Invitación enviada a $email'),
@@ -57,16 +67,16 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     }
   }
 
-  void _copyLink(ShoppingList list) {
+  void _copyLink(ShoppingList list, String copiedMessage) {
     Clipboard.setData(
       ClipboardData(text: 'https://listix.app/join/${list.id}'),
     );
     HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Enlace de invitación copiado al portapapeles'),
+      SnackBar(
+        content: Text(copiedMessage),
         behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -74,11 +84,12 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
   @override
   Widget build(BuildContext context) {
     final list = ref.watch(shoppingListProvider(widget.listId));
+    final tr = ref.watch(stringsProvider);
 
     if (list == null) {
-      return const Padding(
-        padding: EdgeInsets.all(24.0),
-        child: Text('Lista no encontrada'),
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Text(tr.listNotFound),
       );
     }
 
@@ -118,7 +129,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Compartir "${list.name}"',
+                    '${tr.shareHeading} "${list.name}"',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -131,15 +142,18 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Invita a otras personas a ver y tachar items en tiempo real.',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            Text(
+              tr.shareListSubheading,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 18),
 
             // Quick Copy Link button
             InkWell(
-              onTap: () => _copyLink(list),
+              onTap: () => _copyLink(list, tr.linkCopied),
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -151,30 +165,34 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.borderLight),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.link, color: AppColors.primary, size: 20),
-                    SizedBox(width: 10),
+                    const Icon(Icons.link, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Copiar enlace de invitación',
-                        style: TextStyle(
+                        tr.copyInviteLink,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         ),
                       ),
                     ),
-                    Icon(Icons.copy, size: 16, color: AppColors.textMuted),
+                    const Icon(
+                      Icons.copy,
+                      size: 16,
+                      color: AppColors.textMuted,
+                    ),
                   ],
                 ),
               ),
             ),
 
             const SizedBox(height: 18),
-            const Text(
-              'O invitar por correo',
-              style: TextStyle(
+            Text(
+              tr.inviteByEmail,
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
@@ -193,20 +211,20 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       textInputAction: TextInputAction.send,
                       onFieldSubmitted: (_) => _invite(),
                       style: const TextStyle(fontSize: 14),
-                      decoration: const InputDecoration(
-                        hintText: 'ejemplo@correo.com',
+                      decoration: InputDecoration(
+                        hintText: tr.emailHint,
                         isDense: true,
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 12,
                         ),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Ingresa un correo';
+                          return tr.enterEmailError;
                         }
                         if (!value.contains('@') || !value.contains('.')) {
-                          return 'Correo no válido';
+                          return tr.invalidEmailError;
                         }
                         return null;
                       },
@@ -226,46 +244,47 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Invitar'),
+                    child: Text(tr.inviteAction),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 24),
-            Text(
-              'Colaboradores (${list.collaborators.length})',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            if (list.collaborators.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: Text(
-                  'Aún no hay colaboradores en esta lista.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: AppColors.textMuted,
-                    fontStyle: FontStyle.italic,
-                  ),
+            // Collaborators section
+            if (list.collaborators.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              Text(
+                '${tr.collaboratorsHeading} (${list.collaborators.length})',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
                 ),
-              )
-            else
+              ),
+              const SizedBox(height: 10),
               ...list.collaborators.map(
-                (c) => CollaboratorTile(
-                  collaborator: c,
-                  onRemove: () {
-                    ref
-                        .read(listsControllerProvider.notifier)
-                        .removeCollaborator(widget.listId, c.id);
-                  },
+                (collab) => CollaboratorTile(
+                  collaborator: collab,
+                  onRemove: collab.isOwner
+                      ? null
+                      : () {
+                          ref
+                              .read(listsControllerProvider.notifier)
+                              .removeCollaborator(list.id, collab.id);
+                        },
                 ),
               ),
+            ] else ...[
+              const SizedBox(height: 20),
+              Text(
+                tr.noCollaboratorsYet,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ],
         ),
       ),

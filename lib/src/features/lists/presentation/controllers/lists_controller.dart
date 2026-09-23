@@ -19,6 +19,9 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
   @override
   FutureOr<List<ShoppingList>> build() async {
+    ref.onDispose(() {
+      _autoSyncDebounce?.cancel();
+    });
     final repository = ref.read(listsRepositoryProvider);
     return repository.getLists();
   }

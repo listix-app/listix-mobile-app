@@ -36,8 +36,14 @@ class TodoItem {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is TodoItem && runtimeType == other.runtimeType && id == other.id;
+      other is TodoItem &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          listId == other.listId &&
+          title == other.title &&
+          isCompleted == other.isCompleted &&
+          isSynced == other.isSynced;
 
   @override
-  int get hashCode => id.hashCode;
+  int get hashCode => Object.hash(id, listId, title, isCompleted, isSynced);
 }
