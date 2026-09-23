@@ -78,6 +78,38 @@ void main() {
       );
     });
 
+    test('AppLocalizationsDelegate methods', () async {
+      const delegate = AppLocalizations.delegate;
+      expect(delegate.isSupported(const Locale('es')), isTrue);
+      expect(delegate.isSupported(const Locale('en')), isTrue);
+      expect(delegate.isSupported(const Locale('fr')), isFalse);
+      expect(delegate.shouldReload(delegate), isFalse);
+
+      final loaded = await delegate.load(const Locale('es'));
+      expect(loaded.appName, 'Listix');
+    });
+
+    testWidgets('AppLocalizations.of retrieves instance in localized context', (
+      tester,
+    ) async {
+      late AppLocalizations retrieved;
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) {
+              retrieved = AppLocalizations.of(context);
+              return Text(retrieved.appName);
+            },
+          ),
+        ),
+      );
+
+      expect(retrieved, isNotNull);
+      expect(find.text('Listix'), findsOneWidget);
+    });
+
     testWidgets('ListixLogo renders correctly with and without wordmark', (
       tester,
     ) async {

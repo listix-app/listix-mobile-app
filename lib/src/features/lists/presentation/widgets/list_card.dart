@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_strings.dart';
-import '../../../../core/localization/generated/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sync_indicator.dart';
 import '../../domain/entities/collaborator.dart';
@@ -23,32 +22,12 @@ class ListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String badgeText;
-    if (strings != null) {
-      badgeText = list.totalCount == 0
-          ? strings!.noItemsBadge
-          : list.pendingCount == 0
-          ? strings!.allDoneBadge
-          : strings!.pendingBadge(list.progressText);
-    } else {
-      final l10n = Localizations.of<AppLocalizations>(
-        context,
-        AppLocalizations,
-      );
-      if (l10n != null) {
-        badgeText = list.totalCount == 0
-            ? l10n.noItemsBadge
-            : list.pendingCount == 0
-            ? l10n.allDoneBadge
-            : l10n.pendingBadge(list.progressText);
-      } else {
-        badgeText = list.totalCount == 0
-            ? 'Sin items'
-            : list.pendingCount == 0
-            ? 'Todo listo ✓'
-            : '${list.progressText} pendientes';
-      }
-    }
+    final tr = strings ?? AppStrings(AppLanguage.es);
+    final badgeText = list.totalCount == 0
+        ? tr.noItemsBadge
+        : list.pendingCount == 0
+        ? tr.allDoneBadge
+        : tr.pendingBadge(list.progressText);
 
     return Card(
       elevation: 0,

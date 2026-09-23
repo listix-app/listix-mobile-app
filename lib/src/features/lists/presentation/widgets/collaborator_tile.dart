@@ -1,33 +1,24 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/localization/generated/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/collaborator.dart';
 
 class CollaboratorTile extends StatelessWidget {
   final Collaborator collaborator;
   final VoidCallback? onRemove;
-  final String? ownerLabel;
-  final String? removeTooltip;
+  final String ownerLabel;
+  final String removeTooltip;
 
   const CollaboratorTile({
     super.key,
     required this.collaborator,
     this.onRemove,
-    this.ownerLabel,
-    this.removeTooltip,
+    this.ownerLabel = 'Dueño',
+    this.removeTooltip = 'Quitar colaborador',
   });
 
   @override
   Widget build(BuildContext context) {
-    String resolvedOwnerLabel = ownerLabel ?? 'Dueño';
-    String resolvedRemoveTooltip = removeTooltip ?? 'Quitar colaborador';
-    final l10n = Localizations.of<AppLocalizations>(context, AppLocalizations);
-    if (l10n != null) {
-      resolvedOwnerLabel = ownerLabel ?? l10n.ownerBadge;
-      resolvedRemoveTooltip = removeTooltip ?? l10n.removeCollaborator;
-    }
-
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -85,7 +76,7 @@ class CollaboratorTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                resolvedOwnerLabel,
+                ownerLabel,
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -102,7 +93,7 @@ class CollaboratorTile extends StatelessWidget {
               ),
               splashRadius: 18,
               onPressed: onRemove,
-              tooltip: resolvedRemoveTooltip,
+              tooltip: removeTooltip,
             ),
         ],
       ),
