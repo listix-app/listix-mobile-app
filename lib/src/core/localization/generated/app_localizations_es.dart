@@ -91,7 +91,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Escribe tu primer item en la barra inferior y presiona enter.';
 
   @override
-  String get quickAddHint => 'Agregar item rápido...';
+  String get quickAddHint => 'Agregar item';
 
   @override
   String get quickAddTooltip => 'Agregar item';
@@ -222,7 +222,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String versionLabel(String version, String build) {
-    return 'Versión $version (Build $build)';
+    return 'Versión $version (compilación $build)';
   }
 
   @override
@@ -257,7 +257,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String copyrightFooter(int year) {
-    return '© $year Listix • Licencia MIT';
+    return '© $year Nicolas Mena. Todos los derechos reservados.';
   }
 
   @override

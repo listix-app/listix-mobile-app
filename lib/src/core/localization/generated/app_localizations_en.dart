@@ -91,7 +91,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Type your first item in the bottom bar and press enter.';
 
   @override
-  String get quickAddHint => 'Quick add item...';
+  String get quickAddHint => 'Add item';
 
   @override
   String get quickAddTooltip => 'Add item';
@@ -222,14 +222,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String versionLabel(String version, String build) {
-    return 'Version $version (Build $build)';
+    return 'Version $version (build $build)';
   }
 
   @override
   String get languageTitle => 'Language';
 
   @override
-  String get spanish => 'Spanish';
+  String get spanish => 'Español';
 
   @override
   String get english => 'English';
@@ -257,7 +257,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String copyrightFooter(int year) {
-    return '© $year Listix • MIT License';
+    return '© $year Nicolas Mena. All rights reserved.';
   }
 
   @override

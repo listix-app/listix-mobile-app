@@ -239,7 +239,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickAddHint.
   ///
   /// In es, this message translates to:
-  /// **'Agregar item rápido...'**
+  /// **'Agregar item'**
   String get quickAddHint;
 
   /// No description provided for @quickAddTooltip.
@@ -485,7 +485,7 @@ abstract class AppLocalizations {
   /// No description provided for @versionLabel.
   ///
   /// In es, this message translates to:
-  /// **'Versión {version} (Build {build})'**
+  /// **'Versión {version} (compilación {build})'**
   String versionLabel(String version, String build);
 
   /// No description provided for @languageTitle.
@@ -545,7 +545,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyrightFooter.
   ///
   /// In es, this message translates to:
-  /// **'© {year} Listix • Licencia MIT'**
+  /// **'© {year} Nicolas Mena. Todos los derechos reservados.'**
   String copyrightFooter(int year);
 
   /// No description provided for @errorPrefix.

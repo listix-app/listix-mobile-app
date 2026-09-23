@@ -61,7 +61,7 @@
   },
   "emptyItemsTitle": "Lista vacía",
   "emptyItemsMessage": "Escribe tu primer item en la barra inferior y presiona enter.",
-  "quickAddHint": "Agregar item rápido...",
+  "quickAddHint": "Agregar item",
   "quickAddTooltip": "Agregar item",
   "back": "Volver",
   "listNotFound": "Lista no encontrada",
@@ -109,7 +109,7 @@
   "statusSynced": "Sincronizado",
   "aboutApp": "Acerca de Listix",
   "version": "Versión",
-  "versionLabel": "Versión {version} (Build {build})",
+  "versionLabel": "Versión {version} (compilación {build})",
   "@versionLabel": {
     "placeholders": {
       "version": {
@@ -129,7 +129,7 @@
   "privacyStatement": "En Listix tu privacidad es absoluta. Todos tus datos residen de forma predeterminada en el almacenamiento SQLite local de tu dispositivo. No recopilamos rastreadores de publicidad, no vendemos datos a terceros ni almacenamos analíticas invasivas.",
   "offlineFirstStatement": "Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose de manera segura en segundo plano.",
   "termsStatement": "Listix es una herramienta creada para la productividad personal y colaborativa. El usuario es el único propietario de sus listas y contenido.",
-  "copyrightFooter": "© {year} Listix • Licencia MIT",
+  "copyrightFooter": "© {year} Nicolas Mena. Todos los derechos reservados.",
   "@copyrightFooter": {
     "placeholders": {
       "year": {
