@@ -113,7 +113,6 @@ jobs:
             else if (totalChanges >= 150) sizeLabel = 'size/M';
             else if (totalChanges >= 50) sizeLabel = 'size/S';
 
-            // Manage PR size labels
             try {
               const currentLabels = await github.rest.issues.listLabelsOnIssue({
                 owner: context.repo.owner,

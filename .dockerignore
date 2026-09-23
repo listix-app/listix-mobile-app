@@ -1,0 +1,35 @@
+# Version Control & IDEs
+.git
+.github
+.gitignore
+.agents
+.gemini
+.idea
+.vscode
+*.iml
+
+# Flutter / Dart build artifacts & caches
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+coverage/
+
+# Logs & Temporary files
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Documentation & Non-runtime files
+docs/
+README.md
+LICENSE
+commitlint.config.js
+skills-lock.json
+
+# Docker files
+Dockerfile*
+docker-compose*.yml

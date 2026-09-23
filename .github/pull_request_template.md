@@ -49,6 +49,7 @@ Closes # <!-- Link related issue if applicable, e.g., Closes #123 -->
 - [ ] Formatted code via `dart format .`
 - [ ] Verified static analysis with `flutter analyze` (zero errors/warnings)
 - [ ] Ran all unit and widget tests with `flutter test`
+- [ ] Verified strict 100% test coverage via `flutter test --coverage test/all_tests_coverage.dart && dart run tool/verify_coverage.dart`
 - [ ] Tested on at least one target device/platform (Android, Linux, Chrome, iOS)
 - [ ] Updated or added relevant tests for new functionality
 - [ ] Updated documentation or [AGENTS.md](AGENTS.md) if new conventions were introduced
