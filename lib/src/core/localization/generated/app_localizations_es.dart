@@ -316,4 +316,47 @@ class AppLocalizationsEs extends AppLocalizations {
   String errorPrefix(String error) {
     return 'Error: $error';
   }
+
+  @override
+  String get notificationsTitle => 'Notificaciones';
+
+  @override
+  String get weeklyReminderTitle => 'Recordatorio semanal';
+
+  @override
+  String get weeklyReminderSubtitle =>
+      'Recibe un recordatorio cada domingo a las 10:00 AM para planificar tus compras';
+
+  @override
+  String get weeklyReminderNotificationTitle =>
+      '¡Momento de organizar tus compras!';
+
+  @override
+  String get weeklyReminderNotificationBody =>
+      'Revisa tus listas o crea una nueva para esta semana.';
+
+  @override
+  String get undo => 'Deshacer';
+
+  @override
+  String listDeleted(String name) {
+    return '\"$name\" eliminada';
+  }
+
+  @override
+  String itemDeleted(String title) {
+    return '\"$title\" eliminado';
+  }
+
+  @override
+  String get starred => 'Favoritas';
+
+  @override
+  String get starList => 'Destacar lista';
+
+  @override
+  String get unstarList => 'Quitar de destacadas';
+
+  @override
+  String get reorder => 'Reordenar';
 }

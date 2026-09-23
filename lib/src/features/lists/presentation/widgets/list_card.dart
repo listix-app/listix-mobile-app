@@ -9,6 +9,7 @@ class ListCard extends StatelessWidget {
   final ShoppingList list;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onToggleStar;
   final AppStrings? strings;
 
   const ListCard({
@@ -16,6 +17,7 @@ class ListCard extends StatelessWidget {
     required this.list,
     required this.onTap,
     this.onDelete,
+    this.onToggleStar,
     this.strings,
   });
 
@@ -31,7 +33,9 @@ class ListCard extends StatelessWidget {
         : tr.pendingBadge(list.progressText);
 
     final cardBg = isDark ? AppColors.cardDark : AppColors.cardLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final borderColor = list.isStarred
+        ? const Color(0xFFFFB800).withValues(alpha: 0.5)
+        : (isDark ? AppColors.borderDark : AppColors.borderLight);
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -45,7 +49,7 @@ class ListCard extends StatelessWidget {
       color: cardBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: borderColor),
+        side: BorderSide(color: borderColor, width: list.isStarred ? 1.5 : 1.0),
       ),
       child: InkWell(
         onTap: onTap,
@@ -56,20 +60,59 @@ class ListCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: Text(
-                      list.name,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: textTitleColor,
-                        letterSpacing: -0.2,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      children: [
+                        if (list.isStarred) ...[
+                          const Icon(
+                            Icons.star_rounded,
+                            size: 20,
+                            color: Color(0xFFFFB800),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Expanded(
+                          child: Text(
+                            list.name,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: textTitleColor,
+                              letterSpacing: -0.2,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
+                  ),
+                  if (onToggleStar != null)
+                    IconButton(
+                      icon: Icon(
+                        list.isStarred
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
+                        color: list.isStarred
+                            ? const Color(0xFFFFB800)
+                            : (isDark
+                                  ? AppColors.textMutedDark
+                                  : AppColors.textMuted),
+                      ),
+                      tooltip: list.isStarred ? tr.unstarList : tr.starList,
+                      onPressed: onToggleStar,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                    ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.drag_handle_rounded,
+                    size: 20,
+                    color: isDark
+                        ? AppColors.textMutedDark.withValues(alpha: 0.5)
+                        : AppColors.textMuted.withValues(alpha: 0.6),
                   ),
                 ],
               ),
@@ -87,7 +130,9 @@ class ListCard extends StatelessWidget {
                       border: Border.all(
                         color: list.pendingCount == 0 && list.totalCount > 0
                             ? AppColors.syncDone.withValues(alpha: 0.35)
-                            : borderColor,
+                            : (isDark
+                                  ? AppColors.borderDark
+                                  : AppColors.borderLight),
                       ),
                     ),
                     child: Text(
@@ -171,7 +216,7 @@ class _CollaboratorAvatars extends StatelessWidget {
                 child: Text(
                   '+$remaining',
                   style: const TextStyle(
-                    fontSize: 9,
+                    fontSize: 8,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textSecondary,
                   ),

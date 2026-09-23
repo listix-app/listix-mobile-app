@@ -6,6 +6,7 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/widgets/listix_logo.dart';
+import '../../../notifications/presentation/controllers/notifications_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -17,6 +18,7 @@ class SettingsScreen extends ConsumerWidget {
     final localeNotifier = ref.read(localeControllerProvider.notifier);
     final currentThemeMode = ref.watch(themeModeControllerProvider);
     final themeNotifier = ref.read(themeModeControllerProvider.notifier);
+    final notificationsEnabled = ref.watch(notificationsControllerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final cardBg = isDark ? AppColors.cardDark : Colors.white;
@@ -146,6 +148,45 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          _SettingsSectionTitle(title: tr.notificationsTitle),
+          const SizedBox(height: 10),
+          Card(
+            color: cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor),
+            ),
+            child: SwitchListTile.adaptive(
+              key: const Key('weekly_notification_switch'),
+              value: notificationsEnabled,
+              onChanged: (bool value) {
+                ref
+                    .read(notificationsControllerProvider.notifier)
+                    .toggleWeeklyNotifications(
+                      enabled: value,
+                      title: tr.weeklyReminderNotificationTitle,
+                      body: tr.weeklyReminderNotificationBody,
+                    );
+              },
+              title: Text(
+                tr.weeklyReminderTitle,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textTitleColor,
+                ),
+              ),
+              subtitle: Text(
+                tr.weeklyReminderSubtitle,
+                style: TextStyle(fontSize: 12, color: textSubColor),
+              ),
+              secondary: const Icon(
+                Icons.notifications_active_rounded,
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
           _SettingsSectionTitle(title: tr.aboutApp),
           const SizedBox(height: 10),
           _SettingsInfoCard(
@@ -257,7 +298,7 @@ class _SettingsInfoCard extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                     color: titleColor,
                   ),
                 ),

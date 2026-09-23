@@ -649,6 +649,78 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Error: {error}'**
   String errorPrefix(String error);
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificaciones'**
+  String get notificationsTitle;
+
+  /// No description provided for @weeklyReminderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recordatorio semanal'**
+  String get weeklyReminderTitle;
+
+  /// No description provided for @weeklyReminderSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibe un recordatorio cada domingo a las 10:00 AM para planificar tus compras'**
+  String get weeklyReminderSubtitle;
+
+  /// No description provided for @weeklyReminderNotificationTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Momento de organizar tus compras!'**
+  String get weeklyReminderNotificationTitle;
+
+  /// No description provided for @weeklyReminderNotificationBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tus listas o crea una nueva para esta semana.'**
+  String get weeklyReminderNotificationBody;
+
+  /// No description provided for @undo.
+  ///
+  /// In es, this message translates to:
+  /// **'Deshacer'**
+  String get undo;
+
+  /// No description provided for @listDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'\"{name}\" eliminada'**
+  String listDeleted(String name);
+
+  /// No description provided for @itemDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'\"{title}\" eliminado'**
+  String itemDeleted(String title);
+
+  /// No description provided for @starred.
+  ///
+  /// In es, this message translates to:
+  /// **'Favoritas'**
+  String get starred;
+
+  /// No description provided for @starList.
+  ///
+  /// In es, this message translates to:
+  /// **'Destacar lista'**
+  String get starList;
+
+  /// No description provided for @unstarList.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar de destacadas'**
+  String get unstarList;
+
+  /// No description provided for @reorder.
+  ///
+  /// In es, this message translates to:
+  /// **'Reordenar'**
+  String get reorder;
 }
 
 class _AppLocalizationsDelegate

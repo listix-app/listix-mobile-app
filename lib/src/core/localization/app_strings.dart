@@ -17,11 +17,9 @@ class AppStrings {
 
   bool get isSpanish => language == AppLanguage.es;
 
-  // General & Brand
   String get appName => _l10n.appName;
   String get appTagline => _l10n.appTagline;
 
-  // Home / Index Screen
   String get myLists => _l10n.myLists;
   String get emptyListsTitle => _l10n.emptyListsTitle;
   String get emptyListsMessage => _l10n.emptyListsMessage;
@@ -36,7 +34,6 @@ class AppStrings {
   String get allDoneBadge => _l10n.allDoneBadge;
   String pendingBadge(String progress) => _l10n.pendingBadge(progress);
 
-  // List Detail Screen
   String get rename => _l10n.rename;
   String get shareList => _l10n.shareList;
   String get noItemsYet => _l10n.noItemsYet;
@@ -51,7 +48,6 @@ class AppStrings {
   String get back => _l10n.back;
   String get listNotFound => _l10n.listNotFound;
 
-  // Create / Edit List Screen
   String get renameListTitle => _l10n.renameListTitle;
   String get newListTitle => _l10n.newListTitle;
   String get editListHeading => _l10n.editListHeading;
@@ -64,7 +60,6 @@ class AppStrings {
   String get saveChanges => _l10n.saveChanges;
   String get createListAction => _l10n.createListAction;
 
-  // Share List Sheet
   String get shareHeading => _l10n.shareHeading;
   String get shareListSubheading => _l10n.shareListSubheading;
   String get shareWhatsApp => _l10n.shareWhatsApp;
@@ -91,7 +86,6 @@ class AppStrings {
   String get ownerBadge => _l10n.ownerBadge;
   String inviteSent(String email) => _l10n.inviteSent(email);
 
-  // Sync Status
   String get syncStatusTitle => _l10n.syncStatusTitle;
   String get syncStatusDescription => _l10n.syncStatusDescription;
   String get simulateOffline => _l10n.simulateOffline;
@@ -103,14 +97,28 @@ class AppStrings {
   String get statusPending => _l10n.statusPending;
   String get statusSynced => _l10n.statusSynced;
 
-  // Settings & Theme
   String get settings => _l10n.settings;
   String get themeTitle => _l10n.themeTitle;
   String get themeSystem => _l10n.themeSystem;
   String get themeLight => _l10n.themeLight;
   String get themeDark => _l10n.themeDark;
 
-  // About, Policy & Privacy
+  String get notificationsTitle => _l10n.notificationsTitle;
+  String get weeklyReminderTitle => _l10n.weeklyReminderTitle;
+  String get weeklyReminderSubtitle => _l10n.weeklyReminderSubtitle;
+  String get weeklyReminderNotificationTitle =>
+      _l10n.weeklyReminderNotificationTitle;
+  String get weeklyReminderNotificationBody =>
+      _l10n.weeklyReminderNotificationBody;
+
+  String get undo => _l10n.undo;
+  String listDeleted(String name) => _l10n.listDeleted(name);
+  String itemDeleted(String title) => _l10n.itemDeleted(title);
+  String get starred => _l10n.starred;
+  String get starList => _l10n.starList;
+  String get unstarList => _l10n.unstarList;
+  String get reorder => _l10n.reorder;
+
   String get aboutApp => _l10n.aboutApp;
   String get version => _l10n.version;
   String versionLabel(String version, String build) =>

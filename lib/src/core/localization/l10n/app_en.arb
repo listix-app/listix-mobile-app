@@ -167,5 +167,31 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationsTitle": "Notifications",
+  "weeklyReminderTitle": "Weekly reminder",
+  "weeklyReminderSubtitle": "Receive a reminder every Sunday at 10:00 AM to plan your shopping",
+  "weeklyReminderNotificationTitle": "Time to plan your shopping!",
+  "weeklyReminderNotificationBody": "Review your lists or create a new one for the week.",
+  "undo": "Undo",
+  "listDeleted": "\"{name}\" deleted",
+  "@listDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "itemDeleted": "\"{title}\" deleted",
+  "@itemDeleted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "starred": "Starred",
+  "starList": "Star list",
+  "unstarList": "Unstar list",
+  "reorder": "Reorder"
 }

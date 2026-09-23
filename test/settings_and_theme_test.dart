@@ -3,7 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/core/theme/theme_controller.dart';
+import 'package:listix/src/features/notifications/data/services/notification_service.dart';
+import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:listix/src/features/settings/presentation/screens/settings_screen.dart';
+
+class _SettingsTestNotificationService implements NotificationService {
+  @override
+  Future<bool> initialize() async => true;
+
+  @override
+  Future<bool> requestPermissions() async => true;
+
+  @override
+  Future<bool> scheduleWeeklyReminder({
+    required String title,
+    required String body,
+    int dayOfWeek = DateTime.sunday,
+    int hour = 10,
+    int minute = 0,
+  }) async => true;
+
+  @override
+  Future<void> cancelWeeklyReminder() async {}
+}
 
 void main() {
   group('ThemeModeController Unit Tests', () {
@@ -40,8 +62,13 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
+        ProviderScope(
+          overrides: [
+            notificationServiceProvider.overrideWithValue(
+              _SettingsTestNotificationService(),
+            ),
+          ],
+          child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: SettingsScreen(),
@@ -51,34 +78,30 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Header
       expect(find.text('Configuración'), findsOneWidget);
       expect(find.text('Listix'), findsOneWidget);
 
-      // Theme options
       expect(find.text('TEMA'), findsOneWidget);
       expect(find.text('Sistema'), findsOneWidget);
       expect(find.text('Claro'), findsOneWidget);
       expect(find.text('Oscuro'), findsOneWidget);
 
-      // Tap Dark theme
       await tester.tap(find.text('Oscuro'));
       await tester.pumpAndSettle();
 
-      // Tap Light theme
       await tester.tap(find.text('Claro'));
       await tester.pumpAndSettle();
 
-      // Language options
       expect(find.text('IDIOMA'), findsOneWidget);
       expect(find.text('Español'), findsOneWidget);
       expect(find.text('English'), findsOneWidget);
 
-      // Tap English language
       await tester.tap(find.text('English'));
       await tester.pumpAndSettle();
 
-      // Content now in English
+      await tester.tap(find.byKey(const Key('weekly_notification_switch')));
+      await tester.pumpAndSettle();
+
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('APPEARANCE'), findsOneWidget);
       expect(find.text('System'), findsOneWidget);
@@ -88,7 +111,6 @@ void main() {
       expect(find.text('Privacy Policy'), findsOneWidget);
       expect(find.text('Terms of Service'), findsOneWidget);
 
-      // Switch back to Spanish
       await tester.tap(find.text('Español'));
       await tester.pumpAndSettle();
       expect(find.text('Configuración'), findsOneWidget);

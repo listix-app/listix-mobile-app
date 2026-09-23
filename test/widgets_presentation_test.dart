@@ -195,11 +195,9 @@ void main() {
 
       expect(find.text('Manzanas orgánicas'), findsOneWidget);
 
-      // Tap to toggle
       await tester.tap(find.text('Manzanas orgánicas'));
       expect(toggleCalled, isTrue);
 
-      // Swipe dismissible to delete
       await tester.drag(
         find.text('Manzanas orgánicas'),
         const Offset(-500.0, 0.0),
@@ -287,6 +285,38 @@ void main() {
       );
 
       expect(find.text('Todo listo ✓'), findsOneWidget);
+    });
+
+    testWidgets('renders ListCard in dark mode with star toggle', (
+      tester,
+    ) async {
+      var starToggled = false;
+      final list = ShoppingList(
+        id: 'l_star',
+        name: 'Lista Estrellada',
+        isStarred: true,
+        items: const [],
+        createdAt: now,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(
+            body: ListCard(
+              list: list,
+              onTap: () {},
+              onToggleStar: () {
+                starToggled = true;
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byIcon(Icons.star_rounded), findsWidgets);
+      await tester.tap(find.byType(IconButton));
+      expect(starToggled, isTrue);
     });
 
     testWidgets('renders progress text, handles >3 collaborators, and taps', (
@@ -421,18 +451,15 @@ void main() {
         expect(find.text('Compartir por Gmail'), findsOneWidget);
         expect(find.text('Copiar texto de la lista'), findsOneWidget);
 
-        // Share via WhatsApp
         await tester.tap(find.text('Compartir por WhatsApp'));
         await tester.pumpAndSettle();
         expect(fakeShare.whatsAppShared, isTrue);
         expect(fakeController.syncedListIds, contains('share_list'));
 
-        // Share via Gmail
         await tester.tap(find.text('Compartir por Gmail'));
         await tester.pumpAndSettle();
         expect(fakeShare.gmailShared, isTrue);
 
-        // Copy list
         await tester.tap(find.text('Copiar texto de la lista'));
         await tester.pumpAndSettle();
         expect(fakeShare.copied, isTrue);
@@ -475,7 +502,6 @@ void main() {
           ),
         );
 
-        // WhatsApp tap and pop
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
         expect(find.text('Compartir "Lista sola"'), findsOneWidget);
@@ -483,14 +509,12 @@ void main() {
         await tester.pumpAndSettle();
         expect(fakeShare.whatsAppShared, isTrue);
 
-        // Gmail tap and pop
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Compartir por Gmail'));
         await tester.pumpAndSettle();
         expect(fakeShare.gmailShared, isTrue);
 
-        // Copy tap and pop
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Copiar texto de la lista'));

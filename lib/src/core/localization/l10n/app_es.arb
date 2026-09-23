@@ -167,5 +167,31 @@
         "type": "String"
       }
     }
-  }
+  },
+  "notificationsTitle": "Notificaciones",
+  "weeklyReminderTitle": "Recordatorio semanal",
+  "weeklyReminderSubtitle": "Recibe un recordatorio cada domingo a las 10:00 AM para planificar tus compras",
+  "weeklyReminderNotificationTitle": "¡Momento de organizar tus compras!",
+  "weeklyReminderNotificationBody": "Revisa tus listas o crea una nueva para esta semana.",
+  "undo": "Deshacer",
+  "listDeleted": "\"{name}\" eliminada",
+  "@listDeleted": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "itemDeleted": "\"{title}\" eliminado",
+  "@itemDeleted": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "starred": "Favoritas",
+  "starList": "Destacar lista",
+  "unstarList": "Quitar de destacadas",
+  "reorder": "Reordenar"
 }

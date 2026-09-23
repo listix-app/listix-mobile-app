@@ -49,105 +49,133 @@ class HomeScreen extends ConsumerWidget {
               await ref.read(listsControllerProvider.notifier).manualSync();
             },
             color: AppColors.primary,
-            child: ListView(
+            child: ReorderableListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
-                  child: Row(
-                    children: [
-                      Text(
-                        tr.myLists,
+              itemCount: lists.length,
+              onReorderItem: (oldIndex, newIndex) {
+                ref
+                    .read(listsControllerProvider.notifier)
+                    .reorderLists(oldIndex, newIndex);
+              },
+              header: Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 12, top: 4),
+                child: Row(
+                  children: [
+                    Text(
+                      tr.myLists,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimary,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.cardDark
+                            : AppColors.borderLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${lists.length}',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: isDark
-                              ? AppColors.textPrimaryDark
-                              : AppColors.textPrimary,
-                          letterSpacing: -0.3,
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondary,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.cardDark
-                              : AppColors.borderLight,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${lists.length}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-
-                ...lists.map((list) {
-                  return Dismissible(
-                    key: Key(list.id),
-                    direction: DismissDirection.endToStart,
-                    confirmDismiss: (_) async {
-                      return await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text(tr.deleteListTitle),
-                              content: Text(tr.deleteListMessage(list.name)),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => ctx.pop(false),
-                                  child: Text(tr.cancel),
+              ),
+              itemBuilder: (context, index) {
+                final list = lists[index];
+                return Dismissible(
+                  key: ValueKey(list.id),
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (_) async {
+                    return await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: Text(tr.deleteListTitle),
+                            content: Text(tr.deleteListMessage(list.name)),
+                            actions: [
+                              TextButton(
+                                onPressed: () => ctx.pop(false),
+                                child: Text(tr.cancel),
+                              ),
+                              FilledButton(
+                                onPressed: () => ctx.pop(true),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.delete,
                                 ),
-                                FilledButton(
-                                  onPressed: () => ctx.pop(true),
-                                  style: FilledButton.styleFrom(
-                                    backgroundColor: AppColors.delete,
-                                  ),
-                                  child: Text(tr.delete),
-                                ),
-                              ],
-                            ),
-                          ) ??
-                          false;
-                    },
-                    onDismissed: (_) {
+                                child: Text(tr.delete),
+                              ),
+                            ],
+                          ),
+                        ) ??
+                        false;
+                  },
+                  onDismissed: (_) async {
+                    final deleted = await ref
+                        .read(listsControllerProvider.notifier)
+                        .deleteListWithUndo(list.id);
+                    if (deleted != null && context.mounted) {
+                      ScaffoldMessenger.of(context).clearSnackBars();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(tr.listDeleted(deleted.name)),
+                          action: SnackBarAction(
+                            label: tr.undo,
+                            textColor: AppColors.primaryLight,
+                            onPressed: () {
+                              ref
+                                  .read(listsControllerProvider.notifier)
+                                  .restoreList(deleted);
+                            },
+                          ),
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                    }
+                  },
+                  background: Container(
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.deleteBackground,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.delete_outline,
+                      color: AppColors.delete,
+                      size: 24,
+                    ),
+                  ),
+                  child: ListCard(
+                    key: ValueKey('card_${list.id}'),
+                    list: list,
+                    strings: tr,
+                    onTap: () => context.push('/list/${list.id}'),
+                    onToggleStar: () {
                       ref
                           .read(listsControllerProvider.notifier)
-                          .deleteList(list.id);
+                          .toggleStar(list.id);
                     },
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: AppColors.deleteBackground,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: const Icon(
-                        Icons.delete_outline,
-                        color: AppColors.delete,
-                        size: 24,
-                      ),
-                    ),
-                    child: ListCard(
-                      list: list,
-                      strings: tr,
-                      onTap: () => context.push('/list/${list.id}'),
-                    ),
-                  );
-                }),
-              ],
+                  ),
+                );
+              },
             ),
           );
         },

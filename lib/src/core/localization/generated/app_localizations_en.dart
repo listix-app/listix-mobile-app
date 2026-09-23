@@ -316,4 +316,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorPrefix(String error) {
     return 'Error: $error';
   }
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get weeklyReminderTitle => 'Weekly reminder';
+
+  @override
+  String get weeklyReminderSubtitle =>
+      'Receive a reminder every Sunday at 10:00 AM to plan your shopping';
+
+  @override
+  String get weeklyReminderNotificationTitle => 'Time to plan your shopping!';
+
+  @override
+  String get weeklyReminderNotificationBody =>
+      'Review your lists or create a new one for the week.';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String listDeleted(String name) {
+    return '\"$name\" deleted';
+  }
+
+  @override
+  String itemDeleted(String title) {
+    return '\"$title\" deleted';
+  }
+
+  @override
+  String get starred => 'Starred';
+
+  @override
+  String get starList => 'Star list';
+
+  @override
+  String get unstarList => 'Unstar list';
+
+  @override
+  String get reorder => 'Reorder';
 }

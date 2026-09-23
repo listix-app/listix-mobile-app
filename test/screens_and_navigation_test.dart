@@ -46,14 +46,12 @@ void main() {
         ),
       );
 
-      // Verify create title and submit empty to see validation error
-      expect(find.text('Crear lista'), findsOneWidget); // Button text
-      expect(find.text('Nueva lista'), findsOneWidget); // AppBar text
+      expect(find.text('Crear lista'), findsOneWidget);
+      expect(find.text('Nueva lista'), findsOneWidget);
       await tester.tap(find.text('Crear lista'));
       await tester.pump();
       expect(find.text('Por favor ingresa un nombre'), findsOneWidget);
 
-      // Enter name and submit
       await tester.enterText(find.byType(TextFormField), 'Nueva Despensa');
       await tester.tap(find.text('Crear lista'));
       await tester.pumpAndSettle();
@@ -105,17 +103,15 @@ void main() {
       await tester.tap(find.text('Go Edit'));
       await tester.pumpAndSettle();
 
-      // Verify name is pre-populated
       expect(find.text('Lista Vieja'), findsOneWidget);
       expect(find.text('Guardar cambios'), findsOneWidget);
 
-      // Change name and submit
       await tester.enterText(find.byType(TextFormField), 'Lista Actualizada');
       await tester.tap(find.text('Guardar cambios'));
       await tester.pumpAndSettle();
 
       expect(fakeController.updatedNames['edit_target'], 'Lista Actualizada');
-      expect(find.text('Go Edit'), findsOneWidget); // Popped back to prev
+      expect(find.text('Go Edit'), findsOneWidget);
     });
 
     testWidgets('tap back button on CreateEditListScreen', (tester) async {
@@ -231,14 +227,16 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Supermercado'), findsOneWidget);
-        expect(find.text('1'), findsOneWidget); // count badge
+        expect(find.text('1'), findsOneWidget);
 
-        // Pull to refresh
-        await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+        await tester.fling(
+          find.byType(CustomScrollView),
+          const Offset(0, 300),
+          1000,
+        );
         await tester.pumpAndSettle();
         expect(fakeController.manualSyncCalled, isTrue);
 
-        // Tap card navigates to /list/l1
         await tester.tap(find.byType(ListCard));
         await tester.pumpAndSettle();
         expect(find.text('Detail: l1'), findsOneWidget);
@@ -246,7 +244,17 @@ void main() {
         router.go('/');
         await tester.pumpAndSettle();
 
-        // Dismiss swipe and Cancel
+        await tester.tap(find.byIcon(Icons.star_outline_rounded).first);
+        await tester.pumpAndSettle();
+        expect(fakeController.starredListIds, contains('l1'));
+
+        final reorderableHomeScreen = tester.widget<ReorderableListView>(
+          find.byType(ReorderableListView),
+        );
+        reorderableHomeScreen.onReorderItem!(0, 1);
+        await tester.pumpAndSettle();
+        expect(fakeController.reorderedListsCalled, isTrue);
+
         await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
         await tester.pumpAndSettle();
 
@@ -255,7 +263,6 @@ void main() {
         await tester.pumpAndSettle();
         expect(fakeController.deletedListIds, isEmpty);
 
-        // Dismiss swipe and Confirm
         await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
         await tester.pumpAndSettle();
 
@@ -264,7 +271,11 @@ void main() {
         await tester.pumpAndSettle();
         expect(fakeController.deletedListIds, contains('l1'));
 
-        // Tap settings icon in AppBar
+        expect(find.text('Deshacer'), findsOneWidget);
+        await tester.tap(find.text('Deshacer'));
+        await tester.pumpAndSettle();
+        expect(fakeController.restoredLists.length, 1);
+
         await tester.tap(find.byIcon(Icons.settings_outlined));
         await tester.pumpAndSettle();
         expect(find.text('Settings Screen Target'), findsOneWidget);
@@ -272,7 +283,6 @@ void main() {
         router.go('/');
         await tester.pumpAndSettle();
 
-        // Tap FAB
         await tester.tap(find.byType(FloatingActionButton));
         await tester.pumpAndSettle();
         expect(find.text('New Target'), findsOneWidget);
@@ -373,33 +383,38 @@ void main() {
       expect(find.text('50% completado'), findsOneWidget);
       expect(find.text('Completados (1)'), findsOneWidget);
 
-      // Toggle item
       await tester.tap(find.text('Queso'));
       await tester.pump();
       expect(fakeController.toggledItemIds, contains('i1'));
 
-      // Collapse completed group
       await tester.tap(find.text('Completados (1)'));
       await tester.pump();
-      expect(find.text('Vino'), findsNothing); // collapsed
+      expect(find.text('Vino'), findsNothing);
 
-      // Expand completed group back
       await tester.tap(find.text('Completados (1)'));
       await tester.pump();
       expect(find.text('Vino'), findsOneWidget);
 
-      // Pull to refresh
-      await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+      await tester.fling(
+        find.byType(CustomScrollView),
+        const Offset(0, 300),
+        1000,
+      );
       await tester.pumpAndSettle();
       expect(fakeController.manualSyncCalled, isTrue);
 
-      // Quick add item
       await tester.enterText(find.byType(TextField), 'Mantequilla');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
       expect(fakeController.addedItems, contains('Mantequilla'));
 
-      // Tap edit button in AppBar
+      final reorderableDetail = tester.widget<ReorderableListView>(
+        find.byType(ReorderableListView),
+      );
+      reorderableDetail.onReorderItem!(0, 1);
+      await tester.pumpAndSettle();
+      expect(fakeController.reorderedItemsCalled, isTrue);
+
       await tester.tap(find.byTooltip('Renombrar'));
       await tester.pumpAndSettle();
       expect(find.text('Edit: detail_1'), findsOneWidget);
@@ -442,7 +457,6 @@ void main() {
 
       expect(find.text('Sin items aún'), findsOneWidget);
 
-      // Tap share button
       await tester.tap(find.byTooltip('Compartir lista'));
       await tester.pumpAndSettle();
 
@@ -473,7 +487,6 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(HomeScreen), findsOneWidget);
 
-      // Go to /lists/new
       final container = ProviderScope.containerOf(
         tester.element(find.byType(HomeScreen)),
       );
@@ -481,22 +494,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(CreateEditListScreen), findsOneWidget);
 
-      // Go to /list/1
       container.read(appRouterProvider).go(AppRoutes.listDetailPath('1'));
       await tester.pumpAndSettle();
       expect(find.byType(ListDetailScreen), findsOneWidget);
 
-      // Go to /list/1/edit
       container.read(appRouterProvider).go(AppRoutes.editListPath('1'));
       await tester.pumpAndSettle();
       expect(find.byType(CreateEditListScreen), findsOneWidget);
 
-      // Go to /about
       container.read(appRouterProvider).go(AppRoutes.about);
       await tester.pumpAndSettle();
       expect(find.text('Listix'), findsOneWidget);
 
-      // Go to /settings
       container.read(appRouterProvider).go(AppRoutes.settings);
       await tester.pumpAndSettle();
       expect(find.text('Configuración'), findsWidgets);
@@ -509,10 +518,15 @@ class _ScreensTestListsController extends ListsController {
   final List<String> createdNames = [];
   final Map<String, String> updatedNames = {};
   final List<String> deletedListIds = [];
+  final List<ShoppingList> restoredLists = [];
+  final List<String> starredListIds = [];
   final List<String> addedItems = [];
   final List<String> toggledItemIds = [];
   final List<String> deletedItemIds = [];
+  final List<TodoItem> restoredItems = [];
   bool manualSyncCalled = false;
+  bool reorderedListsCalled = false;
+  bool reorderedItemsCalled = false;
 
   _ScreensTestListsController(this._lists);
 
@@ -540,6 +554,27 @@ class _ScreensTestListsController extends ListsController {
   }
 
   @override
+  Future<ShoppingList?> deleteListWithUndo(String listId) async {
+    deletedListIds.add(listId);
+    return _lists.where((l) => l.id == listId).firstOrNull;
+  }
+
+  @override
+  Future<void> restoreList(ShoppingList list) async {
+    restoredLists.add(list);
+  }
+
+  @override
+  Future<void> toggleStar(String listId) async {
+    starredListIds.add(listId);
+  }
+
+  @override
+  Future<void> reorderLists(int oldIndex, int newIndex) async {
+    reorderedListsCalled = true;
+  }
+
+  @override
   Future<void> addItem(String listId, String title) async {
     addedItems.add(title);
   }
@@ -552,6 +587,23 @@ class _ScreensTestListsController extends ListsController {
   @override
   Future<void> deleteItem(String listId, String itemId) async {
     deletedItemIds.add(itemId);
+  }
+
+  @override
+  Future<TodoItem?> deleteItemWithUndo(String listId, String itemId) async {
+    deletedItemIds.add(itemId);
+    final list = _lists.where((l) => l.id == listId).firstOrNull;
+    return list?.items.where((i) => i.id == itemId).firstOrNull;
+  }
+
+  @override
+  Future<void> restoreItem(TodoItem item) async {
+    restoredItems.add(item);
+  }
+
+  @override
+  Future<void> reorderItems(String listId, int oldIndex, int newIndex) async {
+    reorderedItemsCalled = true;
   }
 
   @override

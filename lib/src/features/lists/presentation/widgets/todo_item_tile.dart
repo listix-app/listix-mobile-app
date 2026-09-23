@@ -125,6 +125,16 @@ class TodoItemTile extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (!item.isCompleted) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.drag_handle_rounded,
+                        size: 18,
+                        color: isDark
+                            ? AppColors.textMutedDark.withValues(alpha: 0.4)
+                            : AppColors.textMuted.withValues(alpha: 0.5),
+                      ),
+                    ],
                   ],
                 ),
               ),
