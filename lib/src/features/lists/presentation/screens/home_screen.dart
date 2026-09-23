@@ -141,6 +141,7 @@ class HomeScreen extends ConsumerWidget {
                     ),
                     child: ListCard(
                       list: list,
+                      strings: tr,
                       onTap: () => context.push('/list/${list.id}'),
                     ),
                   );

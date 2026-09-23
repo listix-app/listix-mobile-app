@@ -298,6 +298,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           // Bottom Quick Add Input
           QuickAddInput(
             autoFocus: false,
+            hintText: tr.quickAddHint,
+            tooltip: tr.quickAddTooltip,
             onAdd: (title) {
               ref
                   .read(listsControllerProvider.notifier)

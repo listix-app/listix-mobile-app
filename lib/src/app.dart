@@ -18,6 +18,7 @@ class ListixApp extends ConsumerWidget {
       title: 'Listix',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
       routerConfig: router,
       locale: locale,
       supportedLocales: const [Locale('es'), Locale('en')],
