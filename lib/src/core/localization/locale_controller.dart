@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'app_strings.dart';
+import 'generated/app_localizations.dart';
 
 class LocaleController extends Notifier<Locale> {
   @override
   Locale build() {
-    // Default to Spanish (primary language of user brief), or can be English
     return const Locale('es');
   }
 
@@ -24,9 +25,12 @@ final localeControllerProvider = NotifierProvider<LocaleController, Locale>(
   LocaleController.new,
 );
 
-final stringsProvider = Provider<AppStrings>((ref) {
+final appLocalizationsProvider = Provider<AppLocalizations>((ref) {
   final locale = ref.watch(localeControllerProvider);
-  return AppStrings(
-    locale.languageCode == 'en' ? AppLanguage.en : AppLanguage.es,
-  );
+  return lookupAppLocalizations(locale);
+});
+
+final stringsProvider = Provider<AppStrings>((ref) {
+  final l10n = ref.watch(appLocalizationsProvider);
+  return AppStrings.fromLocalizations(l10n);
 });

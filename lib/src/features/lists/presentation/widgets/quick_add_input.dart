@@ -94,7 +94,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
                   color: AppColors.textPrimary,
                 ),
                 decoration: InputDecoration(
-                  hintText: widget.hintText ?? 'Agregar item rápido...',
+                  hintText: widget.hintText ?? 'Agregar item',
                   isDense: true,
                   prefixIcon: const Icon(
                     Icons.add,

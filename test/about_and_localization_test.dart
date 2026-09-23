@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/app.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
+import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/core/widgets/listix_logo.dart';
 import 'package:listix/src/features/about/presentation/screens/about_screen.dart';
@@ -22,9 +23,9 @@ void main() {
   });
 
   group('Localization & AboutScreen Tests', () {
-    test('AppStrings contains Spanish and English translations', () {
-      const es = AppStrings(AppLanguage.es);
-      const en = AppStrings(AppLanguage.en);
+    test('AppLocalizations & AppStrings provide Spanish and English', () {
+      final es = AppStrings(AppLanguage.es);
+      final en = AppStrings(AppLanguage.en);
 
       expect(es.myLists, 'Mis Listas');
       expect(en.myLists, 'My Lists');
@@ -34,6 +35,12 @@ void main() {
 
       expect(es.newList, 'Nueva lista');
       expect(en.newList, 'New list');
+
+      expect(es.ownerBadge, 'Dueño');
+      expect(en.ownerBadge, 'Owner');
+
+      expect(es.removeCollaborator, 'Quitar colaborador');
+      expect(en.removeCollaborator, 'Remove collaborator');
 
       expect(es.noItemsBadge, 'Sin items');
       expect(en.noItemsBadge, 'No items');
@@ -49,6 +56,58 @@ void main() {
         en.inviteSent('maria@test.com'),
         'Invitation sent to maria@test.com',
       );
+
+      expect(es.versionLabel('1.0.0', '1'), contains('1.0.0'));
+      expect(en.versionLabel('1.0.0', '1'), contains('1.0.0'));
+
+      expect(es.copyrightFooter(2026), contains('2026'));
+      expect(en.copyrightFooter(2026), contains('2026'));
+
+      expect(es.errorPrefix('Failed'), 'Error: Failed');
+      expect(en.errorPrefix('Failed'), 'Error: Failed');
+
+      // Test AppLocalizations lookup directly
+      final directEs = lookupAppLocalizations(const Locale('es'));
+      final directEn = lookupAppLocalizations(const Locale('en'));
+      expect(directEs.appName, 'Listix');
+      expect(directEn.appName, 'Listix');
+
+      expect(
+        () => lookupAppLocalizations(const Locale('fr')),
+        throwsA(isA<FlutterError>()),
+      );
+    });
+
+    test('AppLocalizationsDelegate methods', () async {
+      const delegate = AppLocalizations.delegate;
+      expect(delegate.isSupported(const Locale('es')), isTrue);
+      expect(delegate.isSupported(const Locale('en')), isTrue);
+      expect(delegate.isSupported(const Locale('fr')), isFalse);
+      expect(delegate.shouldReload(delegate), isFalse);
+
+      final loaded = await delegate.load(const Locale('es'));
+      expect(loaded.appName, 'Listix');
+    });
+
+    testWidgets('AppLocalizations.of retrieves instance in localized context', (
+      tester,
+    ) async {
+      late AppLocalizations retrieved;
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) {
+              retrieved = AppLocalizations.of(context);
+              return Text(retrieved.appName);
+            },
+          ),
+        ),
+      );
+
+      expect(retrieved, isNotNull);
+      expect(find.text('Listix'), findsOneWidget);
     });
 
     testWidgets('ListixLogo renders correctly with and without wordmark', (
@@ -80,7 +139,13 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
 
         await tester.pumpWidget(
-          const ProviderScope(child: MaterialApp(home: AboutScreen())),
+          const ProviderScope(
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: AboutScreen(),
+            ),
+          ),
         );
 
         // Verify app identity & version
@@ -89,11 +154,11 @@ void main() {
 
         // Verify sections
         expect(find.text('Offline-First'), findsOneWidget);
-        expect(find.text('Pol\u00edtica de Privacidad'), findsOneWidget);
-        expect(find.text('T\u00e9rminos del Servicio'), findsOneWidget);
+        expect(find.text('Política de Privacidad'), findsOneWidget);
+        expect(find.text('Términos del Servicio'), findsOneWidget);
 
         // Verify language switcher buttons
-        expect(find.text('Espa\u00f1ol'), findsOneWidget);
+        expect(find.text('Español'), findsOneWidget);
         expect(find.text('English'), findsOneWidget);
 
         // Switch language to English
@@ -137,7 +202,7 @@ void main() {
 
         // Verify we navigated to AboutScreen
         expect(find.byType(AboutScreen), findsOneWidget);
-        expect(find.text('Pol\u00edtica de Privacidad'), findsOneWidget);
+        expect(find.text('Política de Privacidad'), findsOneWidget);
       },
     );
   });

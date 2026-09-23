@@ -22,7 +22,12 @@ class ListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tr = strings ?? const AppStrings(AppLanguage.es);
+    final tr = strings ?? AppStrings(AppLanguage.es);
+    final badgeText = list.totalCount == 0
+        ? tr.noItemsBadge
+        : list.pendingCount == 0
+        ? tr.allDoneBadge
+        : tr.pendingBadge(list.progressText);
 
     return Card(
       elevation: 0,
@@ -80,11 +85,7 @@ class ListCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      list.totalCount == 0
-                          ? tr.noItemsBadge
-                          : list.pendingCount == 0
-                          ? tr.allDoneBadge
-                          : tr.pendingBadge(list.progressText),
+                      badgeText,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

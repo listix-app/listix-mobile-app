@@ -6,11 +6,15 @@ import '../../domain/entities/collaborator.dart';
 class CollaboratorTile extends StatelessWidget {
   final Collaborator collaborator;
   final VoidCallback? onRemove;
+  final String ownerLabel;
+  final String removeTooltip;
 
   const CollaboratorTile({
     super.key,
     required this.collaborator,
     this.onRemove,
+    this.ownerLabel = 'Dueño',
+    this.removeTooltip = 'Quitar colaborador',
   });
 
   @override
@@ -71,9 +75,9 @@ class CollaboratorTile extends StatelessWidget {
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text(
-                'Dueño',
-                style: TextStyle(
+              child: Text(
+                ownerLabel,
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppColors.primaryDark,
@@ -89,7 +93,7 @@ class CollaboratorTile extends StatelessWidget {
               ),
               splashRadius: 18,
               onPressed: onRemove,
-              tooltip: 'Quitar colaborador',
+              tooltip: removeTooltip,
             ),
         ],
       ),

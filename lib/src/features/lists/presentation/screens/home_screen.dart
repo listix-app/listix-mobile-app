@@ -155,7 +155,7 @@ class HomeScreen extends ConsumerWidget {
         error: (err, stack) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
-            child: Text('Error: $err'),
+            child: Text(tr.errorPrefix(err.toString())),
           ),
         ),
       ),

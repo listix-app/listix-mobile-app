@@ -266,6 +266,8 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
               ...list.collaborators.map(
                 (collab) => CollaboratorTile(
                   collaborator: collab,
+                  ownerLabel: tr.ownerBadge,
+                  removeTooltip: tr.removeCollaborator,
                   onRemove: collab.isOwner
                       ? null
                       : () {
