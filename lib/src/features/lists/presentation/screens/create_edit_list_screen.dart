@@ -84,78 +84,101 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  widget.isEditing ? tr.editListHeading : tr.createListHeading,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.4,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: (constraints.maxHeight - 40.0).clamp(
+                    0.0,
+                    double.infinity,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.isEditing
-                      ? tr.editListSubheading
-                      : tr.createListSubheading,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 28),
-                TextFormField(
-                  controller: _nameController,
-                  autofocus: true,
-                  textInputAction: TextInputAction.done,
-                  textCapitalization: TextCapitalization.sentences,
-                  onFieldSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
-                    labelText: tr.listNameLabel,
-                    hintText: tr.listNameHint,
-                    prefixIcon: const Icon(Icons.edit_note_rounded),
-                  ),
-                  validator: (val) {
-                    if (val == null || val.trim().isEmpty) {
-                      return tr.listNameValidation;
-                    }
-                    return null;
-                  },
-                ),
-                const Spacer(),
-                FilledButton(
-                  onPressed: _isLoading ? null : _submit,
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            widget.isEditing
+                                ? tr.editListHeading
+                                : tr.createListHeading,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              letterSpacing: -0.4,
+                            ),
                           ),
-                        )
-                      : Text(
-                          actionButtonText,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                          const SizedBox(height: 8),
+                          Text(
+                            widget.isEditing
+                                ? tr.editListSubheading
+                                : tr.createListSubheading,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
                           ),
+                          const SizedBox(height: 28),
+                          TextFormField(
+                            controller: _nameController,
+                            autofocus: true,
+                            textInputAction: TextInputAction.done,
+                            textCapitalization: TextCapitalization.sentences,
+                            onFieldSubmitted: (_) => _submit(),
+                            decoration: InputDecoration(
+                              labelText: tr.listNameLabel,
+                              hintText: tr.listNameHint,
+                              prefixIcon: const Icon(Icons.edit_note_rounded),
+                            ),
+                            validator: (val) {
+                              if (val == null || val.trim().isEmpty) {
+                                return tr.listNameValidation;
+                              }
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      FilledButton(
+                        onPressed: _isLoading ? null : _submit,
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                actionButtonText,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );

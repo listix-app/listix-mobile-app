@@ -49,6 +49,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
+    final tr = ref.read(stringsProvider);
     ref
         .read(listsControllerProvider.notifier)
         .addCollaborator(widget.listId, email);
@@ -59,7 +60,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Invitación enviada a $email'),
+          content: Text(tr.inviteSent(email)),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(seconds: 2),
         ),

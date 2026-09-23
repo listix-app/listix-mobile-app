@@ -30,6 +30,10 @@ class AppStrings {
   String get cancel => isSpanish ? 'Cancelar' : 'Cancel';
   String get delete => isSpanish ? 'Eliminar' : 'Delete';
   String get listCountSuffix => isSpanish ? 'listas' : 'lists';
+  String get noItemsBadge => isSpanish ? 'Sin items' : 'No items';
+  String get allDoneBadge => isSpanish ? 'Todo listo ✓' : 'All done ✓';
+  String pendingBadge(String progress) =>
+      isSpanish ? '$progress pendientes' : '$progress pending';
 
   // List Detail Screen
   String get rename => isSpanish ? 'Renombrar' : 'Rename';
@@ -101,6 +105,8 @@ class AppStrings {
       : 'No collaborators on this list yet.';
   String get removeCollaborator =>
       isSpanish ? 'Eliminar colaborador' : 'Remove collaborator';
+  String inviteSent(String email) =>
+      isSpanish ? 'Invitación enviada a $email' : 'Invitation sent to $email';
 
   // Sync Status
   String get syncStatusTitle =>

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/app.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/core/widgets/listix_logo.dart';
 import 'package:listix/src/features/about/presentation/screens/about_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   setUpAll(() {
@@ -34,6 +34,21 @@ void main() {
 
       expect(es.newList, 'Nueva lista');
       expect(en.newList, 'New list');
+
+      expect(es.noItemsBadge, 'Sin items');
+      expect(en.noItemsBadge, 'No items');
+      expect(es.allDoneBadge, 'Todo listo ✓');
+      expect(en.allDoneBadge, 'All done ✓');
+      expect(es.pendingBadge('1/2'), '1/2 pendientes');
+      expect(en.pendingBadge('1/2'), '1/2 pending');
+      expect(
+        es.inviteSent('maria@test.com'),
+        'Invitación enviada a maria@test.com',
+      );
+      expect(
+        en.inviteSent('maria@test.com'),
+        'Invitation sent to maria@test.com',
+      );
     });
 
     testWidgets('ListixLogo renders correctly with and without wordmark', (
@@ -74,11 +89,11 @@ void main() {
 
         // Verify sections
         expect(find.text('Offline-First'), findsOneWidget);
-        expect(find.text('Política de Privacidad'), findsOneWidget);
-        expect(find.text('Términos del Servicio'), findsOneWidget);
+        expect(find.text('Pol\u00edtica de Privacidad'), findsOneWidget);
+        expect(find.text('T\u00e9rminos del Servicio'), findsOneWidget);
 
         // Verify language switcher buttons
-        expect(find.text('Español'), findsOneWidget);
+        expect(find.text('Espa\u00f1ol'), findsOneWidget);
         expect(find.text('English'), findsOneWidget);
 
         // Switch language to English
@@ -122,7 +137,7 @@ void main() {
 
         // Verify we navigated to AboutScreen
         expect(find.byType(AboutScreen), findsOneWidget);
-        expect(find.text('Política de Privacidad'), findsOneWidget);
+        expect(find.text('Pol\u00edtica de Privacidad'), findsOneWidget);
       },
     );
   });
