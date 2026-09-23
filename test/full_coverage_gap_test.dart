@@ -565,7 +565,7 @@ void main() {
         'SyncController subscription updates state and cancels onDispose',
         () async {
           final container = ProviderContainer();
-          final sub = container.listen(syncControllerProvider, (_, __) {});
+          final sub = container.listen(syncControllerProvider, (_, _) {});
           final service = container.read(mockBackendSyncServiceProvider);
 
           service.toggleSimulatedOffline();
