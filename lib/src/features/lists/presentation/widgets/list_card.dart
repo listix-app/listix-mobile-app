@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/localization/generated/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/sync_indicator.dart';
 import '../../domain/entities/collaborator.dart';
@@ -9,16 +11,45 @@ class ListCard extends StatelessWidget {
   final ShoppingList list;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
+  final AppStrings? strings;
 
   const ListCard({
     super.key,
     required this.list,
     required this.onTap,
     this.onDelete,
+    this.strings,
   });
 
   @override
   Widget build(BuildContext context) {
+    String badgeText;
+    if (strings != null) {
+      badgeText = list.totalCount == 0
+          ? strings!.noItemsBadge
+          : list.pendingCount == 0
+          ? strings!.allDoneBadge
+          : strings!.pendingBadge(list.progressText);
+    } else {
+      final l10n = Localizations.of<AppLocalizations>(
+        context,
+        AppLocalizations,
+      );
+      if (l10n != null) {
+        badgeText = list.totalCount == 0
+            ? l10n.noItemsBadge
+            : list.pendingCount == 0
+            ? l10n.allDoneBadge
+            : l10n.pendingBadge(list.progressText);
+      } else {
+        badgeText = list.totalCount == 0
+            ? 'Sin items'
+            : list.pendingCount == 0
+            ? 'Todo listo ✓'
+            : '${list.progressText} pendientes';
+      }
+    }
+
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
@@ -75,11 +106,7 @@ class ListCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      list.totalCount == 0
-                          ? 'Sin items'
-                          : list.pendingCount == 0
-                          ? 'Todo listo ✓'
-                          : '${list.progressText} pendientes',
+                      badgeText,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,

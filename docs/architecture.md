@@ -1,8 +1,8 @@
-# Listix V1 - Architecture & Design Document
+# Listix Architecture & Design Document
 
 ## 1. Executive Summary
 
-Listix V1 is a fast, minimalist, **offline-first** checklist and shopping list application. It is engineered around instant responsiveness, zero-lag local SQLite persistence, discrete background synchronization, and a clean ad monetization architecture.
+Listix is a fast, minimalist, **offline-first** checklist and shopping list application. It is engineered around instant responsiveness, zero-lag local SQLite persistence, discrete background synchronization, and a clean ad monetization architecture.
 
 ### Scope Matrix
 

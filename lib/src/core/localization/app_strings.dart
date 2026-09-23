@@ -1,143 +1,111 @@
+import 'package:flutter/material.dart';
+
+import 'generated/app_localizations.dart';
+
 enum AppLanguage { es, en }
 
 class AppStrings {
-  final AppLanguage language;
+  final AppLocalizations _l10n;
 
-  const AppStrings(this.language);
+  AppStrings(AppLanguage language)
+    : _l10n = lookupAppLocalizations(Locale(language.name));
+
+  const AppStrings.fromLocalizations(this._l10n);
+
+  AppLanguage get language =>
+      _l10n.localeName == 'en' ? AppLanguage.en : AppLanguage.es;
 
   bool get isSpanish => language == AppLanguage.es;
 
   // General & Brand
-  String get appName => 'Listix';
-  String get appTagline => isSpanish
-      ? 'Listas de compras y pendientes rápidas, colaborativas y offline-first.'
-      : 'Fast, collaborative, offline-first shopping and todo lists.';
+  String get appName => _l10n.appName;
+  String get appTagline => _l10n.appTagline;
 
   // Home / Index Screen
-  String get myLists => isSpanish ? 'Mis Listas' : 'My Lists';
-  String get emptyListsTitle =>
-      isSpanish ? 'Aún no tienes listas' : 'No lists yet';
-  String get emptyListsMessage => isSpanish
-      ? 'Crea una lista para organizar tus compras del supermercado, ropa o pendientes del hogar.'
-      : 'Create a list to organize your groceries, clothing, or household tasks.';
-  String get createFirstList =>
-      isSpanish ? 'Crea tu primera lista' : 'Create your first list';
-  String get newList => isSpanish ? 'Nueva lista' : 'New list';
-  String get deleteListTitle => isSpanish ? '¿Eliminar lista?' : 'Delete list?';
-  String deleteListMessage(String name) => isSpanish
-      ? 'Se eliminará "$name" y todos sus items de forma permanente.'
-      : 'This will permanently delete "$name" and all of its items.';
-  String get cancel => isSpanish ? 'Cancelar' : 'Cancel';
-  String get delete => isSpanish ? 'Eliminar' : 'Delete';
-  String get listCountSuffix => isSpanish ? 'listas' : 'lists';
+  String get myLists => _l10n.myLists;
+  String get emptyListsTitle => _l10n.emptyListsTitle;
+  String get emptyListsMessage => _l10n.emptyListsMessage;
+  String get createFirstList => _l10n.createFirstList;
+  String get newList => _l10n.newList;
+  String get deleteListTitle => _l10n.deleteListTitle;
+  String deleteListMessage(String name) => _l10n.deleteListMessage(name);
+  String get cancel => _l10n.cancel;
+  String get delete => _l10n.delete;
+  String get listCountSuffix => _l10n.listCountSuffix;
+  String get noItemsBadge => _l10n.noItemsBadge;
+  String get allDoneBadge => _l10n.allDoneBadge;
+  String pendingBadge(String progress) => _l10n.pendingBadge(progress);
 
   // List Detail Screen
-  String get rename => isSpanish ? 'Renombrar' : 'Rename';
-  String get shareList => isSpanish ? 'Compartir lista' : 'Share list';
-  String get noItemsYet => isSpanish ? 'Sin items aún' : 'No items yet';
-  String pendingCountText(int pending, int total) => isSpanish
-      ? '$pending de $total pendientes'
-      : '$pending of $total pending';
-  String percentCompleted(int percent) =>
-      isSpanish ? '$percent% completado' : '$percent% completed';
-  String completedGroup(int count) =>
-      isSpanish ? 'Completados ($count)' : 'Completed ($count)';
-  String get emptyItemsTitle => isSpanish ? 'Lista vacía' : 'Empty list';
-  String get emptyItemsMessage => isSpanish
-      ? 'Escribe tu primer item en la barra inferior y presiona enter.'
-      : 'Type your first item in the bottom bar and press enter.';
-  String get quickAddHint =>
-      isSpanish ? 'Agregar item rápido...' : 'Quick add item...';
-  String get quickAddTooltip => isSpanish ? 'Agregar item' : 'Add item';
-  String get back => isSpanish ? 'Volver' : 'Back';
-  String get listNotFound =>
-      isSpanish ? 'Lista no encontrada' : 'List not found';
+  String get rename => _l10n.rename;
+  String get shareList => _l10n.shareList;
+  String get noItemsYet => _l10n.noItemsYet;
+  String pendingCountText(int pending, int total) =>
+      _l10n.pendingCountText(pending, total);
+  String percentCompleted(int percent) => _l10n.percentCompleted(percent);
+  String completedGroup(int count) => _l10n.completedGroup(count);
+  String get emptyItemsTitle => _l10n.emptyItemsTitle;
+  String get emptyItemsMessage => _l10n.emptyItemsMessage;
+  String get quickAddHint => _l10n.quickAddHint;
+  String get quickAddTooltip => _l10n.quickAddTooltip;
+  String get back => _l10n.back;
+  String get listNotFound => _l10n.listNotFound;
 
   // Create / Edit List Screen
-  String get renameListTitle => isSpanish ? 'Renombrar lista' : 'Rename list';
-  String get newListTitle => isSpanish ? 'Nueva lista' : 'New list';
-  String get editListHeading =>
-      isSpanish ? 'Edita el nombre de tu lista' : 'Edit your list name';
-  String get createListHeading => isSpanish
-      ? '¿Qué vas a comprar o preparar hoy?'
-      : 'What are you shopping or planning today?';
-  String get editListSubheading => isSpanish
-      ? 'El nuevo nombre se guardará en SQLite local y se sincronizará automáticamente.'
-      : 'The updated name is saved locally in SQLite and synced automatically.';
-  String get createListSubheading => isSpanish
-      ? 'Escribe un nombre claro (ej. Supermercado semanal, Ferretería, Farmacia).'
-      : 'Type a clear name (e.g. Weekly Groceries, Hardware, Pharmacy).';
-  String get listNameLabel => isSpanish ? 'Nombre de la lista' : 'List name';
-  String get listNameHint =>
-      isSpanish ? 'Ej. Despensa mensual' : 'e.g. Monthly Pantry';
-  String get listNameValidation =>
-      isSpanish ? 'Por favor ingresa un nombre' : 'Please enter a name';
-  String get saveChanges => isSpanish ? 'Guardar cambios' : 'Save changes';
-  String get createListAction => isSpanish ? 'Crear lista' : 'Create list';
+  String get renameListTitle => _l10n.renameListTitle;
+  String get newListTitle => _l10n.newListTitle;
+  String get editListHeading => _l10n.editListHeading;
+  String get createListHeading => _l10n.createListHeading;
+  String get editListSubheading => _l10n.editListSubheading;
+  String get createListSubheading => _l10n.createListSubheading;
+  String get listNameLabel => _l10n.listNameLabel;
+  String get listNameHint => _l10n.listNameHint;
+  String get listNameValidation => _l10n.listNameValidation;
+  String get saveChanges => _l10n.saveChanges;
+  String get createListAction => _l10n.createListAction;
 
   // Share List Sheet
-  String get shareHeading => isSpanish ? 'Compartir' : 'Share';
-  String get shareListSubheading => isSpanish
-      ? 'Invita a otras personas a ver y tachar items en tiempo real.'
-      : 'Invite others to view and check off items in real time.';
-  String get copyInviteLink =>
-      isSpanish ? 'Copiar enlace de invitación' : 'Copy invitation link';
-  String get linkCopied => isSpanish
-      ? 'Enlace de invitación copiado al portapapeles'
-      : 'Invitation link copied to clipboard';
-  String get inviteByEmail =>
-      isSpanish ? 'O invitar por correo' : 'Or invite by email';
-  String get emailHint =>
-      isSpanish ? 'ejemplo@correo.com' : 'example@email.com';
-  String get inviteAction => isSpanish ? 'Invitar' : 'Invite';
-  String get enterEmailError =>
-      isSpanish ? 'Ingresa un correo' : 'Please enter an email';
-  String get invalidEmailError =>
-      isSpanish ? 'Correo no válido' : 'Invalid email';
-  String get collaboratorsHeading =>
-      isSpanish ? 'Colaboradores' : 'Collaborators';
-  String get noCollaboratorsYet => isSpanish
-      ? 'Aún no hay colaboradores en esta lista.'
-      : 'No collaborators on this list yet.';
-  String get removeCollaborator =>
-      isSpanish ? 'Eliminar colaborador' : 'Remove collaborator';
+  String get shareHeading => _l10n.shareHeading;
+  String get shareListSubheading => _l10n.shareListSubheading;
+  String get copyInviteLink => _l10n.copyInviteLink;
+  String get linkCopied => _l10n.linkCopied;
+  String get inviteByEmail => _l10n.inviteByEmail;
+  String get emailHint => _l10n.emailHint;
+  String get inviteAction => _l10n.inviteAction;
+  String get enterEmailError => _l10n.enterEmailError;
+  String get invalidEmailError => _l10n.invalidEmailError;
+  String get collaboratorsHeading => _l10n.collaboratorsHeading;
+  String get noCollaboratorsYet => _l10n.noCollaboratorsYet;
+  String get removeCollaborator => _l10n.removeCollaborator;
+  String get ownerBadge => _l10n.ownerBadge;
+  String inviteSent(String email) => _l10n.inviteSent(email);
 
   // Sync Status
-  String get syncStatusTitle =>
-      isSpanish ? 'Estado de Sincronización' : 'Synchronization Status';
-  String get syncStatusDescription => isSpanish
-      ? 'Listix opera bajo arquitectura Offline-First con persistencia local en SQLite.'
-      : 'Listix operates under an Offline-First architecture with local SQLite storage.';
-  String get simulateOffline =>
-      isSpanish ? 'Simular Modo Offline' : 'Simulate Offline Mode';
-  String get simulateOfflineSubtitle => isSpanish
-      ? 'Comprueba cómo la app guarda localmente sin conexión'
-      : 'Test how the app saves data locally with zero connection';
-  String get close => isSpanish ? 'Cerrar' : 'Close';
-  String get syncNow => isSpanish ? 'Sincronizar ahora' : 'Sync now';
-  String get statusSyncing => isSpanish ? 'Sincronizando...' : 'Syncing...';
-  String get statusOffline => isSpanish ? 'Offline' : 'Offline';
-  String get statusPending => isSpanish ? 'Pendiente' : 'Pending';
-  String get statusSynced => isSpanish ? 'Sincronizado' : 'Synced';
+  String get syncStatusTitle => _l10n.syncStatusTitle;
+  String get syncStatusDescription => _l10n.syncStatusDescription;
+  String get simulateOffline => _l10n.simulateOffline;
+  String get simulateOfflineSubtitle => _l10n.simulateOfflineSubtitle;
+  String get close => _l10n.close;
+  String get syncNow => _l10n.syncNow;
+  String get statusSyncing => _l10n.statusSyncing;
+  String get statusOffline => _l10n.statusOffline;
+  String get statusPending => _l10n.statusPending;
+  String get statusSynced => _l10n.statusSynced;
 
   // About, Policy & Privacy
-  String get aboutApp => isSpanish ? 'Acerca de Listix' : 'About Listix';
-  String get version => isSpanish ? 'Versión' : 'Version';
-  String get languageTitle => isSpanish ? 'Idioma' : 'Language';
-  String get privacyPolicy =>
-      isSpanish ? 'Política de Privacidad' : 'Privacy Policy';
-  String get termsOfService =>
-      isSpanish ? 'Términos del Servicio' : 'Terms of Service';
-
-  String get privacyStatement => isSpanish
-      ? 'En Listix tu privacidad es absoluta. Todos tus datos residen de forma predeterminada en el almacenamiento SQLite local de tu dispositivo. No recopilamos rastreadores de publicidad, no vendemos datos a terceros ni almacenamos analíticas invasivas.'
-      : 'At Listix, your privacy is absolute. All your data lives by default on your device’s local SQLite storage. We do not use advertising trackers, sell personal data to third parties, or run invasive analytics.';
-
-  String get offlineFirstStatement => isSpanish
-      ? 'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose de manera segura en segundo plano.'
-      : 'Offline-First Architecture: Every creation, check-off, and edit occurs at native speed with zero latency on local storage, syncing securely in the background.';
-
-  String get termsStatement => isSpanish
-      ? 'Listix es una herramienta creada para la productividad personal y colaborativa. El usuario es el único propietario de sus listas y contenido.'
-      : 'Listix is a tool built for personal and collaborative productivity. You retain full ownership of your lists and content.';
+  String get aboutApp => _l10n.aboutApp;
+  String get version => _l10n.version;
+  String versionLabel(String version, String build) =>
+      _l10n.versionLabel(version, build);
+  String get languageTitle => _l10n.languageTitle;
+  String get spanish => _l10n.spanish;
+  String get english => _l10n.english;
+  String get offlineFirstTitle => _l10n.offlineFirstTitle;
+  String get privacyPolicy => _l10n.privacyPolicy;
+  String get termsOfService => _l10n.termsOfService;
+  String get privacyStatement => _l10n.privacyStatement;
+  String get offlineFirstStatement => _l10n.offlineFirstStatement;
+  String get termsStatement => _l10n.termsStatement;
+  String copyrightFooter(int year) => _l10n.copyrightFooter(year);
+  String errorPrefix(String error) => _l10n.errorPrefix(error);
 }

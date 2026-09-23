@@ -52,7 +52,7 @@ class AboutScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${tr.version} 1.0.0 (Build 1)',
+                    tr.versionLabel('1.0.0', '1'),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -110,16 +110,16 @@ class AboutScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 SegmentedButton<AppLanguage>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: AppLanguage.es,
-                      label: Text('Español'),
-                      icon: Icon(Icons.flag_outlined, size: 16),
+                      label: Text(tr.spanish),
+                      icon: const Icon(Icons.flag_outlined, size: 16),
                     ),
                     ButtonSegment(
                       value: AppLanguage.en,
-                      label: Text('English'),
-                      icon: Icon(Icons.flag_outlined, size: 16),
+                      label: Text(tr.english),
+                      icon: const Icon(Icons.flag_outlined, size: 16),
                     ),
                   ],
                   selected: {
@@ -154,7 +154,7 @@ class AboutScreen extends ConsumerWidget {
           // Offline-First Principle
           _InfoCard(
             icon: Icons.offline_bolt_outlined,
-            title: 'Offline-First',
+            title: tr.offlineFirstTitle,
             content: tr.offlineFirstStatement,
           ),
 
@@ -181,7 +181,7 @@ class AboutScreen extends ConsumerWidget {
           // Open Source / Copyright Footer
           Center(
             child: Text(
-              '© ${DateTime.now().year} Listix • MIT License',
+              tr.copyrightFooter(DateTime.now().year),
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,

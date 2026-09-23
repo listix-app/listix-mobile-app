@@ -1,0 +1,148 @@
+{
+  "@@locale": "en",
+  "appName": "Listix",
+  "appTagline": "Fast, collaborative, offline-first shopping and todo lists.",
+  "myLists": "My Lists",
+  "emptyListsTitle": "No lists yet",
+  "emptyListsMessage": "Create a list to organize your groceries, clothing, or household tasks.",
+  "createFirstList": "Create your first list",
+  "newList": "New list",
+  "deleteListTitle": "Delete list?",
+  "deleteListMessage": "This will permanently delete \"{name}\" and all of its items.",
+  "@deleteListMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "listCountSuffix": "lists",
+  "noItemsBadge": "No items",
+  "allDoneBadge": "All done ✓",
+  "pendingBadge": "{progress} pending",
+  "@pendingBadge": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "rename": "Rename",
+  "shareList": "Share list",
+  "noItemsYet": "No items yet",
+  "pendingCountText": "{pending} of {total} pending",
+  "@pendingCountText": {
+    "placeholders": {
+      "pending": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "percentCompleted": "{percent}% completed",
+  "@percentCompleted": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "completedGroup": "Completed ({count})",
+  "@completedGroup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptyItemsTitle": "Empty list",
+  "emptyItemsMessage": "Type your first item in the bottom bar and press enter.",
+  "quickAddHint": "Quick add item...",
+  "quickAddTooltip": "Add item",
+  "back": "Back",
+  "listNotFound": "List not found",
+  "renameListTitle": "Rename list",
+  "newListTitle": "New list",
+  "editListHeading": "Edit your list name",
+  "createListHeading": "What are you shopping or planning today?",
+  "editListSubheading": "The updated name is saved locally in SQLite and synced automatically.",
+  "createListSubheading": "Type a clear name (e.g. Weekly Groceries, Hardware, Pharmacy).",
+  "listNameLabel": "List name",
+  "listNameHint": "e.g. Monthly Pantry",
+  "listNameValidation": "Please enter a name",
+  "saveChanges": "Save changes",
+  "createListAction": "Create list",
+  "shareHeading": "Share",
+  "shareListSubheading": "Invite others to view and check off items in real time.",
+  "copyInviteLink": "Copy invitation link",
+  "linkCopied": "Invitation link copied to clipboard",
+  "inviteByEmail": "Or invite by email",
+  "emailHint": "example@email.com",
+  "inviteAction": "Invite",
+  "enterEmailError": "Please enter an email",
+  "invalidEmailError": "Invalid email",
+  "collaboratorsHeading": "Collaborators",
+  "noCollaboratorsYet": "No collaborators on this list yet.",
+  "removeCollaborator": "Remove collaborator",
+  "ownerBadge": "Owner",
+  "inviteSent": "Invitation sent to {email}",
+  "@inviteSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "syncStatusTitle": "Synchronization Status",
+  "syncStatusDescription": "Listix operates under an Offline-First architecture with local SQLite storage.",
+  "simulateOffline": "Simulate Offline Mode",
+  "simulateOfflineSubtitle": "Test how the app saves data locally with zero connection",
+  "close": "Close",
+  "syncNow": "Sync now",
+  "statusSyncing": "Syncing...",
+  "statusOffline": "Offline",
+  "statusPending": "Pending",
+  "statusSynced": "Synced",
+  "aboutApp": "About Listix",
+  "version": "Version",
+  "versionLabel": "Version {version} (Build {build})",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "languageTitle": "Language",
+  "spanish": "Spanish",
+  "english": "English",
+  "offlineFirstTitle": "Offline-First",
+  "privacyPolicy": "Privacy Policy",
+  "termsOfService": "Terms of Service",
+  "privacyStatement": "At Listix, your privacy is absolute. All your data lives by default on your device’s local SQLite storage. We do not use advertising trackers, sell personal data to third parties, or run invasive analytics.",
+  "offlineFirstStatement": "Offline-First Architecture: Every creation, check-off, and edit occurs at native speed with zero latency on local storage, syncing securely in the background.",
+  "termsStatement": "Listix is a tool built for personal and collaborative productivity. You retain full ownership of your lists and content.",
+  "copyrightFooter": "© {year} Listix • MIT License",
+  "@copyrightFooter": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "errorPrefix": "Error: {error}",
+  "@errorPrefix": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}

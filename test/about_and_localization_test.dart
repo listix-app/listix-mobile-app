@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:listix/src/app.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
+import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/core/widgets/listix_logo.dart';
 import 'package:listix/src/features/about/presentation/screens/about_screen.dart';
@@ -22,9 +23,9 @@ void main() {
   });
 
   group('Localization & AboutScreen Tests', () {
-    test('AppStrings contains Spanish and English translations', () {
-      const es = AppStrings(AppLanguage.es);
-      const en = AppStrings(AppLanguage.en);
+    test('AppLocalizations & AppStrings provide Spanish and English', () {
+      final es = AppStrings(AppLanguage.es);
+      final en = AppStrings(AppLanguage.en);
 
       expect(es.myLists, 'Mis Listas');
       expect(en.myLists, 'My Lists');
@@ -34,6 +35,32 @@ void main() {
 
       expect(es.newList, 'Nueva lista');
       expect(en.newList, 'New list');
+
+      expect(es.ownerBadge, 'Dueño');
+      expect(en.ownerBadge, 'Owner');
+
+      expect(es.removeCollaborator, 'Quitar colaborador');
+      expect(en.removeCollaborator, 'Remove collaborator');
+
+      expect(es.versionLabel('1.0.0', '1'), contains('1.0.0'));
+      expect(en.versionLabel('1.0.0', '1'), contains('1.0.0'));
+
+      expect(es.copyrightFooter(2026), contains('2026'));
+      expect(en.copyrightFooter(2026), contains('2026'));
+
+      expect(es.errorPrefix('Failed'), 'Error: Failed');
+      expect(en.errorPrefix('Failed'), 'Error: Failed');
+
+      // Test AppLocalizations lookup directly
+      final directEs = lookupAppLocalizations(const Locale('es'));
+      final directEn = lookupAppLocalizations(const Locale('en'));
+      expect(directEs.appName, 'Listix');
+      expect(directEn.appName, 'Listix');
+
+      expect(
+        () => lookupAppLocalizations(const Locale('fr')),
+        throwsA(isA<FlutterError>()),
+      );
     });
 
     testWidgets('ListixLogo renders correctly with and without wordmark', (
@@ -65,7 +92,13 @@ void main() {
         addTearDown(tester.view.resetDevicePixelRatio);
 
         await tester.pumpWidget(
-          const ProviderScope(child: MaterialApp(home: AboutScreen())),
+          const ProviderScope(
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: AboutScreen(),
+            ),
+          ),
         );
 
         // Verify app identity & version

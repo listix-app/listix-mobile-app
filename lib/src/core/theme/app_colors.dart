@@ -14,6 +14,14 @@ abstract final class AppColors {
   static const Color borderLight = Color(0xFFE2E8F0); // Slate 200
   static const Color borderFocus = Color(0xFF0D9488); // Teal 600
 
+  // Dark mode surfaces & text
+  static const Color surfaceDark = Color(0xFF0F172A); // Slate 900
+  static const Color cardDark = Color(0xFF1E293B); // Slate 800
+  static const Color borderDark = Color(0xFF334155); // Slate 700
+  static const Color textPrimaryDark = Color(0xFFF8FAFC); // Slate 50
+  static const Color textSecondaryDark = Color(0xFF94A3B8); // Slate 400
+  static const Color textMutedDark = Color(0xFF64748B); // Slate 500
+
   // Text with strict contrast
   static const Color textPrimary = Color(
     0xFF0F172A,

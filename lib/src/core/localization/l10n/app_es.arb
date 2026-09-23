@@ -1,0 +1,148 @@
+{
+  "@@locale": "es",
+  "appName": "Listix",
+  "appTagline": "Listas de compras y pendientes rápidas, colaborativas y offline-first.",
+  "myLists": "Mis Listas",
+  "emptyListsTitle": "Aún no tienes listas",
+  "emptyListsMessage": "Crea una lista para organizar tus compras del supermercado, ropa o pendientes del hogar.",
+  "createFirstList": "Crea tu primera lista",
+  "newList": "Nueva lista",
+  "deleteListTitle": "¿Eliminar lista?",
+  "deleteListMessage": "Se eliminará \"{name}\" y todos sus items de forma permanente.",
+  "@deleteListMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "listCountSuffix": "listas",
+  "noItemsBadge": "Sin items",
+  "allDoneBadge": "Todo listo ✓",
+  "pendingBadge": "{progress} pendientes",
+  "@pendingBadge": {
+    "placeholders": {
+      "progress": {
+        "type": "String"
+      }
+    }
+  },
+  "rename": "Renombrar",
+  "shareList": "Compartir lista",
+  "noItemsYet": "Sin items aún",
+  "pendingCountText": "{pending} de {total} pendientes",
+  "@pendingCountText": {
+    "placeholders": {
+      "pending": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "percentCompleted": "{percent}% completado",
+  "@percentCompleted": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "completedGroup": "Completados ({count})",
+  "@completedGroup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "emptyItemsTitle": "Lista vacía",
+  "emptyItemsMessage": "Escribe tu primer item en la barra inferior y presiona enter.",
+  "quickAddHint": "Agregar item rápido...",
+  "quickAddTooltip": "Agregar item",
+  "back": "Volver",
+  "listNotFound": "Lista no encontrada",
+  "renameListTitle": "Renombrar lista",
+  "newListTitle": "Nueva lista",
+  "editListHeading": "Edita el nombre de tu lista",
+  "createListHeading": "¿Qué vas a comprar o preparar hoy?",
+  "editListSubheading": "El nuevo nombre se guardará en SQLite local y se sincronizará automáticamente.",
+  "createListSubheading": "Escribe un nombre claro (ej. Supermercado semanal, Ferretería, Farmacia).",
+  "listNameLabel": "Nombre de la lista",
+  "listNameHint": "Ej. Despensa mensual",
+  "listNameValidation": "Por favor ingresa un nombre",
+  "saveChanges": "Guardar cambios",
+  "createListAction": "Crear lista",
+  "shareHeading": "Compartir",
+  "shareListSubheading": "Invita a otras personas a ver y tachar items en tiempo real.",
+  "copyInviteLink": "Copiar enlace de invitación",
+  "linkCopied": "Enlace de invitación copiado al portapapeles",
+  "inviteByEmail": "O invitar por correo",
+  "emailHint": "ejemplo@correo.com",
+  "inviteAction": "Invitar",
+  "enterEmailError": "Ingresa un correo",
+  "invalidEmailError": "Correo no válido",
+  "collaboratorsHeading": "Colaboradores",
+  "noCollaboratorsYet": "Aún no hay colaboradores en esta lista.",
+  "removeCollaborator": "Quitar colaborador",
+  "ownerBadge": "Dueño",
+  "inviteSent": "Invitación enviada a {email}",
+  "@inviteSent": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "syncStatusTitle": "Estado de Sincronización",
+  "syncStatusDescription": "Listix opera bajo arquitectura Offline-First con persistencia local en SQLite.",
+  "simulateOffline": "Simular Modo Offline",
+  "simulateOfflineSubtitle": "Comprueba cómo la app guarda localmente sin conexión",
+  "close": "Cerrar",
+  "syncNow": "Sincronizar ahora",
+  "statusSyncing": "Sincronizando...",
+  "statusOffline": "Offline",
+  "statusPending": "Pendiente",
+  "statusSynced": "Sincronizado",
+  "aboutApp": "Acerca de Listix",
+  "version": "Versión",
+  "versionLabel": "Versión {version} (Build {build})",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
+  },
+  "languageTitle": "Idioma",
+  "spanish": "Español",
+  "english": "English",
+  "offlineFirstTitle": "Offline-First",
+  "privacyPolicy": "Política de Privacidad",
+  "termsOfService": "Términos del Servicio",
+  "privacyStatement": "En Listix tu privacidad es absoluta. Todos tus datos residen de forma predeterminada en el almacenamiento SQLite local de tu dispositivo. No recopilamos rastreadores de publicidad, no vendemos datos a terceros ni almacenamos analíticas invasivas.",
+  "offlineFirstStatement": "Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose de manera segura en segundo plano.",
+  "termsStatement": "Listix es una herramienta creada para la productividad personal y colaborativa. El usuario es el único propietario de sus listas y contenido.",
+  "copyrightFooter": "© {year} Listix • Licencia MIT",
+  "@copyrightFooter": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "errorPrefix": "Error: {error}",
+  "@errorPrefix": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
+}
