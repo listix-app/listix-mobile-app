@@ -59,7 +59,7 @@ class AppDatabase {
 
     return await openDatabase(
       dbPath,
-      version: 4,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -93,6 +93,31 @@ class AppDatabase {
     if (oldVersion < 4) {
       await db.execute(
         'ALTER TABLE shopping_lists ADD COLUMN is_shared INTEGER NOT NULL DEFAULT 0;',
+      );
+    }
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS collaborators (
+          id TEXT PRIMARY KEY NOT NULL,
+          list_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          is_owner INTEGER NOT NULL DEFAULT 0,
+          role TEXT NOT NULL DEFAULT 'member',
+          FOREIGN KEY (list_id) REFERENCES shopping_lists (id) ON DELETE CASCADE
+        );
+      ''');
+      final tableInfo = await db.rawQuery(
+        "PRAGMA table_info('collaborators');",
+      );
+      final hasRole = tableInfo.any((col) => col['name'] == 'role');
+      if (!hasRole) {
+        await db.execute(
+          "ALTER TABLE collaborators ADD COLUMN role TEXT NOT NULL DEFAULT 'member';",
+        );
+      }
+      await db.execute(
+        "UPDATE collaborators SET role = 'owner' WHERE is_owner = 1;",
       );
     }
   }
@@ -133,6 +158,7 @@ class AppDatabase {
         name TEXT NOT NULL,
         email TEXT NOT NULL,
         is_owner INTEGER NOT NULL DEFAULT 0,
+        role TEXT NOT NULL DEFAULT 'member',
         FOREIGN KEY (list_id) REFERENCES shopping_lists (id) ON DELETE CASCADE
       );
     ''');
@@ -183,6 +209,7 @@ class AppDatabase {
       'name': 'Mariana Ruiz',
       'email': 'mariana.ruiz@example.com',
       'is_owner': 0,
+      'role': 'admin',
     });
     await db.insert('collaborators', {
       'id': 'collab-2',

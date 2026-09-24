@@ -492,10 +492,14 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     }
   }
 
-  Future<void> addCollaborator(String listId, String email) async {
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {
     final repository = ref.read(listsRepositoryProvider);
     await repository.setListShared(listId, true);
-    await repository.addCollaborator(listId, email);
+    await repository.addCollaborator(listId, email, role: role);
     await repository.syncList(listId);
     final freshLists = await repository.getLists();
     state = AsyncData(freshLists);
@@ -524,6 +528,25 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
       CollaborationEvent.collaboratorRemoved(
         listId: listId,
         collaboratorId: collaboratorId,
+        senderEmail: _getCurrentEmail(),
+        senderName: _getCurrentName(),
+      ),
+    );
+  }
+
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final repository = ref.read(listsRepositoryProvider);
+    await repository.updateCollaboratorRole(listId, collaboratorId, role);
+    state = AsyncData(await repository.getLists());
+    _broadcastEvent(
+      CollaborationEvent.collaboratorRoleUpdated(
+        listId: listId,
+        collaboratorId: collaboratorId,
+        role: role,
         senderEmail: _getCurrentEmail(),
         senderName: _getCurrentName(),
       ),
@@ -652,6 +675,37 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.applyRemoteCollaboratorRemove(listId, collaboratorId);
+    } catch (_) {}
+  }
+
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      final updatedLists = currentLists.map((l) {
+        if (l.id == listId) {
+          final updatedCollabs = l.collaborators.map((c) {
+            if (c.id == collaboratorId) {
+              return c.copyWith(role: role);
+            }
+            return c;
+          }).toList();
+          return l.copyWith(collaborators: updatedCollabs);
+        }
+        return l;
+      }).toList();
+      state = AsyncData(updatedLists);
+    }
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.applyRemoteCollaboratorRole(
+        listId,
+        collaboratorId,
+        role,
+      );
     } catch (_) {}
   }
 

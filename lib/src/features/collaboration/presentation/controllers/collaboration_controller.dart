@@ -139,7 +139,6 @@ class CollaborationController extends Notifier<CollaborationState> {
   }
 
   void _onIncomingEvent(CollaborationEvent event) {
-    if (!ref.mounted) return;
     state = state.copyWith(lastEvent: event);
 
     if (event.type == CollaborationEventType.presence) {
@@ -191,9 +190,18 @@ class CollaborationController extends Notifier<CollaborationState> {
             listsCtrl.applyRemoteCollaboratorRemove(event.listId, collabId);
           }
           break;
-        case CollaborationEventType.joinList:
-        case CollaborationEventType.leaveList:
-        case CollaborationEventType.presence:
+        case CollaborationEventType.updateCollaboratorRole:
+          final collabId = event.payload['collaboratorId'] as String?;
+          final roleName = event.payload['role'] as String?;
+          if (collabId != null && roleName != null) {
+            final role = CollaboratorRole.values.firstWhere(
+              (r) => r.name == roleName,
+              orElse: () => CollaboratorRole.member,
+            );
+            listsCtrl.applyRemoteCollaboratorRole(event.listId, collabId, role);
+          }
+          break;
+        default:
           break;
       }
     } catch (_) {}

@@ -18,8 +18,17 @@ abstract interface class ListsRepository {
   Future<void> reorderItems(String listId, List<String> orderedItemIds);
   Future<void> restoreItem(TodoItem item);
 
-  Future<void> addCollaborator(String listId, String email);
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  });
   Future<void> removeCollaborator(String listId, String collaboratorId);
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  );
   Future<ShoppingList> joinSharedList(
     String listId,
     String name, {
@@ -41,6 +50,11 @@ abstract interface class ListsRepository {
   Future<void> applyRemoteCollaboratorRemove(
     String listId,
     String collaboratorId,
+  );
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
   );
 
   Future<void> syncList(String listId);

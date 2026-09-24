@@ -470,6 +470,54 @@ abstract class AppLocalizations {
   /// **'Dueño'**
   String get ownerBadge;
 
+  /// No description provided for @adminBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Admin'**
+  String get adminBadge;
+
+  /// No description provided for @memberBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaborador'**
+  String get memberBadge;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In es, this message translates to:
+  /// **'Dueño'**
+  String get roleOwner;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In es, this message translates to:
+  /// **'Administrador'**
+  String get roleAdmin;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaborador'**
+  String get roleMember;
+
+  /// No description provided for @makeAdmin.
+  ///
+  /// In es, this message translates to:
+  /// **'Hacer Administrador'**
+  String get makeAdmin;
+
+  /// No description provided for @makeMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Hacer Colaborador'**
+  String get makeMember;
+
+  /// No description provided for @inviteAsRole.
+  ///
+  /// In es, this message translates to:
+  /// **'Rol'**
+  String get inviteAsRole;
+
   /// No description provided for @inviteSent.
   ///
   /// In es, this message translates to:
@@ -1015,6 +1063,42 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Soporte y Comentarios'**
   String get supportAndFeedback;
+
+  /// No description provided for @inactiveShareInviteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Invita a colaborar en esta lista'**
+  String get inactiveShareInviteTitle;
+
+  /// No description provided for @inactiveShareInviteDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta lista es privada y está guardada únicamente en tu dispositivo. Activa el modo compartido para invitar amigos o colegas y editar juntos en tiempo real.'**
+  String get inactiveShareInviteDescription;
+
+  /// No description provided for @activateAndShare.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar y compartir lista'**
+  String get activateAndShare;
+
+  /// No description provided for @enableCollaboration.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar colaboración'**
+  String get enableCollaboration;
+
+  /// No description provided for @realtimeSyncFeature.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronización en tiempo real al agregar o tachar productos'**
+  String get realtimeSyncFeature;
+
+  /// No description provided for @collaboratorsFeature.
+  ///
+  /// In es, this message translates to:
+  /// **'Invita fácilmente mediante un enlace o correo electrónico'**
+  String get collaboratorsFeature;
 }
 
 class _AppLocalizationsDelegate

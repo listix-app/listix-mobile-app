@@ -181,14 +181,50 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<void> addCollaborator(String listId, String email) async {
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
-      final collab = Collaborator(id: 'c_$email', name: email, email: email);
+      final collab = Collaborator(
+        id: 'c_$email',
+        name: email,
+        email: email,
+        role: role,
+      );
       internalLists[listIndex] = internalLists[listIndex].copyWith(
         collaborators: [...internalLists[listIndex].collaborators, collab],
       );
     }
+  }
+
+  @override
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      final collabs = internalLists[listIndex].collaborators.map((c) {
+        if (c.id == collaboratorId) return c.copyWith(role: role);
+        return c;
+      }).toList();
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        collaborators: collabs,
+      );
+    }
+  }
+
+  @override
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    await updateCollaboratorRole(listId, collaboratorId, role);
   }
 
   @override
@@ -809,9 +845,34 @@ void main() {
 
         await container
             .read(listsControllerProvider.notifier)
-            .addCollaborator('list_1', 'maria@listix.app');
+            .addCollaborator(
+              'list_1',
+              'maria@listix.app',
+              role: CollaboratorRole.admin,
+            );
         var list = container.read(shoppingListProvider('list_1'))!;
         expect(list.collaborators.length, 1);
+        expect(list.collaborators.first.role, CollaboratorRole.admin);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .updateCollaboratorRole(
+              'list_1',
+              'c_maria@listix.app',
+              CollaboratorRole.member,
+            );
+        list = container.read(shoppingListProvider('list_1'))!;
+        expect(list.collaborators.first.role, CollaboratorRole.member);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .applyRemoteCollaboratorRole(
+              'list_1',
+              'c_maria@listix.app',
+              CollaboratorRole.admin,
+            );
+        list = container.read(shoppingListProvider('list_1'))!;
+        expect(list.collaborators.first.role, CollaboratorRole.admin);
 
         await container
             .read(listsControllerProvider.notifier)

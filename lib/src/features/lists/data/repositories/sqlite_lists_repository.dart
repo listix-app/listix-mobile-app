@@ -64,11 +64,21 @@ class SqliteListsRepository implements ListsRepository {
     final collabsByList = <String, List<Collaborator>>{};
     for (final row in collabMaps) {
       final listId = row['list_id'] as String;
+      final roleStr = row['role'] as String?;
+      final isOwner = (row['is_owner'] as int) == 1;
+      final role = roleStr != null
+          ? CollaboratorRole.values.firstWhere(
+              (r) => r.name == roleStr,
+              orElse: () =>
+                  isOwner ? CollaboratorRole.owner : CollaboratorRole.member,
+            )
+          : (isOwner ? CollaboratorRole.owner : CollaboratorRole.member);
       final collab = Collaborator(
         id: row['id'] as String,
         name: row['name'] as String,
         email: row['email'] as String,
-        isOwner: (row['is_owner'] as int) == 1,
+        role: role,
+        isOwner: isOwner,
       );
       collabsByList.putIfAbsent(listId, () => []).add(collab);
     }
@@ -219,6 +229,7 @@ class SqliteListsRepository implements ListsRepository {
           'name': collab.name,
           'email': collab.email,
           'is_owner': collab.isOwner ? 1 : 0,
+          'role': collab.role.name,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
@@ -375,7 +386,11 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
-  Future<void> addCollaborator(String listId, String email) async {
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     final cleanEmail = email.trim();
@@ -390,12 +405,39 @@ class SqliteListsRepository implements ListsRepository {
         'list_id': listId,
         'name': formattedName,
         'email': cleanEmail,
-        'is_owner': 0,
+        'is_owner': role == CollaboratorRole.owner ? 1 : 0,
+        'role': role.name,
       });
 
       await txn.update(
         'shopping_lists',
         {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+    });
+  }
+
+  @override
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'collaborators',
+        {'role': role.name, 'is_owner': role == CollaboratorRole.owner ? 1 : 0},
+        where: 'id = ? AND list_id = ?',
+        whereArgs: [collaboratorId, listId],
+      );
+
+      await txn.update(
+        'shopping_lists',
+        {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -457,18 +499,13 @@ class SqliteListsRepository implements ListsRepository {
           'name': ownerName ?? ownerEmail.split('@').first,
           'email': ownerEmail,
           'is_owner': 1,
+          'role': CollaboratorRole.owner.name,
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
     });
 
     final created = await getListById(listId);
-    return created ??
-        ShoppingList(
-          id: listId,
-          name: name,
-          items: const [],
-          createdAt: DateTime.fromMillisecondsSinceEpoch(now),
-        );
+    return created!;
   }
 
   @override
@@ -526,7 +563,23 @@ class SqliteListsRepository implements ListsRepository {
       'name': collaborator.name,
       'email': collaborator.email,
       'is_owner': collaborator.isOwner ? 1 : 0,
+      'role': collaborator.role.name,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final db = await _db;
+    await db.update(
+      'collaborators',
+      {'role': role.name, 'is_owner': role == CollaboratorRole.owner ? 1 : 0},
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [collaboratorId, listId],
+    );
   }
 
   @override

@@ -22,6 +22,7 @@ class WebSocketCollaborationRepository implements CollaborationRepository {
   String _currentUserName = 'Me';
   int _activeCollaboratorsCount = 1;
   final String? _serverUrl;
+  final WebSocketChannel Function(Uri)? _channelFactory;
   bool _useInternalHub = false;
 
   // Internal loopback hub for local / offline / test collaboration
@@ -29,8 +30,11 @@ class WebSocketCollaborationRepository implements CollaborationRepository {
       <String, Set<void Function(CollaborationEvent)>>{};
   static final _hubPresence = <String, Set<String>>{};
 
-  WebSocketCollaborationRepository({String? serverUrl})
-    : _serverUrl = serverUrl;
+  WebSocketCollaborationRepository({
+    String? serverUrl,
+    WebSocketChannel Function(Uri)? channelFactory,
+  }) : _serverUrl = serverUrl,
+       _channelFactory = channelFactory;
 
   @override
   Stream<CollaborationStatus> get statusStream => _statusController.stream;
@@ -70,7 +74,9 @@ class WebSocketCollaborationRepository implements CollaborationRepository {
 
     try {
       final uri = Uri.parse(targetUrl);
-      _channel = WebSocketChannel.connect(uri);
+      _channel = _channelFactory != null
+          ? _channelFactory(uri)
+          : WebSocketChannel.connect(uri);
       await _channel!.ready;
 
       _channelSubscription = _channel!.stream.listen(

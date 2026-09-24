@@ -107,6 +107,14 @@
   "noCollaboratorsYet": "Aún no hay colaboradores en esta lista.",
   "removeCollaborator": "Quitar colaborador",
   "ownerBadge": "Dueño",
+  "adminBadge": "Admin",
+  "memberBadge": "Colaborador",
+  "roleOwner": "Dueño",
+  "roleAdmin": "Administrador",
+  "roleMember": "Colaborador",
+  "makeAdmin": "Hacer Administrador",
+  "makeMember": "Hacer Colaborador",
+  "inviteAsRole": "Rol",
   "inviteSent": "Invitación enviada a {email}",
   "@inviteSent": {
     "placeholders": {
@@ -270,5 +278,11 @@
   "listSharedSyncEnabled": "Sincronización en tiempo real habilitada con la nube",
   "listLocalOnlyDescription": "Los datos se guardan únicamente en tu dispositivo",
   "enableSharingAction": "Habilitar sincronización",
-  "supportAndFeedback": "Soporte y Comentarios"
+  "supportAndFeedback": "Soporte y Comentarios",
+  "inactiveShareInviteTitle": "Invita a colaborar en esta lista",
+  "inactiveShareInviteDescription": "Esta lista es privada y está guardada únicamente en tu dispositivo. Activa el modo compartido para invitar amigos o colegas y editar juntos en tiempo real.",
+  "activateAndShare": "Activar y compartir lista",
+  "enableCollaboration": "Activar colaboración",
+  "realtimeSyncFeature": "Sincronización en tiempo real al agregar o tachar productos",
+  "collaboratorsFeature": "Invita fácilmente mediante un enlace o correo electrónico"
 }

@@ -5,6 +5,7 @@ import 'package:listix/src/core/storage/app_database.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'about_and_localization_test.dart' as about_test;
+import 'collaboration_test.dart' as collab_test;
 import 'banner_ad_widget_test.dart' as banner_ad_test;
 import 'domain_entities_test.dart' as domain_test;
 import 'full_coverage_gap_test.dart' as gap_test;
@@ -51,6 +52,7 @@ void main() {
   });
 
   about_test.main();
+  collab_test.main();
   banner_ad_test.main();
   domain_test.main();
   lists_controller_test.main();

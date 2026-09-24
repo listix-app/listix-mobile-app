@@ -139,7 +139,8 @@ void main() {
       expect(list.completedCount, 1);
       expect(list.pendingCount, 1);
       expect(list.progressText, '1 de 2');
-      expect(list.isShared, isTrue);
+      expect(list.isShared, isFalse);
+      expect(list.copyWith(isShared: true).isShared, isTrue);
     });
 
     test('copyWith updates and falls back to original values', () {

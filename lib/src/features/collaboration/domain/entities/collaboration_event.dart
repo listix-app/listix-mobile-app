@@ -10,6 +10,7 @@ enum CollaborationEventType {
   toggleItem,
   inviteCollaborator,
   removeCollaborator,
+  updateCollaboratorRole,
 }
 
 class CollaborationEvent {
@@ -153,6 +154,23 @@ class CollaborationEvent {
     );
   }
 
+  factory CollaborationEvent.collaboratorRoleUpdated({
+    required String listId,
+    required String collaboratorId,
+    required CollaboratorRole role,
+    required String senderEmail,
+    required String senderName,
+  }) {
+    return CollaborationEvent(
+      type: CollaborationEventType.updateCollaboratorRole,
+      listId: listId,
+      senderEmail: senderEmail,
+      senderName: senderName,
+      timestamp: DateTime.now(),
+      payload: {'collaboratorId': collaboratorId, 'role': role.name},
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'type': type.name,
     'listId': listId,
@@ -180,4 +198,25 @@ class CollaborationEvent {
       payload: (json['payload'] as Map<String, dynamic>?) ?? {},
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CollaborationEvent &&
+          runtimeType == other.runtimeType &&
+          type == other.type &&
+          listId == other.listId &&
+          senderEmail == other.senderEmail &&
+          senderName == other.senderName &&
+          timestamp.millisecondsSinceEpoch ==
+              other.timestamp.millisecondsSinceEpoch;
+
+  @override
+  int get hashCode => Object.hash(
+    type,
+    listId,
+    senderEmail,
+    senderName,
+    timestamp.millisecondsSinceEpoch,
+  );
 }

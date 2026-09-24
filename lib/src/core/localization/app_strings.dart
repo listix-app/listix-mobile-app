@@ -84,6 +84,14 @@ class AppStrings {
   String get noCollaboratorsYet => _l10n.noCollaboratorsYet;
   String get removeCollaborator => _l10n.removeCollaborator;
   String get ownerBadge => _l10n.ownerBadge;
+  String get adminBadge => _l10n.adminBadge;
+  String get memberBadge => _l10n.memberBadge;
+  String get roleOwner => _l10n.roleOwner;
+  String get roleAdmin => _l10n.roleAdmin;
+  String get roleMember => _l10n.roleMember;
+  String get makeAdmin => _l10n.makeAdmin;
+  String get makeMember => _l10n.makeMember;
+  String get inviteAsRole => _l10n.inviteAsRole;
   String inviteSent(String email) => _l10n.inviteSent(email);
 
   String get syncStatusTitle => _l10n.syncStatusTitle;
@@ -186,4 +194,11 @@ class AppStrings {
   String get shareCompletedSection => _l10n.shareCompletedSection;
   String get shareEmptyListNotice => _l10n.shareEmptyListNotice;
   String get supportAndFeedback => _l10n.supportAndFeedback;
+  String get inactiveShareInviteTitle => _l10n.inactiveShareInviteTitle;
+  String get inactiveShareInviteDescription =>
+      _l10n.inactiveShareInviteDescription;
+  String get activateAndShare => _l10n.activateAndShare;
+  String get enableCollaboration => _l10n.enableCollaboration;
+  String get realtimeSyncFeature => _l10n.realtimeSyncFeature;
+  String get collaboratorsFeature => _l10n.collaboratorsFeature;
 }

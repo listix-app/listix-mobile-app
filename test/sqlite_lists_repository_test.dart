@@ -5,6 +5,8 @@ import 'package:listix/src/features/lists/data/repositories/sqlite_lists_reposit
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
 import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
 import 'package:listix/src/features/sync/domain/sync_status.dart';
+import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
+import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -158,7 +160,36 @@ void main() {
         expect(addedCollab.email, 'carlos@ejemplo.com');
         expect(addedCollab.isOwner, isFalse);
 
+        await repository.updateCollaboratorRole(
+          list.id,
+          addedCollab.id,
+          CollaboratorRole.admin,
+        );
+        var updated = await repository.getListById(list.id);
+        expect(updated!.collaborators.first.role, CollaboratorRole.admin);
+        expect(updated.collaborators.first.isAdmin, isTrue);
+
+        await repository.applyRemoteCollaboratorRole(
+          list.id,
+          addedCollab.id,
+          CollaboratorRole.member,
+        );
+        updated = await repository.getListById(list.id);
+        expect(updated!.collaborators.first.role, CollaboratorRole.member);
+
+        // Test fallback on invalid role in database
+        final db = await AppDatabase.instance.database;
+        await db.execute(
+          "INSERT INTO collaborators (id, list_id, name, email, is_owner, role) VALUES ('collab_unknown', '${list.id}', 'Unknown', 'unknown@test.com', 0, 'invalid_role');",
+        );
+        final withUnknown = await repository.getListById(list.id);
+        final unknownCollab = withUnknown!.collaborators.firstWhere(
+          (c) => c.id == 'collab_unknown',
+        );
+        expect(unknownCollab.role, CollaboratorRole.member);
+
         await repository.removeCollaborator(list.id, addedCollab.id);
+        await repository.removeCollaborator(list.id, 'collab_unknown');
         final listWithoutCollab = await repository.getListById(list.id);
         expect(listWithoutCollab!.collaborators.isEmpty, isTrue);
       },
@@ -263,6 +294,98 @@ void main() {
       },
     );
 
+    test(
+      'joinSharedList, remote items, and remote collaborators in SQLite',
+      () async {
+        // 1. Join shared list when it does not exist yet (with owner)
+        final joined = await repository.joinSharedList(
+          'remote_list_1',
+          'Lista Remota',
+          ownerName: null,
+          ownerEmail: 'admin@test.com',
+        );
+        expect(joined.id, 'remote_list_1');
+        expect(joined.name, 'Lista Remota');
+        expect(joined.isShared, isTrue);
+        expect(joined.collaborators.length, 1);
+        expect(joined.collaborators.first.isOwner, isTrue);
+        expect(joined.collaborators.first.name, 'admin');
+
+        // 2. Joining same list returns existing
+        final rejoined = await repository.joinSharedList(
+          'remote_list_1',
+          'Nombre Diferente',
+        );
+        expect(rejoined.name, 'Lista Remota');
+
+        // 3. Joining another with empty name and no owner
+        final defaultList = await repository.joinSharedList(
+          'remote_list_empty',
+          '   ',
+        );
+        expect(defaultList.name, 'Lista compartida');
+        expect(defaultList.collaborators, isEmpty);
+
+        // 4. Apply remote item (insert)
+        final remoteItem = TodoItem(
+          id: 'r_item_1',
+          listId: 'remote_list_1',
+          title: 'Manzanas remotas',
+          createdAt: DateTime.now(),
+          position: 0,
+        );
+        await repository.applyRemoteItem(remoteItem);
+        var fetched = await repository.getListById('remote_list_1');
+        expect(fetched!.items.length, 1);
+        expect(fetched.items.first.title, 'Manzanas remotas');
+
+        // 5. Apply remote item toggle
+        await repository.applyRemoteItemToggle(
+          'remote_list_1',
+          'r_item_1',
+          true,
+        );
+        fetched = await repository.getListById('remote_list_1');
+        expect(fetched!.items.first.isCompleted, isTrue);
+
+        // 6. Apply remote item update
+        await repository.applyRemoteItem(
+          remoteItem.copyWith(title: 'Manzanas rojas'),
+        );
+        fetched = await repository.getListById('remote_list_1');
+        expect(fetched!.items.first.title, 'Manzanas rojas');
+
+        // 7. Apply remote item delete
+        await repository.applyRemoteItemDelete('remote_list_1', 'r_item_1');
+        fetched = await repository.getListById('remote_list_1');
+        expect(fetched!.items, isEmpty);
+
+        // 8. Apply remote collaborator
+        const newCollab = Collaborator(
+          id: 'collab_remote',
+          name: 'Pedro',
+          email: 'pedro@test.com',
+        );
+        await repository.applyRemoteCollaborator('remote_list_1', newCollab);
+        fetched = await repository.getListById('remote_list_1');
+        expect(
+          fetched!.collaborators.any((c) => c.id == 'collab_remote'),
+          isTrue,
+        );
+
+        // 9. Apply remote collaborator remove
+        await repository.applyRemoteCollaboratorRemove(
+          'remote_list_1',
+          'collab_remote',
+        );
+        fetched = await repository.getListById('remote_list_1');
+        expect(
+          fetched!.collaborators.any((c) => c.id == 'collab_remote'),
+          isFalse,
+        );
+      },
+    );
+
     test('AppDatabase close and reopen', () async {
       await AppDatabase.instance.close();
       final reopenedDb = await AppDatabase.instance.database;
@@ -316,6 +439,56 @@ void main() {
           'PRAGMA table_info(todo_items);',
         );
         expect(columnsItems.any((c) => c['name'] == 'position'), isTrue);
+
+        await AppDatabase.instance.close();
+        await databaseFactory.deleteDatabase(migrationDbPath);
+        AppDatabase.overrideDbPath = inMemoryDatabasePath;
+        await AppDatabase.instance.database;
+      },
+    );
+
+    test(
+      'AppDatabase migration from version 4 to 5 adds role column to collaborators',
+      () async {
+        await AppDatabase.instance.close();
+        const migrationDbPath = 'test_migration_v4_v5.db';
+        final v4Db = await databaseFactory.openDatabase(
+          migrationDbPath,
+          options: OpenDatabaseOptions(
+            version: 4,
+            onCreate: (db, version) async {
+              await db.execute('''
+              CREATE TABLE shopping_lists (
+                id TEXT PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL,
+                is_synced INTEGER NOT NULL DEFAULT 0,
+                is_starred INTEGER NOT NULL DEFAULT 0,
+                is_shared INTEGER NOT NULL DEFAULT 0,
+                position INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+              );
+            ''');
+              await db.execute('''
+              CREATE TABLE collaborators (
+                id TEXT PRIMARY KEY NOT NULL,
+                list_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                email TEXT NOT NULL,
+                is_owner INTEGER NOT NULL DEFAULT 0
+              );
+            ''');
+            },
+          ),
+        );
+        await v4Db.close();
+
+        AppDatabase.overrideDbPath = migrationDbPath;
+        final upgradedDb = await AppDatabase.instance.database;
+        final columnsCollabs = await upgradedDb.rawQuery(
+          'PRAGMA table_info(collaborators);',
+        );
+        expect(columnsCollabs.any((c) => c['name'] == 'role'), isTrue);
 
         await AppDatabase.instance.close();
         await databaseFactory.deleteDatabase(migrationDbPath);

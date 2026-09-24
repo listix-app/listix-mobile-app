@@ -1054,7 +1054,25 @@ class _FakeRepoWithLists implements ListsRepository {
   Future<void> reorderItems(String listId, List<String> orderedItemIds) async {}
 
   @override
-  Future<void> addCollaborator(String listId, String email) async {}
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {}
+
+  @override
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {}
+
+  @override
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {}
 
   @override
   Future<void> removeCollaborator(String listId, String collaboratorId) async {}

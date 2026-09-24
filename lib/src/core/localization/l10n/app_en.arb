@@ -107,6 +107,14 @@
   "noCollaboratorsYet": "No collaborators on this list yet.",
   "removeCollaborator": "Remove collaborator",
   "ownerBadge": "Owner",
+  "adminBadge": "Admin",
+  "memberBadge": "Member",
+  "roleOwner": "Owner",
+  "roleAdmin": "Admin",
+  "roleMember": "Member",
+  "makeAdmin": "Make Admin",
+  "makeMember": "Make Member",
+  "inviteAsRole": "Role",
   "inviteSent": "Invitation sent to {email}",
   "@inviteSent": {
     "placeholders": {
@@ -270,5 +278,11 @@
   "listSharedSyncEnabled": "Real-time sync enabled with cloud",
   "listLocalOnlyDescription": "Data is stored strictly on this device",
   "enableSharingAction": "Enable sync",
-  "supportAndFeedback": "Support & Feedback"
+  "supportAndFeedback": "Support & Feedback",
+  "inactiveShareInviteTitle": "Invite others to collaborate",
+  "inactiveShareInviteDescription": "This list is private and saved only on your device. Turn on sharing to invite friends or colleagues and edit together in real time.",
+  "activateAndShare": "Activate & Share List",
+  "enableCollaboration": "Enable Collaboration",
+  "realtimeSyncFeature": "Real-time sync when adding or checking off items",
+  "collaboratorsFeature": "Easily invite via link or email"
 }

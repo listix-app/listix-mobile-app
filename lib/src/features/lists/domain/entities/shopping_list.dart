@@ -19,12 +19,12 @@ class ShoppingList {
     required this.name,
     this.isSynced = false,
     this.isStarred = false,
-    bool isShared = false,
+    this.isShared = false,
     this.position = 0,
     this.items = const [],
     this.collaborators = const [],
     required this.createdAt,
-  }) : isShared = isShared || collaborators.length > 0;
+  });
 
   int get totalCount => items.length;
   int get completedCount => items.where((item) => item.isCompleted).length;
@@ -104,7 +104,8 @@ class ShoppingList {
           isShared == other.isShared &&
           position == other.position &&
           listEquals(items, other.items) &&
-          listEquals(collaborators, other.collaborators);
+          listEquals(collaborators, other.collaborators) &&
+          createdAt == other.createdAt;
 
   @override
   int get hashCode => Object.hash(
@@ -116,5 +117,6 @@ class ShoppingList {
     position,
     Object.hashAll(items),
     Object.hashAll(collaborators),
+    createdAt,
   );
 }

@@ -215,6 +215,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerBadge => 'Owner';
 
   @override
+  String get adminBadge => 'Admin';
+
+  @override
+  String get memberBadge => 'Member';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get makeAdmin => 'Make Admin';
+
+  @override
+  String get makeMember => 'Make Member';
+
+  @override
+  String get inviteAsRole => 'Role';
+
+  @override
   String inviteSent(String email) {
     return 'Invitation sent to $email';
   }
@@ -519,4 +543,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get supportAndFeedback => 'Support & Feedback';
+
+  @override
+  String get inactiveShareInviteTitle => 'Invite others to collaborate';
+
+  @override
+  String get inactiveShareInviteDescription =>
+      'This list is private and saved only on your device. Turn on sharing to invite friends or colleagues and edit together in real time.';
+
+  @override
+  String get activateAndShare => 'Activate & Share List';
+
+  @override
+  String get enableCollaboration => 'Enable Collaboration';
+
+  @override
+  String get realtimeSyncFeature =>
+      'Real-time sync when adding or checking off items';
+
+  @override
+  String get collaboratorsFeature => 'Easily invite via link or email';
 }

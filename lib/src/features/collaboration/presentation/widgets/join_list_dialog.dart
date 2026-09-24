@@ -32,10 +32,6 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
     required VoidCallback onError,
   }) {
     final trimmed = input.trim();
-    if (trimmed.isEmpty) {
-      onError();
-      return;
-    }
 
     try {
       if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
