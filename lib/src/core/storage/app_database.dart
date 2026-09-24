@@ -59,7 +59,7 @@ class AppDatabase {
 
     return await openDatabase(
       dbPath,
-      version: 3,
+      version: 5,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -90,14 +90,46 @@ class AppDatabase {
         );
       ''');
     }
+    if (oldVersion < 4) {
+      await db.execute(
+        'ALTER TABLE shopping_lists ADD COLUMN is_shared INTEGER NOT NULL DEFAULT 0;',
+      );
+    }
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS collaborators (
+          id TEXT PRIMARY KEY NOT NULL,
+          list_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          is_owner INTEGER NOT NULL DEFAULT 0,
+          role TEXT NOT NULL DEFAULT 'member',
+          FOREIGN KEY (list_id) REFERENCES shopping_lists (id) ON DELETE CASCADE
+        );
+      ''');
+      final tableInfo = await db.rawQuery(
+        "PRAGMA table_info('collaborators');",
+      );
+      final hasRole = tableInfo.any((col) => col['name'] == 'role');
+      if (!hasRole) {
+        await db.execute(
+          "ALTER TABLE collaborators ADD COLUMN role TEXT NOT NULL DEFAULT 'member';",
+        );
+      }
+      await db.execute(
+        "UPDATE collaborators SET role = 'owner' WHERE is_owner = 1;",
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE shopping_lists (\n        id TEXT PRIMARY KEY NOT NULL,
+      CREATE TABLE shopping_lists (
+        id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
         is_synced INTEGER NOT NULL DEFAULT 0,
         is_starred INTEGER NOT NULL DEFAULT 0,
+        is_shared INTEGER NOT NULL DEFAULT 0,
         position INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
@@ -105,8 +137,8 @@ class AppDatabase {
       );
     ''');
 
-    await db.execute('''
-      CREATE TABLE todo_items (\n        id TEXT PRIMARY KEY NOT NULL,
+    await db.execute(
+      '''CREATE TABLE todo_items (\n        id TEXT PRIMARY KEY NOT NULL,
         list_id TEXT NOT NULL,
         title TEXT NOT NULL,
         is_completed INTEGER NOT NULL DEFAULT 0,
@@ -117,7 +149,8 @@ class AppDatabase {
         deleted_at INTEGER,
         FOREIGN KEY (list_id) REFERENCES shopping_lists (id) ON DELETE CASCADE
       );
-    ''');
+    ''',
+    );
 
     await db.execute('''
       CREATE TABLE collaborators (\n        id TEXT PRIMARY KEY NOT NULL,
@@ -125,6 +158,7 @@ class AppDatabase {
         name TEXT NOT NULL,
         email TEXT NOT NULL,
         is_owner INTEGER NOT NULL DEFAULT 0,
+        role TEXT NOT NULL DEFAULT 'member',
         FOREIGN KEY (list_id) REFERENCES shopping_lists (id) ON DELETE CASCADE
       );
     ''');
@@ -137,6 +171,9 @@ class AppDatabase {
     );
     await db.execute(
       'CREATE INDEX idx_shopping_lists_is_synced ON shopping_lists(is_synced);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_shopping_lists_is_shared ON shopping_lists(is_shared);',
     );
     await db.execute(
       'CREATE INDEX idx_collaborators_list_id ON collaborators(list_id);',
@@ -160,6 +197,7 @@ class AppDatabase {
       'name': 'Supermercado semanal',
       'is_synced': 1,
       'is_starred': 1,
+      'is_shared': 1,
       'position': 0,
       'created_at': now - 86400000 * 2,
       'updated_at': now - 86400000 * 2,
@@ -171,6 +209,7 @@ class AppDatabase {
       'name': 'Mariana Ruiz',
       'email': 'mariana.ruiz@example.com',
       'is_owner': 0,
+      'role': 'admin',
     });
     await db.insert('collaborators', {
       'id': 'collab-2',
@@ -236,6 +275,7 @@ class AppDatabase {
       'name': 'Ferretería y Hogar',
       'is_synced': 1,
       'is_starred': 0,
+      'is_shared': 0,
       'position': 1,
       'created_at': now - 86400000 * 4,
       'updated_at': now - 86400000 * 4,
@@ -266,6 +306,7 @@ class AppDatabase {
       'name': 'Ropa para vacaciones',
       'is_synced': 0,
       'is_starred': 0,
+      'is_shared': 1,
       'position': 2,
       'created_at': now - 3600000,
       'updated_at': now - 3600000,

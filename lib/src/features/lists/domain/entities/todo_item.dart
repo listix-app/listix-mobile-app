@@ -17,6 +17,28 @@ class TodoItem {
     required this.createdAt,
   });
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'listId': listId,
+    'title': title,
+    'isCompleted': isCompleted,
+    'isSynced': isSynced,
+    'position': position,
+    'createdAt': createdAt.millisecondsSinceEpoch,
+  };
+
+  factory TodoItem.fromJson(Map<String, dynamic> json) => TodoItem(
+    id: json['id'] as String,
+    listId: json['listId'] as String,
+    title: json['title'] as String,
+    isCompleted: json['isCompleted'] as bool? ?? false,
+    isSynced: json['isSynced'] as bool? ?? false,
+    position: (json['position'] as int?) ?? 0,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(
+      json['createdAt'] as int? ?? DateTime.now().millisecondsSinceEpoch,
+    ),
+  );
+
   TodoItem copyWith({
     String? id,
     String? listId,

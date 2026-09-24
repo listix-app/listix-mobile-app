@@ -181,14 +181,50 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<void> addCollaborator(String listId, String email) async {
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
-      final collab = Collaborator(id: 'c_$email', name: email, email: email);
+      final collab = Collaborator(
+        id: 'c_$email',
+        name: email,
+        email: email,
+        role: role,
+      );
       internalLists[listIndex] = internalLists[listIndex].copyWith(
         collaborators: [...internalLists[listIndex].collaborators, collab],
       );
     }
+  }
+
+  @override
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      final collabs = internalLists[listIndex].collaborators.map((c) {
+        if (c.id == collaboratorId) return c.copyWith(role: role);
+        return c;
+      }).toList();
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        collaborators: collabs,
+      );
+    }
+  }
+
+  @override
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    await updateCollaboratorRole(listId, collaboratorId, role);
   }
 
   @override
@@ -210,6 +246,134 @@ class FakeFailingListsRepository implements ListsRepository {
     if (listIndex != -1) {
       internalLists[listIndex] = internalLists[listIndex].copyWith(
         isSynced: true,
+        isShared: true,
+      );
+    }
+  }
+
+  @override
+  Future<void> setListShared(String listId, bool isShared) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        isShared: isShared,
+      );
+    }
+  }
+
+  @override
+  Future<ShoppingList> joinSharedList(
+    String listId,
+    String name, {
+    String? ownerName,
+    String? ownerEmail,
+  }) async {
+    final list = ShoppingList(
+      id: listId,
+      name: name,
+      position: internalLists.length,
+      createdAt: DateTime.now(),
+      collaborators: [
+        Collaborator(
+          id: 'owner_$listId',
+          name: ownerName ?? 'Owner',
+          email: ownerEmail ?? 'owner@listix.local',
+          isOwner: true,
+        ),
+      ],
+    );
+    internalLists.add(list);
+    return list;
+  }
+
+  @override
+  Future<void> applyRemoteItem(TodoItem item) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == item.listId);
+    if (listIndex != -1) {
+      final existingIdx = internalLists[listIndex].items.indexWhere(
+        (i) => i.id == item.id,
+      );
+      final List<TodoItem> items;
+      if (existingIdx >= 0) {
+        items = List<TodoItem>.from(internalLists[listIndex].items);
+        items[existingIdx] = item;
+      } else {
+        items = [...internalLists[listIndex].items, item];
+      }
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        items: items,
+      );
+    }
+  }
+
+  @override
+  Future<void> applyRemoteItemToggle(
+    String listId,
+    String itemId,
+    bool isCompleted,
+  ) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      final items = internalLists[listIndex].items.map((i) {
+        if (i.id == itemId) return i.copyWith(isCompleted: isCompleted);
+        return i;
+      }).toList();
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        items: items,
+      );
+    }
+  }
+
+  @override
+  Future<void> applyRemoteItemDelete(String listId, String itemId) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      final items = internalLists[listIndex].items
+          .where((i) => i.id != itemId)
+          .toList();
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        items: items,
+      );
+    }
+  }
+
+  @override
+  Future<void> applyRemoteCollaborator(
+    String listId,
+    Collaborator collaborator,
+  ) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      final existingIdx = internalLists[listIndex].collaborators.indexWhere(
+        (c) => c.id == collaborator.id,
+      );
+      final List<Collaborator> collabs;
+      if (existingIdx >= 0) {
+        collabs = List<Collaborator>.from(
+          internalLists[listIndex].collaborators,
+        );
+        collabs[existingIdx] = collaborator;
+      } else {
+        collabs = [...internalLists[listIndex].collaborators, collaborator];
+      }
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        collaborators: collabs,
+      );
+    }
+  }
+
+  @override
+  Future<void> applyRemoteCollaboratorRemove(
+    String listId,
+    String collaboratorId,
+  ) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      final collabs = internalLists[listIndex].collaborators
+          .where((c) => c.id != collaboratorId)
+          .toList();
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        collaborators: collabs,
       );
     }
   }
@@ -681,9 +845,34 @@ void main() {
 
         await container
             .read(listsControllerProvider.notifier)
-            .addCollaborator('list_1', 'maria@listix.app');
+            .addCollaborator(
+              'list_1',
+              'maria@listix.app',
+              role: CollaboratorRole.admin,
+            );
         var list = container.read(shoppingListProvider('list_1'))!;
         expect(list.collaborators.length, 1);
+        expect(list.collaborators.first.role, CollaboratorRole.admin);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .updateCollaboratorRole(
+              'list_1',
+              'c_maria@listix.app',
+              CollaboratorRole.member,
+            );
+        list = container.read(shoppingListProvider('list_1'))!;
+        expect(list.collaborators.first.role, CollaboratorRole.member);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .applyRemoteCollaboratorRole(
+              'list_1',
+              'c_maria@listix.app',
+              CollaboratorRole.admin,
+            );
+        list = container.read(shoppingListProvider('list_1'))!;
+        expect(list.collaborators.first.role, CollaboratorRole.admin);
 
         await container
             .read(listsControllerProvider.notifier)
@@ -710,7 +899,31 @@ void main() {
             .syncListOnShare('list_1');
         final list = container.read(shoppingListProvider('list_1'))!;
         expect(list.isSynced, isTrue);
+        expect(list.isShared, isTrue);
       },
     );
+
+    test('setListShared toggles list sharing status and syncs', () async {
+      await container.read(listsControllerProvider.future);
+
+      // Initially list_2 is not shared
+      var list2 = container.read(shoppingListProvider('list_2'))!;
+      expect(list2.isShared, isFalse);
+
+      // Turn sharing ON -> should be shared and synced
+      await container
+          .read(listsControllerProvider.notifier)
+          .setListShared('list_2', true);
+      list2 = container.read(shoppingListProvider('list_2'))!;
+      expect(list2.isShared, isTrue);
+      expect(list2.isSynced, isTrue);
+
+      // Turn sharing OFF -> should be marked not shared
+      await container
+          .read(listsControllerProvider.notifier)
+          .setListShared('list_2', false);
+      list2 = container.read(shoppingListProvider('list_2'))!;
+      expect(list2.isShared, isFalse);
+    });
   });
 }

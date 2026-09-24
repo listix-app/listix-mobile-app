@@ -21,32 +21,53 @@ class ShareService {
     : _urlLauncher = urlLauncher ?? launchUrl,
       _systemShare = systemShare;
 
+  static String createInviteLink(String listId, String listName) {
+    final encodedName = Uri.encodeComponent(listName);
+    return 'https://listix.app/join?listId=$listId&name=$encodedName';
+  }
+
   static String formatListForSharing({
     required ShoppingList list,
     required String createdWithText,
+    String? inviteLinkText,
+    String? pendingSectionTitle,
+    String? completedSectionTitle,
+    String? emptyListText,
   }) {
     final buffer = StringBuffer();
     buffer.writeln('📋 *${list.name}*');
-    buffer.writeln();
 
     final pending = list.items.where((i) => !i.isCompleted).toList();
     final completed = list.items.where((i) => i.isCompleted).toList();
 
-    if (pending.isNotEmpty) {
-      for (final item in pending) {
-        buffer.writeln('• ${item.title}');
-      }
-    }
-
-    if (completed.isNotEmpty) {
-      if (pending.isNotEmpty) buffer.writeln();
-      for (final item in completed) {
-        buffer.writeln('✓ ${item.title}');
-      }
-    }
-
     if (list.items.isEmpty) {
-      buffer.writeln('• (Empty)');
+      buffer.writeln();
+      buffer.writeln(emptyListText ?? '• (Empty)');
+    } else {
+      if (pending.isNotEmpty) {
+        buffer.writeln();
+        if (pendingSectionTitle != null && pendingSectionTitle.isNotEmpty) {
+          buffer.writeln('$pendingSectionTitle (${pending.length}):');
+        }
+        for (final item in pending) {
+          buffer.writeln('• ${item.title}');
+        }
+      }
+
+      if (completed.isNotEmpty) {
+        buffer.writeln();
+        if (completedSectionTitle != null && completedSectionTitle.isNotEmpty) {
+          buffer.writeln('$completedSectionTitle (${completed.length}):');
+        }
+        for (final item in completed) {
+          buffer.writeln('✓ ${item.title}');
+        }
+      }
+    }
+
+    if (inviteLinkText != null && inviteLinkText.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln(inviteLinkText);
     }
 
     buffer.writeln();

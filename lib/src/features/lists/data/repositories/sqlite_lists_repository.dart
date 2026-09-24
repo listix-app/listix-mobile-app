@@ -64,11 +64,21 @@ class SqliteListsRepository implements ListsRepository {
     final collabsByList = <String, List<Collaborator>>{};
     for (final row in collabMaps) {
       final listId = row['list_id'] as String;
+      final roleStr = row['role'] as String?;
+      final isOwner = (row['is_owner'] as int) == 1;
+      final role = roleStr != null
+          ? CollaboratorRole.values.firstWhere(
+              (r) => r.name == roleStr,
+              orElse: () =>
+                  isOwner ? CollaboratorRole.owner : CollaboratorRole.member,
+            )
+          : (isOwner ? CollaboratorRole.owner : CollaboratorRole.member);
       final collab = Collaborator(
         id: row['id'] as String,
         name: row['name'] as String,
         email: row['email'] as String,
-        isOwner: (row['is_owner'] as int) == 1,
+        role: role,
+        isOwner: isOwner,
       );
       collabsByList.putIfAbsent(listId, () => []).add(collab);
     }
@@ -80,6 +90,7 @@ class SqliteListsRepository implements ListsRepository {
         name: row['name'] as String,
         isSynced: (row['is_synced'] as int) == 1,
         isStarred: (row['is_starred'] as int?) == 1,
+        isShared: (row['is_shared'] as int?) == 1,
         position: (row['position'] as int?) ?? 0,
         items: itemsByList[id] ?? [],
         collaborators: collabsByList[id] ?? [],
@@ -116,6 +127,7 @@ class SqliteListsRepository implements ListsRepository {
       'name': name.trim(),
       'is_synced': 0,
       'is_starred': 0,
+      'is_shared': 0,
       'position': nextPosition,
       'created_at': now,
       'updated_at': now,
@@ -126,6 +138,7 @@ class SqliteListsRepository implements ListsRepository {
       name: name.trim(),
       isSynced: false,
       isStarred: false,
+      isShared: false,
       position: nextPosition,
       createdAt: DateTime.fromMillisecondsSinceEpoch(now),
       items: const [],
@@ -190,6 +203,7 @@ class SqliteListsRepository implements ListsRepository {
         'name': list.name,
         'is_synced': list.isSynced ? 1 : 0,
         'is_starred': list.isStarred ? 1 : 0,
+        'is_shared': list.isShared ? 1 : 0,
         'position': list.position,
         'created_at': list.createdAt.millisecondsSinceEpoch,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
@@ -215,6 +229,7 @@ class SqliteListsRepository implements ListsRepository {
           'name': collab.name,
           'email': collab.email,
           'is_owner': collab.isOwner ? 1 : 0,
+          'role': collab.role.name,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
@@ -246,7 +261,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -294,7 +309,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -323,7 +338,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -371,7 +386,11 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
-  Future<void> addCollaborator(String listId, String email) async {
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     final cleanEmail = email.trim();
@@ -386,8 +405,35 @@ class SqliteListsRepository implements ListsRepository {
         'list_id': listId,
         'name': formattedName,
         'email': cleanEmail,
-        'is_owner': 0,
+        'is_owner': role == CollaboratorRole.owner ? 1 : 0,
+        'role': role.name,
       });
+
+      await txn.update(
+        'shopping_lists',
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+    });
+  }
+
+  @override
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'collaborators',
+        {'role': role.name, 'is_owner': role == CollaboratorRole.owner ? 1 : 0},
+        where: 'id = ? AND list_id = ?',
+        whereArgs: [collaboratorId, listId],
+      );
 
       await txn.update(
         'shopping_lists',
@@ -412,11 +458,141 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
     });
+  }
+
+  @override
+  Future<ShoppingList> joinSharedList(
+    String listId,
+    String name, {
+    String? ownerName,
+    String? ownerEmail,
+  }) async {
+    final db = await _db;
+    final existing = await getListById(listId);
+    if (existing != null) {
+      return existing;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      await txn.insert('shopping_lists', {
+        'id': listId,
+        'name': name.trim().isEmpty ? 'Lista compartida' : name.trim(),
+        'is_synced': 1,
+        'is_starred': 0,
+        'is_shared': 1,
+        'position': 0,
+        'created_at': now,
+        'updated_at': now,
+        'deleted_at': null,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+      if (ownerEmail != null && ownerEmail.isNotEmpty) {
+        await txn.insert('collaborators', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'name': ownerName ?? ownerEmail.split('@').first,
+          'email': ownerEmail,
+          'is_owner': 1,
+          'role': CollaboratorRole.owner.name,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    });
+
+    final created = await getListById(listId);
+    return created!;
+  }
+
+  @override
+  Future<void> applyRemoteItem(TodoItem item) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('todo_items', {
+      'id': item.id,
+      'list_id': item.listId,
+      'title': item.title,
+      'is_completed': item.isCompleted ? 1 : 0,
+      'is_synced': 1,
+      'position': item.position,
+      'created_at': item.createdAt.millisecondsSinceEpoch,
+      'updated_at': now,
+      'deleted_at': null,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> applyRemoteItemToggle(
+    String listId,
+    String itemId,
+    bool isCompleted,
+  ) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'todo_items',
+      {'is_completed': isCompleted ? 1 : 0, 'is_synced': 1, 'updated_at': now},
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [itemId, listId],
+    );
+  }
+
+  @override
+  Future<void> applyRemoteItemDelete(String listId, String itemId) async {
+    final db = await _db;
+    await db.delete(
+      'todo_items',
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [itemId, listId],
+    );
+  }
+
+  @override
+  Future<void> applyRemoteCollaborator(
+    String listId,
+    Collaborator collaborator,
+  ) async {
+    final db = await _db;
+    await db.insert('collaborators', {
+      'id': collaborator.id,
+      'list_id': listId,
+      'name': collaborator.name,
+      'email': collaborator.email,
+      'is_owner': collaborator.isOwner ? 1 : 0,
+      'role': collaborator.role.name,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  ) async {
+    final db = await _db;
+    await db.update(
+      'collaborators',
+      {'role': role.name, 'is_owner': role == CollaboratorRole.owner ? 1 : 0},
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [collaboratorId, listId],
+    );
+  }
+
+  @override
+  Future<void> applyRemoteCollaboratorRemove(
+    String listId,
+    String collaboratorId,
+  ) async {
+    final db = await _db;
+    await db.delete(
+      'collaborators',
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [collaboratorId, listId],
+    );
   }
 
   @override
@@ -427,7 +603,7 @@ class SqliteListsRepository implements ListsRepository {
     await db.transaction((txn) async {
       await txn.update(
         'shopping_lists',
-        {'is_synced': 1, 'updated_at': now},
+        {'is_synced': 1, 'is_shared': 1, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -439,5 +615,17 @@ class SqliteListsRepository implements ListsRepository {
         whereArgs: [listId],
       );
     });
+  }
+
+  @override
+  Future<void> setListShared(String listId, bool isShared) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'shopping_lists',
+      {'is_shared': isShared ? 1 : 0, 'updated_at': now},
+      where: 'id = ?',
+      whereArgs: [listId],
+    );
   }
 }

@@ -215,6 +215,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ownerBadge => 'Owner';
 
   @override
+  String get adminBadge => 'Admin';
+
+  @override
+  String get memberBadge => 'Member';
+
+  @override
+  String get roleOwner => 'Owner';
+
+  @override
+  String get roleAdmin => 'Admin';
+
+  @override
+  String get roleMember => 'Member';
+
+  @override
+  String get makeAdmin => 'Make Admin';
+
+  @override
+  String get makeMember => 'Make Member';
+
+  @override
+  String get inviteAsRole => 'Role';
+
+  @override
   String inviteSent(String email) {
     return 'Invitation sent to $email';
   }
@@ -417,8 +441,126 @@ class AppLocalizationsEn extends AppLocalizations {
       'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.';
 
   @override
-  String get shareSystem => 'System sharesheet';
+  String get shareSystem => 'Share via system';
 
   @override
-  String get shareSystemDesc => 'Share using other installed applications';
+  String get shareSystemDesc =>
+      'Send list and link to WhatsApp, Telegram, Email, and more';
+
+  @override
+  String shareInviteLinkPrompt(String url) {
+    return '🔗 Join this list to collaborate in real-time:\n$url';
+  }
+
+  @override
+  String get sharePendingSection => '📝 To buy';
+
+  @override
+  String get shareCompletedSection => '✅ Completed';
+
+  @override
+  String get shareEmptyListNotice => '• (No items in the list yet)';
+
+  @override
+  String get realtimeLive => 'Live';
+
+  @override
+  String get realtimeConnecting => 'Connecting...';
+
+  @override
+  String get realtimeDisconnected => 'Disconnected';
+
+  @override
+  String get realtimeCollaborating => 'Real-time collaboration active';
+
+  @override
+  String realtimeOnlineUsers(int count) {
+    return '$count online';
+  }
+
+  @override
+  String get joinList => 'Join list';
+
+  @override
+  String get joinListTitle => 'Join a shared list';
+
+  @override
+  String get joinListPrompt =>
+      'Enter the invite code or link to collaborate in real time.';
+
+  @override
+  String get joinListHint => 'List code or invite link';
+
+  @override
+  String get joinAction => 'Join';
+
+  @override
+  String listJoined(String name) {
+    return 'You joined \"$name\"';
+  }
+
+  @override
+  String get invalidInviteCode => 'Invalid invitation code or link';
+
+  @override
+  String get alreadyJoined => 'You already have access to this list';
+
+  @override
+  String get collaborators => 'Collaborators';
+
+  @override
+  String get inviteColleague => 'Invite friends or colleagues';
+
+  @override
+  String get inviteColleagueSubtitle =>
+      'Collaborate in real time adding and completing items';
+
+  @override
+  String get simulateColleagueAction => 'Simulate colleague action';
+
+  @override
+  String get simulateColleagueTooltip =>
+      'Simulates a colleague adding or completing an item in real time';
+
+  @override
+  String get simulatedItemAdded => 'A colleague added an item in real time';
+
+  @override
+  String get listIsShared => 'Shared list';
+
+  @override
+  String get listIsLocalOnly => 'Private list (local only)';
+
+  @override
+  String get listSharedSyncEnabled => 'Real-time sync enabled with cloud';
+
+  @override
+  String get listLocalOnlyDescription =>
+      'Data is stored strictly on this device';
+
+  @override
+  String get enableSharingAction => 'Enable sync';
+
+  @override
+  String get supportAndFeedback => 'Support & Feedback';
+
+  @override
+  String get inactiveShareInviteTitle => 'Invite others to collaborate';
+
+  @override
+  String get inactiveShareInviteDescription =>
+      'This list is private and saved only on your device. Turn on sharing to invite friends or colleagues and edit together in real time.';
+
+  @override
+  String get activateAndShare => 'Activate & Share List';
+
+  @override
+  String get enableCollaboration => 'Enable Collaboration';
+
+  @override
+  String get realtimeSyncFeature =>
+      'Real-time sync when adding or checking off items';
+
+  @override
+  String get collaboratorsFeature => 'Easily invite via link or email';
 }

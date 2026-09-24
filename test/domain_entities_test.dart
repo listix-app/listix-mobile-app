@@ -139,7 +139,8 @@ void main() {
       expect(list.completedCount, 1);
       expect(list.pendingCount, 1);
       expect(list.progressText, '1 de 2');
-      expect(list.isShared, isTrue);
+      expect(list.isShared, isFalse);
+      expect(list.copyWith(isShared: true).isShared, isTrue);
     });
 
     test('copyWith updates and falls back to original values', () {
@@ -165,6 +166,34 @@ void main() {
       expect(l1.hashCode, equals(l2.hashCode));
       expect(l1 == l3, isFalse);
       expect(l1 == Object(), isFalse);
+    });
+
+    test('isShared boolean serialization and explicit toggle', () {
+      final localList = ShoppingList(
+        id: 'l1',
+        name: 'Solo local',
+        isShared: false,
+        createdAt: now,
+      );
+      expect(localList.isShared, isFalse);
+
+      final sharedList = ShoppingList(
+        id: 'l2',
+        name: 'Compartida nube',
+        isShared: true,
+        createdAt: now,
+      );
+      expect(sharedList.isShared, isTrue);
+
+      final jsonShared = sharedList.toJson();
+      expect(jsonShared['isShared'], isTrue);
+
+      final fromJsonList = ShoppingList.fromJson(jsonShared);
+      expect(fromJsonList.isShared, isTrue);
+      expect(fromJsonList.id, 'l2');
+
+      final toggledOff = sharedList.copyWith(isShared: false);
+      expect(toggledOff.isShared, isFalse);
     });
   });
 

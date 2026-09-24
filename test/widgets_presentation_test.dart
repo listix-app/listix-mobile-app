@@ -170,6 +170,68 @@ void main() {
       await tester.tap(removeBtn);
       expect(removeCalled, isTrue);
     });
+
+    testWidgets('renders admin and member badges and handles onRoleChanged', (
+      tester,
+    ) async {
+      CollaboratorRole? changedRole;
+      final adminCollab = Collaborator(
+        id: 'c_admin',
+        name: 'Admin Boss',
+        email: 'admin@ejemplo.com',
+        role: CollaboratorRole.admin,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CollaboratorTile(
+              collaborator: adminCollab,
+              adminLabel: 'Admin',
+              memberLabel: 'Miembro',
+              onRoleChanged: (role) {
+                changedRole = role;
+              },
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Admin'), findsOneWidget);
+
+      // Open popup menu and select member
+      await tester.tap(find.byKey(const ValueKey('change_role_c_admin')));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.shield_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.person_rounded), findsOneWidget);
+
+      await tester.tap(find.text('Miembro').last);
+      await tester.pumpAndSettle();
+      expect(changedRole, CollaboratorRole.member);
+
+      // Render member without onRoleChanged
+      final memberCollab = Collaborator(
+        id: 'c_member',
+        name: 'Member Person',
+        email: 'member@ejemplo.com',
+        role: CollaboratorRole.member,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CollaboratorTile(
+              collaborator: memberCollab,
+              adminLabel: 'Admin',
+              memberLabel: 'Miembro',
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('Miembro'), findsOneWidget);
+    });
   });
 
   group('TodoItemTile Tests', () {
@@ -326,7 +388,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.star_rounded), findsWidgets);
+      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
       await tester.tap(find.byType(IconButton));
       expect(starToggled, isTrue);
     });
@@ -338,6 +400,7 @@ void main() {
       final list = ShoppingList(
         id: 'l3',
         name: 'Asado con amigos',
+        isShared: true,
         items: [
           TodoItem(
             id: 'i1',
@@ -423,8 +486,14 @@ void main() {
     });
 
     testWidgets(
-      'renders sheet, shares via WhatsApp, Gmail, and copies to clipboard',
+      'renders sheet, shares via system, and verifies WhatsApp, Gmail, Copy text removed',
       (tester) async {
+        tester.view.physicalSize = const Size(800, 1200);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
         final list = ShoppingList(
           id: 'share_list',
           name: 'Asado familiar',
@@ -460,33 +529,28 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Compartir "Asado familiar"'), findsOneWidget);
         expect(find.text('Compartir en el sistema'), findsOneWidget);
-        expect(find.text('Compartir por WhatsApp'), findsOneWidget);
-        expect(find.text('Compartir por Gmail'), findsOneWidget);
-        expect(find.text('Copiar texto de la lista'), findsOneWidget);
+
+        // Verify removed options
+        expect(find.byKey(const Key('share_whatsapp_tile')), findsNothing);
+        expect(find.byKey(const Key('share_gmail_tile')), findsNothing);
+        expect(find.byKey(const Key('copy_text_tile')), findsNothing);
 
         await tester.tap(find.text('Compartir en el sistema'));
         await tester.pumpAndSettle();
         expect(fakeShare.systemShared, isTrue);
-
-        await tester.tap(find.text('Compartir por WhatsApp'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.whatsAppShared, isTrue);
         expect(fakeController.syncedListIds, contains('share_list'));
-
-        await tester.tap(find.text('Compartir por Gmail'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.gmailShared, isTrue);
-
-        await tester.tap(find.text('Copiar texto de la lista'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.copied, isTrue);
-        expect(find.text('¡Lista copiada al portapapeles!'), findsOneWidget);
       },
     );
 
     testWidgets(
       'ShareListSheet.show helper renders modal properly and actions pop',
       (tester) async {
+        tester.view.physicalSize = const Size(800, 1200);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
         final list = ShoppingList(
           id: 'no_collab',
           name: 'Lista sola',
@@ -526,23 +590,13 @@ void main() {
         await tester.pumpAndSettle();
         expect(fakeShare.systemShared, isTrue);
 
+        // Verify WhatsApp, Gmail, and Copy raw text options are removed, keeping only system share
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('Compartir por WhatsApp'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.whatsAppShared, isTrue);
-
-        await tester.tap(find.text('Open Modal'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Compartir por Gmail'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.gmailShared, isTrue);
-
-        await tester.tap(find.text('Open Modal'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Copiar texto de la lista'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.copied, isTrue);
+        expect(find.byKey(const Key('share_system_tile')), findsOneWidget);
+        expect(find.byKey(const Key('share_whatsapp_tile')), findsNothing);
+        expect(find.byKey(const Key('share_gmail_tile')), findsNothing);
+        expect(find.byKey(const Key('copy_text_tile')), findsNothing);
       },
     );
   });

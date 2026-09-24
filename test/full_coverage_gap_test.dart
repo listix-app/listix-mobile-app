@@ -1,3 +1,4 @@
+import 'package:listix/src/features/collaboration/domain/entities/collaboration_event.dart';
 import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'dart:async';
@@ -157,7 +158,165 @@ void main() {
         expect(tr.notificationTimeSubtitle('10:00 AM'), contains('10:00 AM'));
         expect(tr.shareSystem, isNotEmpty);
         expect(tr.shareSystemDesc, isNotEmpty);
+        expect(tr.realtimeLive, isNotEmpty);
+        expect(tr.realtimeConnecting, isNotEmpty);
+        expect(tr.realtimeDisconnected, isNotEmpty);
+        expect(tr.realtimeCollaborating, isNotEmpty);
+        expect(tr.realtimeOnlineUsers(2), contains('2'));
+        expect(tr.joinList, isNotEmpty);
+        expect(tr.joinListTitle, isNotEmpty);
+        expect(tr.joinListPrompt, isNotEmpty);
+        expect(tr.joinListHint, isNotEmpty);
+        expect(tr.joinAction, isNotEmpty);
+        expect(tr.listJoined('Test'), contains('Test'));
+        expect(tr.invalidInviteCode, isNotEmpty);
+        expect(tr.alreadyJoined, isNotEmpty);
+        expect(tr.collaborators, isNotEmpty);
+        expect(tr.inviteColleague, isNotEmpty);
+        expect(tr.inviteColleagueSubtitle, isNotEmpty);
+        expect(tr.simulateColleagueAction, isNotEmpty);
+        expect(tr.simulateColleagueTooltip, isNotEmpty);
+        expect(tr.simulatedItemAdded, isNotEmpty);
+        expect(tr.listIsShared, isNotEmpty);
+        expect(tr.listIsLocalOnly, isNotEmpty);
+        expect(tr.listSharedSyncEnabled, isNotEmpty);
+        expect(tr.listLocalOnlyDescription, isNotEmpty);
+        expect(tr.enableSharingAction, isNotEmpty);
+        expect(
+          tr.shareInviteLinkPrompt('https://test.com'),
+          contains('https://test.com'),
+        );
+        expect(tr.sharePendingSection, isNotEmpty);
+        expect(tr.shareCompletedSection, isNotEmpty);
+        expect(tr.shareEmptyListNotice, isNotEmpty);
+        expect(tr.supportAndFeedback, isNotEmpty);
+        expect(tr.inactiveShareInviteTitle, isNotEmpty);
+        expect(tr.inactiveShareInviteDescription, isNotEmpty);
+        expect(tr.activateAndShare, isNotEmpty);
+        expect(tr.enableCollaboration, isNotEmpty);
+        expect(tr.realtimeSyncFeature, isNotEmpty);
+        expect(tr.collaboratorsFeature, isNotEmpty);
+        expect(tr.adminBadge, isNotEmpty);
+        expect(tr.memberBadge, isNotEmpty);
+        expect(tr.roleOwner, isNotEmpty);
+        expect(tr.roleAdmin, isNotEmpty);
+        expect(tr.roleMember, isNotEmpty);
+        expect(tr.makeAdmin, isNotEmpty);
+        expect(tr.makeMember, isNotEmpty);
+        expect(tr.inviteAsRole, isNotEmpty);
       }
+    });
+
+    test('Collaborator toJson and fromJson', () {
+      const c = Collaborator(
+        id: 'c_json',
+        name: 'Carlos',
+        email: 'carlos@test.com',
+        isOwner: true,
+      );
+      final json = c.toJson();
+      expect(json['id'], 'c_json');
+      expect(json['isOwner'], isTrue);
+      final restored = Collaborator.fromJson(json);
+      expect(restored, equals(c));
+
+      final copied = c.copyWith(
+        id: 'c_new',
+        name: 'Carlos 2',
+        email: 'c2@test.com',
+        isOwner: false,
+      );
+      expect(copied.id, 'c_new');
+      expect(copied.name, 'Carlos 2');
+      expect(copied.email, 'c2@test.com');
+      expect(copied.isOwner, isFalse);
+      final copiedSelf = c.copyWith();
+      expect(copiedSelf, equals(c));
+
+      // Test CollaboratorRole getters
+      expect(CollaboratorRole.owner.isOwner, isTrue);
+      expect(CollaboratorRole.owner.isAdmin, isTrue);
+      expect(CollaboratorRole.owner.isMember, isFalse);
+
+      expect(CollaboratorRole.admin.isOwner, isFalse);
+      expect(CollaboratorRole.admin.isAdmin, isTrue);
+      expect(CollaboratorRole.admin.isMember, isFalse);
+
+      expect(CollaboratorRole.member.isOwner, isFalse);
+      expect(CollaboratorRole.member.isAdmin, isFalse);
+      expect(CollaboratorRole.member.isMember, isTrue);
+
+      // Test Collaborator getters
+      const adminCollab = Collaborator(
+        id: 'c_admin',
+        name: 'Admin User',
+        email: 'admin@test.com',
+        role: CollaboratorRole.admin,
+      );
+      expect(adminCollab.isOwner, isFalse);
+      expect(adminCollab.isAdmin, isTrue);
+      expect(adminCollab.isMember, isFalse);
+
+      const memberCollab = Collaborator(
+        id: 'c_member',
+        name: 'Member User',
+        email: 'member@test.com',
+        role: CollaboratorRole.member,
+      );
+      expect(memberCollab.isOwner, isFalse);
+      expect(memberCollab.isAdmin, isFalse);
+      expect(memberCollab.isMember, isTrue);
+
+      // Test fromJson variations
+      final legacyOwner = Collaborator.fromJson({
+        'id': 'c_legacy_owner',
+        'name': 'Legacy Owner',
+        'email': 'legacy@test.com',
+        'isOwner': true,
+      });
+      expect(legacyOwner.role, CollaboratorRole.owner);
+
+      final legacyMember = Collaborator.fromJson({
+        'id': 'c_legacy_member',
+        'name': 'Legacy Member',
+        'email': 'legacy_m@test.com',
+        'isOwner': false,
+      });
+      expect(legacyMember.role, CollaboratorRole.member);
+
+      final fallbackMember = Collaborator.fromJson({
+        'id': 'c_fallback',
+        'name': 'Fallback',
+        'email': 'fallback@test.com',
+        'role': 'unknown_role_string',
+      });
+      expect(fallbackMember.role, CollaboratorRole.member);
+    });
+
+    test('CollaborationEvent fromJson fallback', () {
+      final ev = CollaborationEvent.fromJson({
+        'type': 'unsupported_unknown_type',
+        'listId': 'l1',
+      });
+      expect(ev.type, CollaborationEventType.presence);
+
+      final roleEvent = CollaborationEvent.collaboratorRoleUpdated(
+        listId: 'l1',
+        collaboratorId: 'c1',
+        role: CollaboratorRole.admin,
+        senderEmail: 'admin@test.com',
+        senderName: 'Admin',
+      );
+      expect(roleEvent.type, CollaborationEventType.updateCollaboratorRole);
+      expect(roleEvent.payload['role'], 'admin');
+
+      final json = roleEvent.toJson();
+      final restored = CollaborationEvent.fromJson(json);
+      expect(restored.type, CollaborationEventType.updateCollaboratorRole);
+      expect(restored.payload['role'], 'admin');
+
+      expect(roleEvent == restored, isTrue);
+      expect(roleEvent.hashCode, restored.hashCode);
     });
 
     test('LocaleController toggleLanguage and Provider', () {
@@ -682,7 +841,11 @@ class _ScreensTestListsController extends ListsController {
   }
 
   @override
-  Future<void> addCollaborator(String listId, String email) async {
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {
     collaboratorsAdded.add(email);
   }
 

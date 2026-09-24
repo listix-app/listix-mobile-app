@@ -84,6 +84,14 @@ class AppStrings {
   String get noCollaboratorsYet => _l10n.noCollaboratorsYet;
   String get removeCollaborator => _l10n.removeCollaborator;
   String get ownerBadge => _l10n.ownerBadge;
+  String get adminBadge => _l10n.adminBadge;
+  String get memberBadge => _l10n.memberBadge;
+  String get roleOwner => _l10n.roleOwner;
+  String get roleAdmin => _l10n.roleAdmin;
+  String get roleMember => _l10n.roleMember;
+  String get makeAdmin => _l10n.makeAdmin;
+  String get makeMember => _l10n.makeMember;
+  String get inviteAsRole => _l10n.inviteAsRole;
   String inviteSent(String email) => _l10n.inviteSent(email);
 
   String get syncStatusTitle => _l10n.syncStatusTitle;
@@ -156,4 +164,41 @@ class AppStrings {
       _l10n.notificationTimeSubtitle(time);
   String get shareSystem => _l10n.shareSystem;
   String get shareSystemDesc => _l10n.shareSystemDesc;
+
+  String get realtimeLive => _l10n.realtimeLive;
+  String get realtimeConnecting => _l10n.realtimeConnecting;
+  String get realtimeDisconnected => _l10n.realtimeDisconnected;
+  String get realtimeCollaborating => _l10n.realtimeCollaborating;
+  String realtimeOnlineUsers(int count) => _l10n.realtimeOnlineUsers(count);
+  String get joinList => _l10n.joinList;
+  String get joinListTitle => _l10n.joinListTitle;
+  String get joinListPrompt => _l10n.joinListPrompt;
+  String get joinListHint => _l10n.joinListHint;
+  String get joinAction => _l10n.joinAction;
+  String listJoined(String name) => _l10n.listJoined(name);
+  String get invalidInviteCode => _l10n.invalidInviteCode;
+  String get alreadyJoined => _l10n.alreadyJoined;
+  String get collaborators => _l10n.collaborators;
+  String get inviteColleague => _l10n.inviteColleague;
+  String get inviteColleagueSubtitle => _l10n.inviteColleagueSubtitle;
+  String get simulateColleagueAction => _l10n.simulateColleagueAction;
+  String get simulateColleagueTooltip => _l10n.simulateColleagueTooltip;
+  String get simulatedItemAdded => _l10n.simulatedItemAdded;
+  String get listIsShared => _l10n.listIsShared;
+  String get listIsLocalOnly => _l10n.listIsLocalOnly;
+  String get listSharedSyncEnabled => _l10n.listSharedSyncEnabled;
+  String get listLocalOnlyDescription => _l10n.listLocalOnlyDescription;
+  String get enableSharingAction => _l10n.enableSharingAction;
+  String shareInviteLinkPrompt(String url) => _l10n.shareInviteLinkPrompt(url);
+  String get sharePendingSection => _l10n.sharePendingSection;
+  String get shareCompletedSection => _l10n.shareCompletedSection;
+  String get shareEmptyListNotice => _l10n.shareEmptyListNotice;
+  String get supportAndFeedback => _l10n.supportAndFeedback;
+  String get inactiveShareInviteTitle => _l10n.inactiveShareInviteTitle;
+  String get inactiveShareInviteDescription =>
+      _l10n.inactiveShareInviteDescription;
+  String get activateAndShare => _l10n.activateAndShare;
+  String get enableCollaboration => _l10n.enableCollaboration;
+  String get realtimeSyncFeature => _l10n.realtimeSyncFeature;
+  String get collaboratorsFeature => _l10n.collaboratorsFeature;
 }

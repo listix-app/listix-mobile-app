@@ -6,16 +6,76 @@ import '../../domain/entities/collaborator.dart';
 class CollaboratorTile extends StatelessWidget {
   final Collaborator collaborator;
   final VoidCallback? onRemove;
+  final ValueChanged<CollaboratorRole>? onRoleChanged;
   final String ownerLabel;
+  final String adminLabel;
+  final String memberLabel;
   final String removeTooltip;
 
   const CollaboratorTile({
     super.key,
     required this.collaborator,
     this.onRemove,
+    this.onRoleChanged,
     this.ownerLabel = 'Dueño',
+    this.adminLabel = 'Admin',
+    this.memberLabel = 'Colaborador',
     this.removeTooltip = 'Quitar colaborador',
   });
+
+  Widget _buildRoleBadge() {
+    if (collaborator.isOwner) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          ownerLabel,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.primaryDark,
+          ),
+        ),
+      );
+    }
+
+    final isAdmin = collaborator.role == CollaboratorRole.admin;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: isAdmin ? const Color(0xFFF3E8FF) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            isAdmin ? adminLabel : memberLabel,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isAdmin
+                  ? const Color(0xFF7E22CE)
+                  : const Color(0xFF475569),
+            ),
+          ),
+          if (onRoleChanged != null) ...[
+            const SizedBox(width: 2),
+            Icon(
+              Icons.arrow_drop_down_rounded,
+              size: 14,
+              color: isAdmin
+                  ? const Color(0xFF7E22CE)
+                  : const Color(0xFF475569),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,32 +129,60 @@ class CollaboratorTile extends StatelessWidget {
             ),
           ),
           if (collaborator.isOwner)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                ownerLabel,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primaryDark,
+            _buildRoleBadge()
+          else ...[
+            if (onRoleChanged != null)
+              PopupMenuButton<CollaboratorRole>(
+                key: ValueKey('change_role_${collaborator.id}'),
+                tooltip: 'Cambiar rol',
+                initialValue: collaborator.role,
+                onSelected: onRoleChanged,
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: CollaboratorRole.admin,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.shield_rounded,
+                          size: 16,
+                          color: Color(0xFF7E22CE),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(adminLabel),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: CollaboratorRole.member,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.person_rounded,
+                          size: 16,
+                          color: Color(0xFF475569),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(memberLabel),
+                      ],
+                    ),
+                  ),
+                ],
+                child: _buildRoleBadge(),
+              )
+            else
+              _buildRoleBadge(),
+            if (onRemove != null)
+              IconButton(
+                icon: const Icon(
+                  Icons.close,
+                  size: 18,
+                  color: AppColors.textMuted,
                 ),
+                splashRadius: 18,
+                onPressed: onRemove,
+                tooltip: removeTooltip,
               ),
-            )
-          else if (onRemove != null)
-            IconButton(
-              icon: const Icon(
-                Icons.close,
-                size: 18,
-                color: AppColors.textMuted,
-              ),
-              splashRadius: 18,
-              onPressed: onRemove,
-              tooltip: removeTooltip,
-            ),
+          ],
         ],
       ),
     );

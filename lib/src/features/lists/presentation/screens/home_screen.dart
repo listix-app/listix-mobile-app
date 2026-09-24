@@ -1,3 +1,4 @@
+import '../../../collaboration/presentation/widgets/join_list_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -81,6 +82,17 @@ class HomeScreen extends ConsumerWidget {
         titleSpacing: 16,
         title: const ListixLogo(size: 28, showWordmark: true, fontSize: 22),
         actions: [
+          IconButton(
+            key: const Key('join_list_button'),
+            icon: const Icon(Icons.group_add_outlined, size: 22),
+            tooltip: tr.joinList,
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (ctx) => const JoinListDialog(),
+              );
+            },
+          ),
           IconButton(
             key: const Key('layout_toggle_button'),
             icon: Icon(

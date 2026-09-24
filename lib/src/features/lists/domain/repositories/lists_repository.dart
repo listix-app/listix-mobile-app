@@ -1,3 +1,4 @@
+import '../entities/collaborator.dart';
 import '../entities/shopping_list.dart';
 import '../entities/todo_item.dart';
 
@@ -17,8 +18,45 @@ abstract interface class ListsRepository {
   Future<void> reorderItems(String listId, List<String> orderedItemIds);
   Future<void> restoreItem(TodoItem item);
 
-  Future<void> addCollaborator(String listId, String email);
+  Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  });
   Future<void> removeCollaborator(String listId, String collaboratorId);
+  Future<void> updateCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  );
+  Future<ShoppingList> joinSharedList(
+    String listId,
+    String name, {
+    String? ownerName,
+    String? ownerEmail,
+  });
+
+  Future<void> applyRemoteItem(TodoItem item);
+  Future<void> applyRemoteItemToggle(
+    String listId,
+    String itemId,
+    bool isCompleted,
+  );
+  Future<void> applyRemoteItemDelete(String listId, String itemId);
+  Future<void> applyRemoteCollaborator(
+    String listId,
+    Collaborator collaborator,
+  );
+  Future<void> applyRemoteCollaboratorRemove(
+    String listId,
+    String collaboratorId,
+  );
+  Future<void> applyRemoteCollaboratorRole(
+    String listId,
+    String collaboratorId,
+    CollaboratorRole role,
+  );
 
   Future<void> syncList(String listId);
+  Future<void> setListShared(String listId, bool isShared);
 }

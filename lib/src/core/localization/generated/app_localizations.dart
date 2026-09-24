@@ -470,6 +470,54 @@ abstract class AppLocalizations {
   /// **'Dueño'**
   String get ownerBadge;
 
+  /// No description provided for @adminBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Admin'**
+  String get adminBadge;
+
+  /// No description provided for @memberBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaborador'**
+  String get memberBadge;
+
+  /// No description provided for @roleOwner.
+  ///
+  /// In es, this message translates to:
+  /// **'Dueño'**
+  String get roleOwner;
+
+  /// No description provided for @roleAdmin.
+  ///
+  /// In es, this message translates to:
+  /// **'Administrador'**
+  String get roleAdmin;
+
+  /// No description provided for @roleMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaborador'**
+  String get roleMember;
+
+  /// No description provided for @makeAdmin.
+  ///
+  /// In es, this message translates to:
+  /// **'Hacer Administrador'**
+  String get makeAdmin;
+
+  /// No description provided for @makeMember.
+  ///
+  /// In es, this message translates to:
+  /// **'Hacer Colaborador'**
+  String get makeMember;
+
+  /// No description provided for @inviteAsRole.
+  ///
+  /// In es, this message translates to:
+  /// **'Rol'**
+  String get inviteAsRole;
+
   /// No description provided for @inviteSent.
   ///
   /// In es, this message translates to:
@@ -839,8 +887,218 @@ abstract class AppLocalizations {
   /// No description provided for @shareSystemDesc.
   ///
   /// In es, this message translates to:
-  /// **'Compartir con otras aplicaciones instaladas'**
+  /// **'Enviar lista y enlace a WhatsApp, Telegram, Correo y más'**
   String get shareSystemDesc;
+
+  /// No description provided for @shareInviteLinkPrompt.
+  ///
+  /// In es, this message translates to:
+  /// **'🔗 Únete a esta lista para colaborar en tiempo real:\n{url}'**
+  String shareInviteLinkPrompt(String url);
+
+  /// No description provided for @sharePendingSection.
+  ///
+  /// In es, this message translates to:
+  /// **'📝 Por comprar'**
+  String get sharePendingSection;
+
+  /// No description provided for @shareCompletedSection.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ Comprados'**
+  String get shareCompletedSection;
+
+  /// No description provided for @shareEmptyListNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'• (Sin productos en la lista todavía)'**
+  String get shareEmptyListNotice;
+
+  /// No description provided for @realtimeLive.
+  ///
+  /// In es, this message translates to:
+  /// **'En vivo'**
+  String get realtimeLive;
+
+  /// No description provided for @realtimeConnecting.
+  ///
+  /// In es, this message translates to:
+  /// **'Conectando...'**
+  String get realtimeConnecting;
+
+  /// No description provided for @realtimeDisconnected.
+  ///
+  /// In es, this message translates to:
+  /// **'Desconectado'**
+  String get realtimeDisconnected;
+
+  /// No description provided for @realtimeCollaborating.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaboración en tiempo real activa'**
+  String get realtimeCollaborating;
+
+  /// No description provided for @realtimeOnlineUsers.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} en línea'**
+  String realtimeOnlineUsers(int count);
+
+  /// No description provided for @joinList.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirse a lista'**
+  String get joinList;
+
+  /// No description provided for @joinListTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirse a una lista compartida'**
+  String get joinListTitle;
+
+  /// No description provided for @joinListPrompt.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa el código o enlace de invitación para colaborar en tiempo real.'**
+  String get joinListPrompt;
+
+  /// No description provided for @joinListHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Código o enlace de la lista'**
+  String get joinListHint;
+
+  /// No description provided for @joinAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirse'**
+  String get joinAction;
+
+  /// No description provided for @listJoined.
+  ///
+  /// In es, this message translates to:
+  /// **'Te has unido a \"{name}\"'**
+  String listJoined(String name);
+
+  /// No description provided for @invalidInviteCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código o enlace de invitación inválido'**
+  String get invalidInviteCode;
+
+  /// No description provided for @alreadyJoined.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tienes acceso a esta lista'**
+  String get alreadyJoined;
+
+  /// No description provided for @collaborators.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaboradores'**
+  String get collaborators;
+
+  /// No description provided for @inviteColleague.
+  ///
+  /// In es, this message translates to:
+  /// **'Invitar amigos o colegas'**
+  String get inviteColleague;
+
+  /// No description provided for @inviteColleagueSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Colabora en tiempo real agregando y tachando productos'**
+  String get inviteColleagueSubtitle;
+
+  /// No description provided for @simulateColleagueAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Simular acción de colega'**
+  String get simulateColleagueAction;
+
+  /// No description provided for @simulateColleagueTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Simula que un colega agrega o tacha un producto en tiempo real'**
+  String get simulateColleagueTooltip;
+
+  /// No description provided for @simulatedItemAdded.
+  ///
+  /// In es, this message translates to:
+  /// **'Un colega agregó un producto en tiempo real'**
+  String get simulatedItemAdded;
+
+  /// No description provided for @listIsShared.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista compartida'**
+  String get listIsShared;
+
+  /// No description provided for @listIsLocalOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista privada (solo local)'**
+  String get listIsLocalOnly;
+
+  /// No description provided for @listSharedSyncEnabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronización en tiempo real habilitada con la nube'**
+  String get listSharedSyncEnabled;
+
+  /// No description provided for @listLocalOnlyDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Los datos se guardan únicamente en tu dispositivo'**
+  String get listLocalOnlyDescription;
+
+  /// No description provided for @enableSharingAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Habilitar sincronización'**
+  String get enableSharingAction;
+
+  /// No description provided for @supportAndFeedback.
+  ///
+  /// In es, this message translates to:
+  /// **'Soporte y Comentarios'**
+  String get supportAndFeedback;
+
+  /// No description provided for @inactiveShareInviteTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Invita a colaborar en esta lista'**
+  String get inactiveShareInviteTitle;
+
+  /// No description provided for @inactiveShareInviteDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Esta lista es privada y está guardada únicamente en tu dispositivo. Activa el modo compartido para invitar amigos o colegas y editar juntos en tiempo real.'**
+  String get inactiveShareInviteDescription;
+
+  /// No description provided for @activateAndShare.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar y compartir lista'**
+  String get activateAndShare;
+
+  /// No description provided for @enableCollaboration.
+  ///
+  /// In es, this message translates to:
+  /// **'Activar colaboración'**
+  String get enableCollaboration;
+
+  /// No description provided for @realtimeSyncFeature.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronización en tiempo real al agregar o tachar productos'**
+  String get realtimeSyncFeature;
+
+  /// No description provided for @collaboratorsFeature.
+  ///
+  /// In es, this message translates to:
+  /// **'Invita fácilmente mediante un enlace o correo electrónico'**
+  String get collaboratorsFeature;
 }
 
 class _AppLocalizationsDelegate

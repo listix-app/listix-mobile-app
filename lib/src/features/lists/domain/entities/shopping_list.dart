@@ -8,6 +8,7 @@ class ShoppingList {
   final String name;
   final bool isSynced;
   final bool isStarred;
+  final bool isShared;
   final int position;
   final List<TodoItem> items;
   final List<Collaborator> collaborators;
@@ -18,6 +19,7 @@ class ShoppingList {
     required this.name,
     this.isSynced = false,
     this.isStarred = false,
+    this.isShared = false,
     this.position = 0,
     this.items = const [],
     this.collaborators = const [],
@@ -32,13 +34,12 @@ class ShoppingList {
   double get completionProgress =>
       totalCount == 0 ? 0.0 : completedCount / totalCount;
 
-  bool get isShared => collaborators.isNotEmpty;
-
   ShoppingList copyWith({
     String? id,
     String? name,
     bool? isSynced,
     bool? isStarred,
+    bool? isShared,
     int? position,
     List<TodoItem>? items,
     List<Collaborator>? collaborators,
@@ -49,10 +50,45 @@ class ShoppingList {
       name: name ?? this.name,
       isSynced: isSynced ?? this.isSynced,
       isStarred: isStarred ?? this.isStarred,
+      isShared: isShared ?? this.isShared,
       position: position ?? this.position,
       items: items ?? this.items,
       collaborators: collaborators ?? this.collaborators,
       createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'isSynced': isSynced,
+    'isStarred': isStarred,
+    'isShared': isShared,
+    'position': position,
+    'items': items.map((i) => i.toJson()).toList(),
+    'collaborators': collaborators.map((c) => c.toJson()).toList(),
+    'createdAt': createdAt.toIso8601String(),
+  };
+
+  factory ShoppingList.fromJson(Map<String, dynamic> json) {
+    return ShoppingList(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      isSynced: json['isSynced'] as bool? ?? false,
+      isStarred: json['isStarred'] as bool? ?? false,
+      isShared: json['isShared'] as bool? ?? false,
+      position: json['position'] as int? ?? 0,
+      items:
+          (json['items'] as List<dynamic>?)
+              ?.map((i) => TodoItem.fromJson(i as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      collaborators:
+          (json['collaborators'] as List<dynamic>?)
+              ?.map((c) => Collaborator.fromJson(c as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 
@@ -65,9 +101,11 @@ class ShoppingList {
           name == other.name &&
           isSynced == other.isSynced &&
           isStarred == other.isStarred &&
+          isShared == other.isShared &&
           position == other.position &&
           listEquals(items, other.items) &&
-          listEquals(collaborators, other.collaborators);
+          listEquals(collaborators, other.collaborators) &&
+          createdAt == other.createdAt;
 
   @override
   int get hashCode => Object.hash(
@@ -75,8 +113,10 @@ class ShoppingList {
     name,
     isSynced,
     isStarred,
+    isShared,
     position,
     Object.hashAll(items),
     Object.hashAll(collaborators),
+    createdAt,
   );
 }

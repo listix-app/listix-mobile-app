@@ -215,6 +215,30 @@ class AppLocalizationsEs extends AppLocalizations {
   String get ownerBadge => 'Dueño';
 
   @override
+  String get adminBadge => 'Admin';
+
+  @override
+  String get memberBadge => 'Colaborador';
+
+  @override
+  String get roleOwner => 'Dueño';
+
+  @override
+  String get roleAdmin => 'Administrador';
+
+  @override
+  String get roleMember => 'Colaborador';
+
+  @override
+  String get makeAdmin => 'Hacer Administrador';
+
+  @override
+  String get makeMember => 'Hacer Colaborador';
+
+  @override
+  String get inviteAsRole => 'Rol';
+
+  @override
   String inviteSent(String email) {
     return 'Invitación enviada a $email';
   }
@@ -421,5 +445,126 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareSystem => 'Compartir en el sistema';
 
   @override
-  String get shareSystemDesc => 'Compartir con otras aplicaciones instaladas';
+  String get shareSystemDesc =>
+      'Enviar lista y enlace a WhatsApp, Telegram, Correo y más';
+
+  @override
+  String shareInviteLinkPrompt(String url) {
+    return '🔗 Únete a esta lista para colaborar en tiempo real:\n$url';
+  }
+
+  @override
+  String get sharePendingSection => '📝 Por comprar';
+
+  @override
+  String get shareCompletedSection => '✅ Comprados';
+
+  @override
+  String get shareEmptyListNotice => '• (Sin productos en la lista todavía)';
+
+  @override
+  String get realtimeLive => 'En vivo';
+
+  @override
+  String get realtimeConnecting => 'Conectando...';
+
+  @override
+  String get realtimeDisconnected => 'Desconectado';
+
+  @override
+  String get realtimeCollaborating => 'Colaboración en tiempo real activa';
+
+  @override
+  String realtimeOnlineUsers(int count) {
+    return '$count en línea';
+  }
+
+  @override
+  String get joinList => 'Unirse a lista';
+
+  @override
+  String get joinListTitle => 'Unirse a una lista compartida';
+
+  @override
+  String get joinListPrompt =>
+      'Ingresa el código o enlace de invitación para colaborar en tiempo real.';
+
+  @override
+  String get joinListHint => 'Código o enlace de la lista';
+
+  @override
+  String get joinAction => 'Unirse';
+
+  @override
+  String listJoined(String name) {
+    return 'Te has unido a \"$name\"';
+  }
+
+  @override
+  String get invalidInviteCode => 'Código o enlace de invitación inválido';
+
+  @override
+  String get alreadyJoined => 'Ya tienes acceso a esta lista';
+
+  @override
+  String get collaborators => 'Colaboradores';
+
+  @override
+  String get inviteColleague => 'Invitar amigos o colegas';
+
+  @override
+  String get inviteColleagueSubtitle =>
+      'Colabora en tiempo real agregando y tachando productos';
+
+  @override
+  String get simulateColleagueAction => 'Simular acción de colega';
+
+  @override
+  String get simulateColleagueTooltip =>
+      'Simula que un colega agrega o tacha un producto en tiempo real';
+
+  @override
+  String get simulatedItemAdded =>
+      'Un colega agregó un producto en tiempo real';
+
+  @override
+  String get listIsShared => 'Lista compartida';
+
+  @override
+  String get listIsLocalOnly => 'Lista privada (solo local)';
+
+  @override
+  String get listSharedSyncEnabled =>
+      'Sincronización en tiempo real habilitada con la nube';
+
+  @override
+  String get listLocalOnlyDescription =>
+      'Los datos se guardan únicamente en tu dispositivo';
+
+  @override
+  String get enableSharingAction => 'Habilitar sincronización';
+
+  @override
+  String get supportAndFeedback => 'Soporte y Comentarios';
+
+  @override
+  String get inactiveShareInviteTitle => 'Invita a colaborar en esta lista';
+
+  @override
+  String get inactiveShareInviteDescription =>
+      'Esta lista es privada y está guardada únicamente en tu dispositivo. Activa el modo compartido para invitar amigos o colegas y editar juntos en tiempo real.';
+
+  @override
+  String get activateAndShare => 'Activar y compartir lista';
+
+  @override
+  String get enableCollaboration => 'Activar colaboración';
+
+  @override
+  String get realtimeSyncFeature =>
+      'Sincronización en tiempo real al agregar o tachar productos';
+
+  @override
+  String get collaboratorsFeature =>
+      'Invita fácilmente mediante un enlace o correo electrónico';
 }
