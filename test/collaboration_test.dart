@@ -725,7 +725,6 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify collaboration section elements
-      expect(find.text('Invitar amigos o colegas'), findsOneWidget);
       expect(find.byKey(const Key('copy_invite_link_button')), findsOneWidget);
       expect(find.text('Juan Perez'), findsOneWidget);
 
@@ -735,32 +734,11 @@ void main() {
       expect(fakeShare.lastCopiedText, contains('listId=collab_list_1'));
       expect(find.text('Enlace copiado al portapapeles'), findsOneWidget);
 
-      // Tap choice chips for invite role
-      await tester.tap(find.byKey(const Key('invite_role_admin_chip')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('invite_role_member_chip')));
-      await tester.pumpAndSettle();
-
       // Change role via popup menu
       await tester.tap(find.byKey(const ValueKey('change_role_c_peer')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Admin').last);
       await tester.pumpAndSettle();
-
-      // Enter new email to invite
-      await tester.enterText(
-        find.byKey(const Key('collaborator_email_input')),
-        'maria@correo.com',
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Invitación enviada a maria@correo.com'),
-        findsOneWidget,
-      );
 
       // Tap peer simulation button
       await tester.tap(find.byKey(const Key('simulate_peer_button')));
@@ -893,11 +871,6 @@ void main() {
         expect(find.byKey(const Key('enable_sharing_button')), findsOneWidget);
 
         // Verify active collaborator management is hidden when inactive
-        expect(find.byKey(const Key('collaborator_email_input')), findsNothing);
-        expect(
-          find.byKey(const Key('invite_collaborator_button')),
-          findsNothing,
-        );
         expect(find.byKey(const Key('copy_invite_link_button')), findsNothing);
         expect(find.byKey(const Key('simulate_peer_button')), findsNothing);
 
@@ -910,127 +883,6 @@ void main() {
         expect(fakeShare.systemShared, isTrue);
       },
     );
-
-    testWidgets(
-      'shows validation errors for empty and invalid email in share sheet',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1200);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
-
-        final list = ShoppingList(
-          id: 'val_list_1',
-          name: 'Lista Validación',
-          isShared: true,
-          items: const [],
-          collaborators: const [],
-          createdAt: DateTime.now(),
-        );
-
-        final fakeRepo = _FakeListsRepoForCollab([list]);
-        final fakeController = _FakeListsControllerCollab([list]);
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              listsRepositoryProvider.overrideWithValue(fakeRepo),
-              listsControllerProvider.overrideWith(() => fakeController),
-              shoppingListProvider('val_list_1').overrideWithValue(list),
-              shareServiceProvider.overrideWithValue(
-                _FakeShareServiceForCollab(),
-              ),
-            ],
-            child: const MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Scaffold(body: ShareListSheet(listId: 'val_list_1')),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        // Tap invite button with empty field
-        await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-        await tester.pumpAndSettle();
-        expect(find.text('Ingresa un correo'), findsOneWidget);
-
-        // Enter invalid email
-        await tester.enterText(
-          find.byKey(const Key('collaborator_email_input')),
-          'not-an-email',
-        );
-        await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-        await tester.pumpAndSettle();
-        expect(find.text('Correo no válido'), findsOneWidget);
-
-        // Submit via onFieldSubmitted
-        await tester.enterText(
-          find.byKey(const Key('collaborator_email_input')),
-          'valid@listix.local',
-        );
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.pumpAndSettle();
-        expect(
-          find.text('Invitación enviada a valid@listix.local'),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets('displays error snackbar when addCollaborator throws', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final list = ShoppingList(
-        id: 'err_list_1',
-        name: 'Lista Error',
-        isShared: true,
-        items: const [],
-        collaborators: const [],
-        createdAt: DateTime.now(),
-      );
-
-      final throwingController = _ThrowingListsControllerCollab([list]);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            listsRepositoryProvider.overrideWithValue(
-              _FakeListsRepoForCollab([list]),
-            ),
-            listsControllerProvider.overrideWith(() => throwingController),
-            shoppingListProvider('err_list_1').overrideWithValue(list),
-            shareServiceProvider.overrideWithValue(
-              _FakeShareServiceForCollab(),
-            ),
-          ],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: ShareListSheet(listId: 'err_list_1')),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byKey(const Key('collaborator_email_input')),
-        'test@listix.local',
-      );
-      await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('Error:'), findsOneWidget);
-    });
 
     testWidgets(
       'empty collaborators container in dark mode and remove collaborator',
@@ -1822,23 +1674,6 @@ void main() {
       },
     );
   });
-}
-
-class _ThrowingListsControllerCollab extends ListsController {
-  final List<ShoppingList> _initial;
-  _ThrowingListsControllerCollab(this._initial);
-
-  @override
-  Future<List<ShoppingList>> build() async => _initial;
-
-  @override
-  Future<void> addCollaborator(
-    String listId,
-    String email, {
-    CollaboratorRole role = CollaboratorRole.member,
-  }) async {
-    throw Exception('Error simulado al invitar');
-  }
 }
 
 class _StaticCollabController extends CollaborationController {

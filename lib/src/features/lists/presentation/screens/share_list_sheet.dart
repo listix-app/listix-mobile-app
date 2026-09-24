@@ -6,7 +6,6 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
-import '../../domain/entities/collaborator.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../controllers/lists_controller.dart';
 import '../services/share_service.dart';
@@ -31,17 +30,6 @@ class ShareListSheet extends ConsumerStatefulWidget {
 }
 
 class _ShareListSheetState extends ConsumerState<ShareListSheet> {
-  final _emailController = TextEditingController();
-  final _inviteFormKey = GlobalKey<FormState>();
-  bool _isInviting = false;
-  CollaboratorRole _inviteRole = CollaboratorRole.member;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
   Future<void> _shareSystem(
     BuildContext context,
     WidgetRef ref,
@@ -92,47 +80,6 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
           duration: const Duration(seconds: 2),
         ),
       );
-    }
-  }
-
-  Future<void> _handleInvite(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-    AppStrings tr,
-  ) async {
-    if (!_inviteFormKey.currentState!.validate()) return;
-
-    final email = _emailController.text.trim();
-    setState(() => _isInviting = true);
-
-    try {
-      await ref
-          .read(listsControllerProvider.notifier)
-          .addCollaborator(list.id, email, role: _inviteRole);
-      _emailController.clear();
-      setState(() => _isInviting = false);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr.inviteSent(email)),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.primary,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() => _isInviting = false);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr.errorPrefix(e.toString())),
-            backgroundColor: AppColors.delete,
-          ),
-        );
-      }
     }
   }
 
@@ -386,176 +333,6 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                 title: tr.shareSystem,
                 subtitle: tr.shareSystemDesc,
                 onTap: () => _shareSystem(context, ref, list),
-              ),
-              const SizedBox(height: 16),
-              Divider(color: handleColor),
-              const SizedBox(height: 12),
-
-              // Section: Invite Colleague by Email
-              Text(
-                tr.inviteColleague,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: textTitleColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Text(
-                    '${tr.inviteAsRole}:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: textMutedColor,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.surfaceDark
-                          : AppColors.surfaceLight,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: handleColor),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ChoiceChip(
-                          key: const Key('invite_role_member_chip'),
-                          label: Text(tr.roleMember),
-                          labelStyle: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: _inviteRole == CollaboratorRole.member
-                                ? AppColors.primary
-                                : textMutedColor,
-                          ),
-                          selected: _inviteRole == CollaboratorRole.member,
-                          selectedColor: AppColors.primary.withValues(
-                            alpha: 0.15,
-                          ),
-                          backgroundColor: Colors.transparent,
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide.none,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(
-                                () => _inviteRole = CollaboratorRole.member,
-                              );
-                            }
-                          },
-                        ),
-                        ChoiceChip(
-                          key: const Key('invite_role_admin_chip'),
-                          label: Text(tr.roleAdmin),
-                          labelStyle: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: _inviteRole == CollaboratorRole.admin
-                                ? const Color(0xFF7E22CE)
-                                : textMutedColor,
-                          ),
-                          selected: _inviteRole == CollaboratorRole.admin,
-                          selectedColor: const Color(0xFFF3E8FF),
-                          backgroundColor: Colors.transparent,
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide.none,
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(
-                                () => _inviteRole = CollaboratorRole.admin,
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Form(
-                key: _inviteFormKey,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('collaborator_email_input'),
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          hintText: tr.emailHint,
-                          prefixIcon: const Icon(
-                            Icons.email_outlined,
-                            size: 20,
-                          ),
-                          filled: true,
-                          fillColor: isDark
-                              ? AppColors.surfaceDark
-                              : AppColors.surfaceLight,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                        ),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) {
-                            return tr.enterEmailError;
-                          }
-                          if (!val.contains('@') || !val.contains('.')) {
-                            return tr.invalidEmailError;
-                          }
-                          return null;
-                        },
-                        onFieldSubmitted: (_) =>
-                            _handleInvite(context, ref, list, tr),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      key: const Key('invite_collaborator_button'),
-                      onPressed: _isInviting
-                          ? null
-                          : () => _handleInvite(context, ref, list, tr),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isInviting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : Text(tr.inviteAction),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 10),
 

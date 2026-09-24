@@ -3,7 +3,6 @@ import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.da
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -390,7 +389,7 @@ void main() {
       expect(db.isOpen, isTrue);
 
       final tables = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='shopping_lists'",
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='lists'",
       );
       expect(tables.isNotEmpty, isTrue);
 
@@ -399,28 +398,14 @@ void main() {
       );
       expect(overridePath, '/custom/path.db');
 
-      final desktopPath = await AppDatabase.resolveDatabasePath(
-        isDesktop: true,
-        getDocDir: () async => '/mock/desktop',
+      final customDirPath = await AppDatabase.resolveDatabasePath(
+        getDefaultDatabasesPath: () async => '/mock/dir',
       );
-      expect(desktopPath, contains('mock/desktop'));
+      expect(customDirPath, contains('mock/dir'));
+      expect(customDirPath, contains('listix.db'));
 
-      final mobilePath = await AppDatabase.resolveDatabasePath(
-        isDesktop: false,
-        getDefaultDatabasesPath: () async => '/mock/mobile',
-      );
-      expect(mobilePath, contains('mock/mobile'));
-
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(
-            const MethodChannel('plugins.flutter.io/path_provider'),
-            (MethodCall methodCall) async => '/mock/app_support',
-          );
-      final p1 = await AppDatabase.resolveDatabasePath(isDesktop: true);
-      expect(p1, contains('listix.db'));
-
-      final p2 = await AppDatabase.resolveDatabasePath(isDesktop: false);
-      expect(p2, contains('listix.db'));
+      final defaultPath = await AppDatabase.resolveDatabasePath();
+      expect(defaultPath, contains('listix.db'));
     });
 
     testWidgets('CustomPainter shouldRepaint on ListixLogo', (tester) async {
@@ -755,7 +740,7 @@ void main() {
           expect(service.isSimulatedOffline, isFalse);
 
           final db = await AppDatabase.instance.database;
-          await db.insert('todo_items', {
+          await db.insert('items', {
             'id': 'unsynced_gap_item',
             'list_id': 'list-1',
             'title': 'Unsynced Gap Test',

@@ -52,17 +52,6 @@ class MockAndroidFlutterLocalNotificationsPlugin
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class MockIOSFlutterLocalNotificationsPlugin
-    implements IOSFlutterLocalNotificationsPlugin {
-  @override
-  dynamic noSuchMethod(Invocation invocation) {
-    if (invocation.memberName == #requestPermissions) {
-      return Future<bool?>.value(true);
-    }
-    return super.noSuchMethod(invocation);
-  }
-}
-
 class MockLocalNotificationsPlugin implements FlutterLocalNotificationsPlugin {
   bool initializeSuccess = true;
   int cancelCallCount = 0;
@@ -107,9 +96,6 @@ class MockLocalNotificationsPlugin implements FlutterLocalNotificationsPlugin {
   >() {
     if (T == AndroidFlutterLocalNotificationsPlugin) {
       return MockAndroidFlutterLocalNotificationsPlugin() as T;
-    }
-    if (T == IOSFlutterLocalNotificationsPlugin) {
-      return MockIOSFlutterLocalNotificationsPlugin() as T;
     }
     return null;
   }
@@ -185,7 +171,7 @@ void main() {
     });
 
     test(
-      'requestPermissions handles android, darwin, and default platforms',
+      'requestPermissions handles android and non-android platforms',
       () async {
         final defaultResult = await service.requestPermissions();
         expect(defaultResult, isA<bool>());
@@ -193,18 +179,16 @@ void main() {
         final androidService = LocalNotificationService(
           plugin: mockPlugin,
           isAndroid: true,
-          isDarwin: false,
         );
         final androidResult = await androidService.requestPermissions();
         expect(androidResult, isTrue);
 
-        final darwinService = LocalNotificationService(
+        final nonAndroidService = LocalNotificationService(
           plugin: mockPlugin,
           isAndroid: false,
-          isDarwin: true,
         );
-        final darwinResult = await darwinService.requestPermissions();
-        expect(darwinResult, isTrue);
+        final nonAndroidResult = await nonAndroidService.requestPermissions();
+        expect(nonAndroidResult, isTrue);
       },
     );
 

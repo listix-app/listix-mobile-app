@@ -9,10 +9,11 @@ import '../../domain/repositories/lists_repository.dart';
 
 class SqliteListsRepository implements ListsRepository {
   final AppDatabase _appDatabase;
-  static const _uuid = Uuid();
+  final Uuid _uuid;
 
-  SqliteListsRepository({AppDatabase? appDatabase})
-    : _appDatabase = appDatabase ?? AppDatabase.instance;
+  SqliteListsRepository({AppDatabase? appDatabase, Uuid? uuid})
+    : _appDatabase = appDatabase ?? AppDatabase.instance,
+      _uuid = uuid ?? const Uuid();
 
   Future<Database> get _db => _appDatabase.database;
 
@@ -21,7 +22,7 @@ class SqliteListsRepository implements ListsRepository {
     final db = await _db;
 
     final listMaps = await db.query(
-      'shopping_lists',
+      'lists',
       where: 'deleted_at IS NULL',
       orderBy: 'is_starred DESC, position ASC, created_at DESC',
     );
@@ -32,7 +33,7 @@ class SqliteListsRepository implements ListsRepository {
     final inPlaceholders = List.filled(listIds.length, '?').join(',');
 
     final itemMaps = await db.query(
-      'todo_items',
+      'items',
       where: 'list_id IN ($inPlaceholders) AND deleted_at IS NULL',
       whereArgs: listIds,
       orderBy: 'position ASC, created_at DESC',
@@ -118,11 +119,11 @@ class SqliteListsRepository implements ListsRepository {
     final id = _uuid.v4();
 
     final maxPosQuery = await db.rawQuery(
-      'SELECT COALESCE(MAX(position), -1) AS max_pos FROM shopping_lists WHERE deleted_at IS NULL',
+      'SELECT COALESCE(MAX(position), -1) AS max_pos FROM lists WHERE deleted_at IS NULL',
     );
     final nextPosition = ((maxPosQuery.first['max_pos'] as int?) ?? -1) + 1;
 
-    await db.insert('shopping_lists', {
+    await db.insert('lists', {
       'id': id,
       'name': name.trim(),
       'is_synced': 0,
@@ -152,7 +153,7 @@ class SqliteListsRepository implements ListsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     await db.update(
-      'shopping_lists',
+      'lists',
       {'name': newName.trim(), 'is_synced': 0, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [id],
@@ -166,7 +167,7 @@ class SqliteListsRepository implements ListsRepository {
   @override
   Future<void> deleteList(String id) async {
     final db = await _db;
-    await db.delete('shopping_lists', where: 'id = ?', whereArgs: [id]);
+    await db.delete('lists', where: 'id = ?', whereArgs: [id]);
   }
 
   @override
@@ -174,7 +175,7 @@ class SqliteListsRepository implements ListsRepository {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.rawUpdate(
-      'UPDATE shopping_lists SET is_starred = CASE WHEN is_starred = 1 THEN 0 ELSE 1 END, updated_at = ? WHERE id = ?',
+      'UPDATE lists SET is_starred = CASE WHEN is_starred = 1 THEN 0 ELSE 1 END, updated_at = ? WHERE id = ?',
       [now, listId],
     );
   }
@@ -185,7 +186,7 @@ class SqliteListsRepository implements ListsRepository {
     final batch = db.batch();
     for (var i = 0; i < orderedListIds.length; i++) {
       batch.update(
-        'shopping_lists',
+        'lists',
         {'position': i},
         where: 'id = ?',
         whereArgs: [orderedListIds[i]],
@@ -198,7 +199,7 @@ class SqliteListsRepository implements ListsRepository {
   Future<void> restoreList(ShoppingList list) async {
     final db = await _db;
     await db.transaction((txn) async {
-      await txn.insert('shopping_lists', {
+      await txn.insert('lists', {
         'id': list.id,
         'name': list.name,
         'is_synced': list.isSynced ? 1 : 0,
@@ -210,7 +211,7 @@ class SqliteListsRepository implements ListsRepository {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       for (final item in list.items) {
-        await txn.insert('todo_items', {
+        await txn.insert('items', {
           'id': item.id,
           'list_id': list.id,
           'title': item.title,
@@ -242,13 +243,13 @@ class SqliteListsRepository implements ListsRepository {
     final itemId = id ?? _uuid.v4();
 
     final maxPosQuery = await db.rawQuery(
-      'SELECT COALESCE(MAX(position), -1) AS max_pos FROM todo_items WHERE list_id = ? AND deleted_at IS NULL',
+      'SELECT COALESCE(MAX(position), -1) AS max_pos FROM items WHERE list_id = ? AND deleted_at IS NULL',
       [listId],
     );
     final nextPosition = ((maxPosQuery.first['max_pos'] as int?) ?? -1) + 1;
 
     await db.transaction((txn) async {
-      await txn.insert('todo_items', {
+      await txn.insert('items', {
         'id': itemId,
         'list_id': listId,
         'title': title.trim(),
@@ -260,7 +261,7 @@ class SqliteListsRepository implements ListsRepository {
       });
 
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
@@ -284,7 +285,7 @@ class SqliteListsRepository implements ListsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     final existing = await db.query(
-      'todo_items',
+      'items',
       where: 'id = ?',
       whereArgs: [itemId],
       limit: 1,
@@ -297,7 +298,7 @@ class SqliteListsRepository implements ListsRepository {
 
     await db.transaction((txn) async {
       await txn.update(
-        'todo_items',
+        'items',
         {
           'is_completed': newCompleted ? 1 : 0,
           'is_synced': 0,
@@ -308,7 +309,7 @@ class SqliteListsRepository implements ListsRepository {
       );
 
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
@@ -334,10 +335,10 @@ class SqliteListsRepository implements ListsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     await db.transaction((txn) async {
-      await txn.delete('todo_items', where: 'id = ?', whereArgs: [itemId]);
+      await txn.delete('items', where: 'id = ?', whereArgs: [itemId]);
 
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
@@ -351,7 +352,7 @@ class SqliteListsRepository implements ListsRepository {
     final batch = db.batch();
     for (var i = 0; i < orderedItemIds.length; i++) {
       batch.update(
-        'todo_items',
+        'items',
         {'position': i},
         where: 'id = ? AND list_id = ?',
         whereArgs: [orderedItemIds[i], listId],
@@ -365,7 +366,7 @@ class SqliteListsRepository implements ListsRepository {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.transaction((txn) async {
-      await txn.insert('todo_items', {
+      await txn.insert('items', {
         'id': item.id,
         'list_id': item.listId,
         'title': item.title,
@@ -377,7 +378,7 @@ class SqliteListsRepository implements ListsRepository {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [item.listId],
@@ -410,7 +411,7 @@ class SqliteListsRepository implements ListsRepository {
       });
 
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
@@ -436,7 +437,7 @@ class SqliteListsRepository implements ListsRepository {
       );
 
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
@@ -457,7 +458,7 @@ class SqliteListsRepository implements ListsRepository {
       );
 
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
@@ -480,7 +481,7 @@ class SqliteListsRepository implements ListsRepository {
 
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.transaction((txn) async {
-      await txn.insert('shopping_lists', {
+      await txn.insert('lists', {
         'id': listId,
         'name': name.trim().isEmpty ? 'Lista compartida' : name.trim(),
         'is_synced': 1,
@@ -512,7 +513,7 @@ class SqliteListsRepository implements ListsRepository {
   Future<void> applyRemoteItem(TodoItem item) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.insert('todo_items', {
+    await db.insert('items', {
       'id': item.id,
       'list_id': item.listId,
       'title': item.title,
@@ -534,7 +535,7 @@ class SqliteListsRepository implements ListsRepository {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.update(
-      'todo_items',
+      'items',
       {'is_completed': isCompleted ? 1 : 0, 'is_synced': 1, 'updated_at': now},
       where: 'id = ? AND list_id = ?',
       whereArgs: [itemId, listId],
@@ -545,7 +546,7 @@ class SqliteListsRepository implements ListsRepository {
   Future<void> applyRemoteItemDelete(String listId, String itemId) async {
     final db = await _db;
     await db.delete(
-      'todo_items',
+      'items',
       where: 'id = ? AND list_id = ?',
       whereArgs: [itemId, listId],
     );
@@ -602,14 +603,14 @@ class SqliteListsRepository implements ListsRepository {
 
     await db.transaction((txn) async {
       await txn.update(
-        'shopping_lists',
+        'lists',
         {'is_synced': 1, 'is_shared': 1, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
 
       await txn.update(
-        'todo_items',
+        'items',
         {'is_synced': 1, 'updated_at': now},
         where: 'list_id = ?',
         whereArgs: [listId],
@@ -622,7 +623,7 @@ class SqliteListsRepository implements ListsRepository {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.update(
-      'shopping_lists',
+      'lists',
       {'is_shared': isShared ? 1 : 0, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [listId],

@@ -23,9 +23,9 @@ void main() {
     setUp(() async {
       AppDatabase.overrideDbPath = inMemoryDatabasePath;
       final db = await AppDatabase.instance.database;
-      await db.delete('todo_items');
+      await db.delete('items');
       await db.delete('collaborators');
-      await db.delete('shopping_lists');
+      await db.delete('lists');
 
       repository = SqliteListsRepository();
       syncService = MockBackendSyncService();
@@ -397,6 +397,7 @@ void main() {
       () async {
         await AppDatabase.instance.close();
         const migrationDbPath = 'test_migration_v1_v2.db';
+        await databaseFactory.deleteDatabase(migrationDbPath);
         final v1Db = await databaseFactory.openDatabase(
           migrationDbPath,
           options: OpenDatabaseOptions(
@@ -430,13 +431,13 @@ void main() {
         AppDatabase.overrideDbPath = migrationDbPath;
         final upgradedDb = await AppDatabase.instance.database;
         final columnsLists = await upgradedDb.rawQuery(
-          'PRAGMA table_info(shopping_lists);',
+          'PRAGMA table_info(lists);',
         );
         expect(columnsLists.any((c) => c['name'] == 'is_starred'), isTrue);
         expect(columnsLists.any((c) => c['name'] == 'position'), isTrue);
 
         final columnsItems = await upgradedDb.rawQuery(
-          'PRAGMA table_info(todo_items);',
+          'PRAGMA table_info(items);',
         );
         expect(columnsItems.any((c) => c['name'] == 'position'), isTrue);
 
@@ -452,6 +453,7 @@ void main() {
       () async {
         await AppDatabase.instance.close();
         const migrationDbPath = 'test_migration_v4_v5.db';
+        await databaseFactory.deleteDatabase(migrationDbPath);
         final v4Db = await databaseFactory.openDatabase(
           migrationDbPath,
           options: OpenDatabaseOptions(
@@ -489,6 +491,62 @@ void main() {
           'PRAGMA table_info(collaborators);',
         );
         expect(columnsCollabs.any((c) => c['name'] == 'role'), isTrue);
+
+        await AppDatabase.instance.close();
+        await databaseFactory.deleteDatabase(migrationDbPath);
+        AppDatabase.overrideDbPath = inMemoryDatabasePath;
+        await AppDatabase.instance.database;
+      },
+    );
+
+    test(
+      'AppDatabase migration from version 5 to 6 renames tables to lists and items',
+      () async {
+        await AppDatabase.instance.close();
+        const migrationDbPath = 'test_migration_v5_v6.db';
+        final v5Db = await databaseFactory.openDatabase(
+          migrationDbPath,
+          options: OpenDatabaseOptions(
+            version: 5,
+            onCreate: (db, version) async {
+              await db.execute('''
+              CREATE TABLE shopping_lists (
+                id TEXT PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL,
+                is_synced INTEGER NOT NULL DEFAULT 0,
+                is_starred INTEGER NOT NULL DEFAULT 0,
+                is_shared INTEGER NOT NULL DEFAULT 0,
+                position INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+              );
+            ''');
+              await db.execute('''
+              CREATE TABLE todo_items (
+                id TEXT PRIMARY KEY NOT NULL,
+                list_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                is_completed INTEGER NOT NULL DEFAULT 0,
+                is_synced INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+              );
+            ''');
+            },
+          ),
+        );
+        await v5Db.close();
+
+        AppDatabase.overrideDbPath = migrationDbPath;
+        final upgradedDb = await AppDatabase.instance.database;
+        final tables = await upgradedDb.rawQuery(
+          "SELECT name FROM sqlite_master WHERE type='table';",
+        );
+        final tableNames = tables.map((t) => t['name'] as String).toSet();
+        expect(tableNames.contains('lists'), isTrue);
+        expect(tableNames.contains('items'), isTrue);
+        expect(tableNames.contains('shopping_lists'), isFalse);
+        expect(tableNames.contains('todo_items'), isFalse);
 
         await AppDatabase.instance.close();
         await databaseFactory.deleteDatabase(migrationDbPath);
