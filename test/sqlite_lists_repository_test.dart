@@ -177,7 +177,24 @@ void main() {
 
       final afterSync = await repository.getListById(list.id);
       expect(afterSync!.isSynced, isTrue);
+      expect(afterSync.isShared, isTrue);
       expect(afterSync.items.every((i) => i.isSynced), isTrue);
+    });
+
+    test('setListShared updates is_shared column in SQLite', () async {
+      final list = await repository.createList('Lista Local Exclusiva');
+      expect(list.isShared, isFalse);
+
+      var fetched = await repository.getListById(list.id);
+      expect(fetched!.isShared, isFalse);
+
+      await repository.setListShared(list.id, true);
+      fetched = await repository.getListById(list.id);
+      expect(fetched!.isShared, isTrue);
+
+      await repository.setListShared(list.id, false);
+      fetched = await repository.getListById(list.id);
+      expect(fetched!.isShared, isFalse);
     });
 
     test(

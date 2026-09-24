@@ -253,5 +253,10 @@
   "inviteColleagueSubtitle": "Colabora en tiempo real agregando y tachando productos",
   "simulateColleagueAction": "Simular acción de colega",
   "simulateColleagueTooltip": "Simula que un colega agrega o tacha un producto en tiempo real",
-  "simulatedItemAdded": "Un colega agregó un producto en tiempo real"
+  "simulatedItemAdded": "Un colega agregó un producto en tiempo real",
+  "listIsShared": "Lista compartida",
+  "listIsLocalOnly": "Lista privada (solo local)",
+  "listSharedSyncEnabled": "Sincronización en tiempo real habilitada con la nube",
+  "listLocalOnlyDescription": "Los datos se guardan únicamente en tu dispositivo",
+  "enableSharingAction": "Habilitar sincronización"
 }

@@ -139,6 +139,14 @@ class _FakeListsRepoForCollab implements ListsRepository {
   Future<void> syncList(String listId) async {}
 
   @override
+  Future<void> setListShared(String listId, bool isShared) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isShared: isShared);
+    }
+  }
+
+  @override
   Future<void> applyRemoteItem(TodoItem item) async {
     final idx = internalLists.indexWhere((l) => l.id == item.listId);
     if (idx != -1) {
@@ -223,7 +231,22 @@ class _FakeListsControllerCollab extends ListsController {
       );
       _initial[idx] = _initial[idx].copyWith(
         collaborators: [..._initial[idx].collaborators, collab],
+        isShared: true,
       );
+      state = AsyncData(List.from(_initial));
+    }
+  }
+
+  bool setListSharedCalled = false;
+  bool? lastSetSharedValue;
+
+  @override
+  Future<void> setListShared(String listId, bool isShared) async {
+    setListSharedCalled = true;
+    lastSetSharedValue = isShared;
+    final idx = _initial.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      _initial[idx] = _initial[idx].copyWith(isShared: isShared);
       state = AsyncData(List.from(_initial));
     }
   }
@@ -613,6 +636,57 @@ void main() {
         find.text('Un colega agregó un producto en tiempo real'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('toggles sharing switch between local only and shared with cloud sync', (tester) async {
+      tester.view.physicalSize = const Size(800, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final unsharedList = ShoppingList(
+        id: 'local_list_only',
+        name: 'Notas privadas',
+        isShared: false,
+        items: const [],
+        collaborators: const [],
+        createdAt: DateTime.now(),
+      );
+
+      final fakeRepo = _FakeListsRepoForCollab([unsharedList]);
+      final fakeController = _FakeListsControllerCollab([unsharedList]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsRepositoryProvider.overrideWithValue(fakeRepo),
+            listsControllerProvider.overrideWith(() => fakeController),
+            shoppingListProvider('local_list_only').overrideWithValue(unsharedList),
+            shareServiceProvider.overrideWithValue(_FakeShareServiceForCollab()),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ShareListSheet(listId: 'local_list_only')),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Check initial unshared local-only status
+      expect(find.byKey(const Key('toggle_shared_switch')), findsOneWidget);
+      expect(find.text('Lista privada (solo local)'), findsOneWidget);
+      expect(find.text('Los datos se guardan únicamente en tu dispositivo'), findsOneWidget);
+
+      // Tap toggle switch to turn ON sharing
+      await tester.tap(find.byKey(const Key('toggle_shared_switch')));
+      await tester.pumpAndSettle();
+
+      expect(fakeController.setListSharedCalled, isTrue);
+      expect(fakeController.lastSetSharedValue, isTrue);
     });
   });
 }

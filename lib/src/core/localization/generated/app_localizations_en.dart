@@ -485,4 +485,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get simulatedItemAdded => 'A colleague added an item in real time';
+
+  @override
+  String get listIsShared => 'Shared list';
+
+  @override
+  String get listIsLocalOnly => 'Private list (local only)';
+
+  @override
+  String get listSharedSyncEnabled => 'Real-time sync enabled with cloud';
+
+  @override
+  String get listLocalOnlyDescription =>
+      'Data is stored strictly on this device';
+
+  @override
+  String get enableSharingAction => 'Enable sync';
 }

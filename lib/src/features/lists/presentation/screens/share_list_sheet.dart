@@ -144,6 +144,11 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     ShoppingList list,
   ) async {
     final tr = ref.read(stringsProvider);
+    if (!list.isShared) {
+      await ref
+          .read(listsControllerProvider.notifier)
+          .setListShared(list.id, true);
+    }
     final inviteLink = ShareService.createInviteLink(list.id, list.name);
     final shareService = ref.read(shareServiceProvider);
     await shareService.copyToClipboard(inviteLink);
@@ -302,8 +307,10 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 8),
-                const RealtimePresenceBadge(),
+                if (list.isShared) ...[
+                  const SizedBox(width: 8),
+                  const RealtimePresenceBadge(),
+                ],
               ],
             ),
             const SizedBox(height: 6),
@@ -312,6 +319,73 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
               style: TextStyle(fontSize: 13, color: textMutedColor),
             ),
             const SizedBox(height: 14),
+
+            // Collaboration & Cloud Sync status switch
+            Container(
+              margin: const EdgeInsets.only(bottom: 14),
+              decoration: BoxDecoration(
+                color: list.isShared
+                    ? AppColors.primary.withValues(alpha: 0.08)
+                    : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: list.isShared
+                      ? AppColors.primary.withValues(alpha: 0.3)
+                      : handleColor,
+                ),
+              ),
+              child: SwitchListTile.adaptive(
+                key: const Key('toggle_shared_switch'),
+                value: list.isShared,
+                activeTrackColor: AppColors.primary,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 4,
+                ),
+                secondary: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: (list.isShared
+                            ? AppColors.primary
+                            : (isDark
+                                ? AppColors.borderDark
+                                : AppColors.borderLight))
+                        .withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    list.isShared
+                        ? Icons.cloud_done_rounded
+                        : Icons.cloud_off_rounded,
+                    color: list.isShared
+                        ? AppColors.primary
+                        : (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondary),
+                    size: 20,
+                  ),
+                ),
+                title: Text(
+                  list.isShared ? tr.listIsShared : tr.listIsLocalOnly,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textTitleColor,
+                  ),
+                ),
+                subtitle: Text(
+                  list.isShared
+                      ? tr.listSharedSyncEnabled
+                      : tr.listLocalOnlyDescription,
+                  style: TextStyle(fontSize: 12, color: textMutedColor),
+                ),
+                onChanged: (bool value) async {
+                  await ref
+                      .read(listsControllerProvider.notifier)
+                      .setListShared(list.id, value);
+                },
+              ),
+            ),
 
             // Section: Export & Sharing options (WhatsApp, System, Gmail, Copy)
             _ShareOptionTile(

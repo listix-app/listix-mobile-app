@@ -166,6 +166,24 @@ void main() {
       expect(l1 == l3, isFalse);
       expect(l1 == Object(), isFalse);
     });
+
+    test('isShared boolean serialization and explicit toggle', () {
+      final localList = ShoppingList(id: 'l1', name: 'Solo local', isShared: false, createdAt: now);
+      expect(localList.isShared, isFalse);
+
+      final sharedList = ShoppingList(id: 'l2', name: 'Compartida nube', isShared: true, createdAt: now);
+      expect(sharedList.isShared, isTrue);
+
+      final jsonShared = sharedList.toJson();
+      expect(jsonShared['isShared'], isTrue);
+
+      final fromJsonList = ShoppingList.fromJson(jsonShared);
+      expect(fromJsonList.isShared, isTrue);
+      expect(fromJsonList.id, 'l2');
+
+      final toggledOff = sharedList.copyWith(isShared: false);
+      expect(toggledOff.isShared, isFalse);
+    });
   });
 
   group('BannerAdStatus & SyncStatus', () {

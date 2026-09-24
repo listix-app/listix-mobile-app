@@ -80,6 +80,7 @@ class SqliteListsRepository implements ListsRepository {
         name: row['name'] as String,
         isSynced: (row['is_synced'] as int) == 1,
         isStarred: (row['is_starred'] as int?) == 1,
+        isShared: (row['is_shared'] as int?) == 1,
         position: (row['position'] as int?) ?? 0,
         items: itemsByList[id] ?? [],
         collaborators: collabsByList[id] ?? [],
@@ -116,6 +117,7 @@ class SqliteListsRepository implements ListsRepository {
       'name': name.trim(),
       'is_synced': 0,
       'is_starred': 0,
+      'is_shared': 0,
       'position': nextPosition,
       'created_at': now,
       'updated_at': now,
@@ -126,6 +128,7 @@ class SqliteListsRepository implements ListsRepository {
       name: name.trim(),
       isSynced: false,
       isStarred: false,
+      isShared: false,
       position: nextPosition,
       createdAt: DateTime.fromMillisecondsSinceEpoch(now),
       items: const [],
@@ -190,6 +193,7 @@ class SqliteListsRepository implements ListsRepository {
         'name': list.name,
         'is_synced': list.isSynced ? 1 : 0,
         'is_starred': list.isStarred ? 1 : 0,
+        'is_shared': list.isShared ? 1 : 0,
         'position': list.position,
         'created_at': list.createdAt.millisecondsSinceEpoch,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
@@ -246,7 +250,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -294,7 +298,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -323,7 +327,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -391,7 +395,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -412,7 +416,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'shopping_lists',
-        {'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -439,6 +443,7 @@ class SqliteListsRepository implements ListsRepository {
         'name': name.trim().isEmpty ? 'Lista compartida' : name.trim(),
         'is_synced': 1,
         'is_starred': 0,
+        'is_shared': 1,
         'position': 0,
         'created_at': now,
         'updated_at': now,
@@ -545,7 +550,7 @@ class SqliteListsRepository implements ListsRepository {
     await db.transaction((txn) async {
       await txn.update(
         'shopping_lists',
-        {'is_synced': 1, 'updated_at': now},
+        {'is_synced': 1, 'is_shared': 1, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -557,5 +562,20 @@ class SqliteListsRepository implements ListsRepository {
         whereArgs: [listId],
       );
     });
+  }
+
+  @override
+  Future<void> setListShared(String listId, bool isShared) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'shopping_lists',
+      {
+        'is_shared': isShared ? 1 : 0,
+        'updated_at': now,
+      },
+      where: 'id = ?',
+      whereArgs: [listId],
+    );
   }
 }

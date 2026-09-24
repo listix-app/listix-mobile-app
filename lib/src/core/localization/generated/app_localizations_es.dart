@@ -487,4 +487,21 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get simulatedItemAdded =>
       'Un colega agregó un producto en tiempo real';
+
+  @override
+  String get listIsShared => 'Lista compartida';
+
+  @override
+  String get listIsLocalOnly => 'Lista privada (solo local)';
+
+  @override
+  String get listSharedSyncEnabled =>
+      'Sincronización en tiempo real habilitada con la nube';
+
+  @override
+  String get listLocalOnlyDescription =>
+      'Los datos se guardan únicamente en tu dispositivo';
+
+  @override
+  String get enableSharingAction => 'Habilitar sincronización';
 }

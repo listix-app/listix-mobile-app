@@ -247,6 +247,61 @@ void main() {
       expect(res.first['value'], 'v');
       await upgradedDb.close();
     });
+
+    test('migration from version 3 to 4 adds is_shared column to shopping_lists', () async {
+      final testDbPath = inMemoryDatabasePath;
+      final factory = databaseFactoryFfi;
+      final oldDb = await factory.openDatabase(
+        testDbPath,
+        options: OpenDatabaseOptions(
+          version: 3,
+          onCreate: (d, v) async {
+            await d.execute('''
+              CREATE TABLE shopping_lists (
+                id TEXT PRIMARY KEY NOT NULL,
+                name TEXT NOT NULL,
+                is_synced INTEGER NOT NULL DEFAULT 0,
+                is_starred INTEGER NOT NULL DEFAULT 0,
+                position INTEGER NOT NULL DEFAULT 0,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL,
+                deleted_at INTEGER
+              );
+            ''');
+            await d.insert('shopping_lists', {
+              'id': 'l1',
+              'name': 'Test List',
+              'created_at': 1000,
+              'updated_at': 1000,
+            });
+          },
+        ),
+      );
+      await oldDb.close();
+
+      final upgradedDb = await factory.openDatabase(
+        testDbPath,
+        options: OpenDatabaseOptions(
+          version: 4,
+          onUpgrade: (d, oldV, newV) async {
+            if (oldV < 4) {
+              await d.execute(
+                'ALTER TABLE shopping_lists ADD COLUMN is_shared INTEGER NOT NULL DEFAULT 0;',
+              );
+            }
+          },
+        ),
+      );
+
+      final res = await upgradedDb.query('shopping_lists', where: 'id = ?', whereArgs: ['l1']);
+      expect(res.first['is_shared'], 0);
+
+      await upgradedDb.update('shopping_lists', {'is_shared': 1}, where: 'id = ?', whereArgs: ['l1']);
+      final updated = await upgradedDb.query('shopping_lists', where: 'id = ?', whereArgs: ['l1']);
+      expect(updated.first['is_shared'], 1);
+
+      await upgradedDb.close();
+    });
   });
 
   group('InterstitialAdService Tests', () {
@@ -949,6 +1004,14 @@ class _FakeRepoWithLists implements ListsRepository {
 
   @override
   Future<void> syncList(String listId) async {}
+
+  @override
+  Future<void> setListShared(String listId, bool isShared) async {
+    final idx = lists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      lists[idx] = lists[idx].copyWith(isShared: isShared);
+    }
+  }
 
   @override
   Future<ShoppingList> joinSharedList(

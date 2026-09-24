@@ -31,9 +31,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        ref
-            .read(collaborationControllerProvider.notifier)
-            .joinListRoom(widget.listId);
+        final current = ref.read(shoppingListProvider(widget.listId));
+        if (current != null && current.isShared) {
+          ref
+              .read(collaborationControllerProvider.notifier)
+              .joinListRoom(widget.listId);
+        }
       }
     });
   }
@@ -137,11 +140,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
-          Center(
-            child: RealtimePresenceBadge(
-              onTap: () => ShareListSheet.show(context, list.id),
+          if (list.isShared)
+            Center(
+              child: RealtimePresenceBadge(
+                onTap: () => ShareListSheet.show(context, list.id),
+              ),
             ),
-          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined, size: 20),
             tooltip: tr.rename,

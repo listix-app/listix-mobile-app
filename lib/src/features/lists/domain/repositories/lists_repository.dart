@@ -44,4 +44,5 @@ abstract interface class ListsRepository {
   );
 
   Future<void> syncList(String listId);
+  Future<void> setListShared(String listId, bool isShared);
 }

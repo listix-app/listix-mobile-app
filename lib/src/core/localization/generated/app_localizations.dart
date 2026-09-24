@@ -955,6 +955,36 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Un colega agregó un producto en tiempo real'**
   String get simulatedItemAdded;
+
+  /// No description provided for @listIsShared.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista compartida'**
+  String get listIsShared;
+
+  /// No description provided for @listIsLocalOnly.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista privada (solo local)'**
+  String get listIsLocalOnly;
+
+  /// No description provided for @listSharedSyncEnabled.
+  ///
+  /// In es, this message translates to:
+  /// **'Sincronización en tiempo real habilitada con la nube'**
+  String get listSharedSyncEnabled;
+
+  /// No description provided for @listLocalOnlyDescription.
+  ///
+  /// In es, this message translates to:
+  /// **'Los datos se guardan únicamente en tu dispositivo'**
+  String get listLocalOnlyDescription;
+
+  /// No description provided for @enableSharingAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Habilitar sincronización'**
+  String get enableSharingAction;
 }
 
 class _AppLocalizationsDelegate

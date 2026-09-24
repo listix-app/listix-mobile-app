@@ -26,6 +26,10 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
   void _broadcastEvent(CollaborationEvent event) {
     try {
+      final list = state.value?.where((l) => l.id == event.listId).firstOrNull;
+      if (list != null && !list.isShared) {
+        return; // List is local only: do not broadcast
+      }
       final repo = ref.read(collaborationRepositoryProvider);
       repo.sendEvent(event);
     } catch (_) {}
@@ -51,8 +55,51 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
   Future<void> syncListOnShare(String listId) async {
     final repository = ref.read(listsRepositoryProvider);
+    await repository.setListShared(listId, true);
     await repository.syncList(listId);
     state = AsyncData(await repository.getLists());
+    try {
+      await ref
+          .read(collaborationControllerProvider.notifier)
+          .joinListRoom(listId);
+    } catch (_) {}
+  }
+
+  Future<void> setListShared(String listId, bool isShared) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      final updatedLists = currentLists.map((l) {
+        if (l.id == listId) {
+          return l.copyWith(isShared: isShared);
+        }
+        return l;
+      }).toList();
+      state = AsyncData(updatedLists);
+    }
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.setListShared(listId, isShared);
+      if (isShared) {
+        await repository.syncList(listId);
+        state = AsyncData(await repository.getLists());
+        try {
+          await ref
+              .read(collaborationControllerProvider.notifier)
+              .joinListRoom(listId);
+        } catch (_) {}
+      } else {
+        try {
+          await ref
+              .read(collaborationControllerProvider.notifier)
+              .leaveListRoom(listId);
+        } catch (_) {}
+      }
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
   }
 
   Future<ShoppingList> createList(String name) async {
@@ -447,7 +494,9 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
   Future<void> addCollaborator(String listId, String email) async {
     final repository = ref.read(listsRepositoryProvider);
+    await repository.setListShared(listId, true);
     await repository.addCollaborator(listId, email);
+    await repository.syncList(listId);
     final freshLists = await repository.getLists();
     state = AsyncData(freshLists);
 

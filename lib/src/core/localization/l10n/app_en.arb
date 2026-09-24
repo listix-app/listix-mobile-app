@@ -253,5 +253,10 @@
   "inviteColleagueSubtitle": "Collaborate in real time adding and completing items",
   "simulateColleagueAction": "Simulate colleague action",
   "simulateColleagueTooltip": "Simulates a colleague adding or completing an item in real time",
-  "simulatedItemAdded": "A colleague added an item in real time"
+  "simulatedItemAdded": "A colleague added an item in real time",
+  "listIsShared": "Shared list",
+  "listIsLocalOnly": "Private list (local only)",
+  "listSharedSyncEnabled": "Real-time sync enabled with cloud",
+  "listLocalOnlyDescription": "Data is stored strictly on this device",
+  "enableSharingAction": "Enable sync"
 }

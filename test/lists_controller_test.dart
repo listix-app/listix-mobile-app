@@ -210,6 +210,17 @@ class FakeFailingListsRepository implements ListsRepository {
     if (listIndex != -1) {
       internalLists[listIndex] = internalLists[listIndex].copyWith(
         isSynced: true,
+        isShared: true,
+      );
+    }
+  }
+
+  @override
+  Future<void> setListShared(String listId, bool isShared) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        isShared: isShared,
       );
     }
   }
@@ -797,7 +808,31 @@ void main() {
             .syncListOnShare('list_1');
         final list = container.read(shoppingListProvider('list_1'))!;
         expect(list.isSynced, isTrue);
+        expect(list.isShared, isTrue);
       },
     );
+
+    test('setListShared toggles list sharing status and syncs', () async {
+      await container.read(listsControllerProvider.future);
+
+      // Initially list_2 is not shared
+      var list2 = container.read(shoppingListProvider('list_2'))!;
+      expect(list2.isShared, isFalse);
+
+      // Turn sharing ON -> should be shared and synced
+      await container
+          .read(listsControllerProvider.notifier)
+          .setListShared('list_2', true);
+      list2 = container.read(shoppingListProvider('list_2'))!;
+      expect(list2.isShared, isTrue);
+      expect(list2.isSynced, isTrue);
+
+      // Turn sharing OFF -> should be marked not shared
+      await container
+          .read(listsControllerProvider.notifier)
+          .setListShared('list_2', false);
+      list2 = container.read(shoppingListProvider('list_2'))!;
+      expect(list2.isShared, isFalse);
+    });
   });
 }
