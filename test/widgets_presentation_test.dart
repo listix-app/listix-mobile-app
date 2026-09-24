@@ -388,7 +388,7 @@ void main() {
         ),
       );
 
-      expect(find.byIcon(Icons.star_rounded), findsWidgets);
+      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
       await tester.tap(find.byType(IconButton));
       expect(starToggled, isTrue);
     });
