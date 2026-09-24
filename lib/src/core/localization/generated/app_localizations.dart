@@ -839,8 +839,32 @@ abstract class AppLocalizations {
   /// No description provided for @shareSystemDesc.
   ///
   /// In es, this message translates to:
-  /// **'Compartir con otras aplicaciones instaladas'**
+  /// **'Enviar lista y enlace a WhatsApp, Telegram, Correo y más'**
   String get shareSystemDesc;
+
+  /// No description provided for @shareInviteLinkPrompt.
+  ///
+  /// In es, this message translates to:
+  /// **'🔗 Únete a esta lista para colaborar en tiempo real:\n{url}'**
+  String shareInviteLinkPrompt(String url);
+
+  /// No description provided for @sharePendingSection.
+  ///
+  /// In es, this message translates to:
+  /// **'📝 Por comprar'**
+  String get sharePendingSection;
+
+  /// No description provided for @shareCompletedSection.
+  ///
+  /// In es, this message translates to:
+  /// **'✅ Comprados'**
+  String get shareCompletedSection;
+
+  /// No description provided for @shareEmptyListNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'• (Sin productos en la lista todavía)'**
+  String get shareEmptyListNotice;
 
   /// No description provided for @realtimeLive.
   ///
@@ -985,6 +1009,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Habilitar sincronización'**
   String get enableSharingAction;
+
+  /// No description provided for @supportAndFeedback.
+  ///
+  /// In es, this message translates to:
+  /// **'Soporte y Comentarios'**
+  String get supportAndFeedback;
 }
 
 class _AppLocalizationsDelegate

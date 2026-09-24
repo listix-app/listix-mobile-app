@@ -1,3 +1,4 @@
+import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -246,17 +247,21 @@ void main() {
       final res = await upgradedDb.query('app_settings');
       expect(res.first['value'], 'v');
       await upgradedDb.close();
+      await factory.deleteDatabase(testDbPath);
     });
 
-    test('migration from version 3 to 4 adds is_shared column to shopping_lists', () async {
-      final testDbPath = inMemoryDatabasePath;
-      final factory = databaseFactoryFfi;
-      final oldDb = await factory.openDatabase(
-        testDbPath,
-        options: OpenDatabaseOptions(
-          version: 3,
-          onCreate: (d, v) async {
-            await d.execute('''
+    test(
+      'migration from version 3 to 4 adds is_shared column to shopping_lists',
+      () async {
+        const testDbPath = 'test_migration_v3_v4.db';
+        final factory = databaseFactoryFfi;
+        await factory.deleteDatabase(testDbPath);
+        final oldDb = await factory.openDatabase(
+          testDbPath,
+          options: OpenDatabaseOptions(
+            version: 3,
+            onCreate: (d, v) async {
+              await d.execute('''
               CREATE TABLE shopping_lists (
                 id TEXT PRIMARY KEY NOT NULL,
                 name TEXT NOT NULL,
@@ -268,40 +273,55 @@ void main() {
                 deleted_at INTEGER
               );
             ''');
-            await d.insert('shopping_lists', {
-              'id': 'l1',
-              'name': 'Test List',
-              'created_at': 1000,
-              'updated_at': 1000,
-            });
-          },
-        ),
-      );
-      await oldDb.close();
+              await d.insert('shopping_lists', {
+                'id': 'l1',
+                'name': 'Test List',
+                'created_at': 1000,
+                'updated_at': 1000,
+              });
+            },
+          ),
+        );
+        await oldDb.close();
 
-      final upgradedDb = await factory.openDatabase(
-        testDbPath,
-        options: OpenDatabaseOptions(
-          version: 4,
-          onUpgrade: (d, oldV, newV) async {
-            if (oldV < 4) {
-              await d.execute(
-                'ALTER TABLE shopping_lists ADD COLUMN is_shared INTEGER NOT NULL DEFAULT 0;',
-              );
-            }
-          },
-        ),
-      );
+        final upgradedDb = await factory.openDatabase(
+          testDbPath,
+          options: OpenDatabaseOptions(
+            version: 4,
+            onUpgrade: (d, oldV, newV) async {
+              if (oldV < 4) {
+                await d.execute(
+                  'ALTER TABLE shopping_lists ADD COLUMN is_shared INTEGER NOT NULL DEFAULT 0;',
+                );
+              }
+            },
+          ),
+        );
 
-      final res = await upgradedDb.query('shopping_lists', where: 'id = ?', whereArgs: ['l1']);
-      expect(res.first['is_shared'], 0);
+        final res = await upgradedDb.query(
+          'shopping_lists',
+          where: 'id = ?',
+          whereArgs: ['l1'],
+        );
+        expect(res.first['is_shared'], 0);
 
-      await upgradedDb.update('shopping_lists', {'is_shared': 1}, where: 'id = ?', whereArgs: ['l1']);
-      final updated = await upgradedDb.query('shopping_lists', where: 'id = ?', whereArgs: ['l1']);
-      expect(updated.first['is_shared'], 1);
+        await upgradedDb.update(
+          'shopping_lists',
+          {'is_shared': 1},
+          where: 'id = ?',
+          whereArgs: ['l1'],
+        );
+        final updated = await upgradedDb.query(
+          'shopping_lists',
+          where: 'id = ?',
+          whereArgs: ['l1'],
+        );
+        expect(updated.first['is_shared'], 1);
 
-      await upgradedDb.close();
-    });
+        await upgradedDb.close();
+        await factory.deleteDatabase(testDbPath);
+      },
+    );
   });
 
   group('InterstitialAdService Tests', () {
@@ -869,7 +889,11 @@ void main() {
                 _TestSettingsNotificationService(),
               ),
             ],
-            child: const MaterialApp(home: SettingsScreen()),
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: SettingsScreen(showBuyCoffee: true, showRateApp: true),
+            ),
           ),
         );
         await tester.pumpAndSettle();
@@ -904,6 +928,39 @@ void main() {
           await tester.tap(find.text('OK'));
           await tester.pumpAndSettle();
         }
+
+        await tester.pump(const Duration(seconds: 15));
+        await tester.pumpAndSettle();
+      },
+    );
+
+    testWidgets(
+      'SettingsScreen hides coffee and rate app by default under supportAndFeedback group',
+      (tester) async {
+        tester.view.physicalSize = const Size(800, 2000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              notificationServiceProvider.overrideWithValue(
+                _TestSettingsNotificationService(),
+              ),
+            ],
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: SettingsScreen(),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('SOPORTE Y COMENTARIOS'), findsOneWidget);
+        expect(find.byKey(const Key('settings_buy_coffee')), findsNothing);
+        expect(find.byKey(const Key('settings_rate_app')), findsNothing);
+        expect(find.byKey(const Key('settings_send_feedback')), findsOneWidget);
 
         await tester.pump(const Duration(seconds: 15));
         await tester.pumpAndSettle();
@@ -1041,16 +1098,26 @@ class _FakeRepoWithLists implements ListsRepository {
   Future<void> applyRemoteItem(TodoItem item) async {}
 
   @override
-  Future<void> applyRemoteItemToggle(String listId, String itemId, bool isCompleted) async {}
+  Future<void> applyRemoteItemToggle(
+    String listId,
+    String itemId,
+    bool isCompleted,
+  ) async {}
 
   @override
   Future<void> applyRemoteItemDelete(String listId, String itemId) async {}
 
   @override
-  Future<void> applyRemoteCollaborator(String listId, Collaborator collaborator) async {}
+  Future<void> applyRemoteCollaborator(
+    String listId,
+    Collaborator collaborator,
+  ) async {}
 
   @override
-  Future<void> applyRemoteCollaboratorRemove(String listId, String collaboratorId) async {}
+  Future<void> applyRemoteCollaboratorRemove(
+    String listId,
+    String collaboratorId,
+  ) async {}
 }
 
 class _TestSettingsNotificationService implements NotificationService {

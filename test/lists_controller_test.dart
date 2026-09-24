@@ -254,7 +254,9 @@ class FakeFailingListsRepository implements ListsRepository {
   Future<void> applyRemoteItem(TodoItem item) async {
     final listIndex = internalLists.indexWhere((l) => l.id == item.listId);
     if (listIndex != -1) {
-      final existingIdx = internalLists[listIndex].items.indexWhere((i) => i.id == item.id);
+      final existingIdx = internalLists[listIndex].items.indexWhere(
+        (i) => i.id == item.id,
+      );
       final List<TodoItem> items;
       if (existingIdx >= 0) {
         items = List<TodoItem>.from(internalLists[listIndex].items);
@@ -262,19 +264,27 @@ class FakeFailingListsRepository implements ListsRepository {
       } else {
         items = [...internalLists[listIndex].items, item];
       }
-      internalLists[listIndex] = internalLists[listIndex].copyWith(items: items);
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        items: items,
+      );
     }
   }
 
   @override
-  Future<void> applyRemoteItemToggle(String listId, String itemId, bool isCompleted) async {
+  Future<void> applyRemoteItemToggle(
+    String listId,
+    String itemId,
+    bool isCompleted,
+  ) async {
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
       final items = internalLists[listIndex].items.map((i) {
         if (i.id == itemId) return i.copyWith(isCompleted: isCompleted);
         return i;
       }).toList();
-      internalLists[listIndex] = internalLists[listIndex].copyWith(items: items);
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        items: items,
+      );
     }
   }
 
@@ -282,33 +292,53 @@ class FakeFailingListsRepository implements ListsRepository {
   Future<void> applyRemoteItemDelete(String listId, String itemId) async {
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
-      final items = internalLists[listIndex].items.where((i) => i.id != itemId).toList();
-      internalLists[listIndex] = internalLists[listIndex].copyWith(items: items);
+      final items = internalLists[listIndex].items
+          .where((i) => i.id != itemId)
+          .toList();
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        items: items,
+      );
     }
   }
 
   @override
-  Future<void> applyRemoteCollaborator(String listId, Collaborator collaborator) async {
+  Future<void> applyRemoteCollaborator(
+    String listId,
+    Collaborator collaborator,
+  ) async {
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
-      final existingIdx = internalLists[listIndex].collaborators.indexWhere((c) => c.id == collaborator.id);
+      final existingIdx = internalLists[listIndex].collaborators.indexWhere(
+        (c) => c.id == collaborator.id,
+      );
       final List<Collaborator> collabs;
       if (existingIdx >= 0) {
-        collabs = List<Collaborator>.from(internalLists[listIndex].collaborators);
+        collabs = List<Collaborator>.from(
+          internalLists[listIndex].collaborators,
+        );
         collabs[existingIdx] = collaborator;
       } else {
         collabs = [...internalLists[listIndex].collaborators, collaborator];
       }
-      internalLists[listIndex] = internalLists[listIndex].copyWith(collaborators: collabs);
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        collaborators: collabs,
+      );
     }
   }
 
   @override
-  Future<void> applyRemoteCollaboratorRemove(String listId, String collaboratorId) async {
+  Future<void> applyRemoteCollaboratorRemove(
+    String listId,
+    String collaboratorId,
+  ) async {
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
-      final collabs = internalLists[listIndex].collaborators.where((c) => c.id != collaboratorId).toList();
-      internalLists[listIndex] = internalLists[listIndex].copyWith(collaborators: collabs);
+      final collabs = internalLists[listIndex].collaborators
+          .where((c) => c.id != collaboratorId)
+          .toList();
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        collaborators: collabs,
+      );
     }
   }
 }

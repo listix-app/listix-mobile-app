@@ -112,7 +112,8 @@ class AppDatabase {
       );
     ''');
 
-    await db.execute('''CREATE TABLE todo_items (\n        id TEXT PRIMARY KEY NOT NULL,
+    await db.execute(
+      '''CREATE TABLE todo_items (\n        id TEXT PRIMARY KEY NOT NULL,
         list_id TEXT NOT NULL,
         title TEXT NOT NULL,
         is_completed INTEGER NOT NULL DEFAULT 0,
@@ -123,7 +124,8 @@ class AppDatabase {
         deleted_at INTEGER,
         FOREIGN KEY (list_id) REFERENCES shopping_lists (id) ON DELETE CASCADE
       );
-    ''');
+    ''',
+    );
 
     await db.execute('''
       CREATE TABLE collaborators (\n        id TEXT PRIMARY KEY NOT NULL,

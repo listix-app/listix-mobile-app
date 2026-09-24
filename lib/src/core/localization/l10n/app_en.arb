@@ -219,8 +219,19 @@
   "switchLayout": "Switch layout",
   "adPolicyTitle": "Ad Policy & Privacy",
   "adPolicyStatement": "Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.",
-  "shareSystem": "System sharesheet",
-  "shareSystemDesc": "Share using other installed applications",
+  "shareSystem": "Share via system",
+  "shareSystemDesc": "Send list and link to WhatsApp, Telegram, Email, and more",
+  "shareInviteLinkPrompt": "🔗 Join this list to collaborate in real-time:\n{url}",
+  "@shareInviteLinkPrompt": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "sharePendingSection": "📝 To buy",
+  "shareCompletedSection": "✅ Completed",
+  "shareEmptyListNotice": "• (No items in the list yet)",
   "realtimeLive": "Live",
   "realtimeConnecting": "Connecting...",
   "realtimeDisconnected": "Disconnected",
@@ -258,5 +269,6 @@
   "listIsLocalOnly": "Private list (local only)",
   "listSharedSyncEnabled": "Real-time sync enabled with cloud",
   "listLocalOnlyDescription": "Data is stored strictly on this device",
-  "enableSharingAction": "Enable sync"
+  "enableSharingAction": "Enable sync",
+  "supportAndFeedback": "Support & Feedback"
 }

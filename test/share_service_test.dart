@@ -64,6 +64,63 @@ void main() {
     });
 
     test(
+      'formatListForSharing with improved copy, sections, counts and invite prompt',
+      () {
+        final list = ShoppingList(
+          id: 'list_123',
+          name: 'Asado Fin de Semana',
+          items: [
+            TodoItem(
+              id: 'i1',
+              listId: 'list_123',
+              title: 'Carne para asar',
+              isCompleted: false,
+              createdAt: now,
+            ),
+            TodoItem(
+              id: 'i2',
+              listId: 'list_123',
+              title: 'Carbón',
+              isCompleted: false,
+              createdAt: now,
+            ),
+            TodoItem(
+              id: 'i3',
+              listId: 'list_123',
+              title: 'Bebidas',
+              isCompleted: true,
+              createdAt: now,
+            ),
+          ],
+          createdAt: now,
+        );
+
+        final inviteLink = ShareService.createInviteLink(list.id, list.name);
+        final text = ShareService.formatListForSharing(
+          list: list,
+          createdWithText: tr.sharedWithListix,
+          inviteLinkText: tr.shareInviteLinkPrompt(inviteLink),
+          pendingSectionTitle: tr.sharePendingSection,
+          completedSectionTitle: tr.shareCompletedSection,
+          emptyListText: tr.shareEmptyListNotice,
+        );
+
+        expect(text, contains('📋 *Asado Fin de Semana*'));
+        expect(text, contains('📝 Por comprar (2):'));
+        expect(text, contains('• Carne para asar'));
+        expect(text, contains('• Carbón'));
+        expect(text, contains('✅ Comprados (1):'));
+        expect(text, contains('✓ Bebidas'));
+        expect(
+          text,
+          contains('🔗 Únete a esta lista para colaborar en tiempo real:'),
+        );
+        expect(text, contains('https://listix.app/join?listId=list_123'));
+        expect(text, contains('Creado con Listix'));
+      },
+    );
+
+    test(
       'shareToWhatsApp tries native scheme first, then web fallback',
       () async {
         final launchedUris = <String>[];

@@ -11,7 +11,14 @@ import '../../../lists/presentation/controllers/list_layout_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  final bool showBuyCoffee;
+  final bool showRateApp;
+
+  const SettingsScreen({
+    super.key,
+    this.showBuyCoffee = false,
+    this.showRateApp = false,
+  });
 
   static const String coffeeUrl = 'https://buymeacoffee.com/nmenag';
   static const String feedbackEmail = 'nmena.garzon@gmail.com';
@@ -204,6 +211,24 @@ class SettingsScreen extends ConsumerWidget {
                 SwitchListTile.adaptive(
                   key: const Key('weekly_notification_switch'),
                   value: notifState.isEnabled,
+                  activeThumbColor: AppColors.primary,
+                  activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
+                  inactiveThumbColor: isDark
+                      ? AppColors.textSecondaryDark
+                      : const Color(0xFF94A3B8),
+                  inactiveTrackColor: isDark
+                      ? AppColors.surfaceDark
+                      : const Color(0xFFE2E8F0),
+                  thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      );
+                    }
+                    return null;
+                  }),
                   onChanged: (bool value) {
                     ref
                         .read(notificationsControllerProvider.notifier)
@@ -224,9 +249,27 @@ class SettingsScreen extends ConsumerWidget {
                     tr.weeklyReminderSubtitle,
                     style: TextStyle(fontSize: 12, color: textSubColor),
                   ),
-                  secondary: const Icon(
-                    Icons.notifications_active_rounded,
-                    color: AppColors.primary,
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: notifState.isEnabled
+                          ? AppColors.primary.withValues(alpha: 0.12)
+                          : (isDark
+                                ? AppColors.surfaceDark
+                                : AppColors.surfaceLight),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      notifState.isEnabled
+                          ? Icons.notifications_active_rounded
+                          : Icons.notifications_outlined,
+                      color: notifState.isEnabled
+                          ? AppColors.primary
+                          : (isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textMuted),
+                      size: 22,
+                    ),
                   ),
                 ),
                 if (notifState.isEnabled) ...[
@@ -292,7 +335,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          _SettingsSectionTitle(title: tr.buyMeACoffee),
+          _SettingsSectionTitle(title: tr.supportAndFeedback),
           const SizedBox(height: 10),
           Card(
             color: cardBg,
@@ -302,39 +345,41 @@ class SettingsScreen extends ConsumerWidget {
             ),
             child: Column(
               children: [
-                ListTile(
-                  key: const Key('settings_buy_coffee'),
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF813F).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                if (showBuyCoffee) ...[
+                  ListTile(
+                    key: const Key('settings_buy_coffee'),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF813F).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.coffee_rounded,
+                        color: Color(0xFFFF813F),
+                        size: 22,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.coffee_rounded,
-                      color: Color(0xFFFF813F),
-                      size: 22,
+                    title: Text(
+                      tr.buyMeACoffee,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: textTitleColor,
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    tr.buyMeACoffee,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: textTitleColor,
+                    subtitle: Text(
+                      tr.buyMeACoffeeSubtitle,
+                      style: TextStyle(fontSize: 12, color: textSubColor),
                     ),
+                    trailing: const Icon(
+                      Icons.open_in_new_rounded,
+                      size: 18,
+                      color: AppColors.textMuted,
+                    ),
+                    onTap: () => urlService.openUrl(coffeeUrl),
                   ),
-                  subtitle: Text(
-                    tr.buyMeACoffeeSubtitle,
-                    style: TextStyle(fontSize: 12, color: textSubColor),
-                  ),
-                  trailing: const Icon(
-                    Icons.open_in_new_rounded,
-                    size: 18,
-                    color: AppColors.textMuted,
-                  ),
-                  onTap: () => urlService.openUrl(coffeeUrl),
-                ),
-                Divider(height: 1, color: borderColor),
+                  Divider(height: 1, color: borderColor),
+                ],
                 ListTile(
                   key: const Key('settings_send_feedback'),
                   leading: Container(
@@ -369,39 +414,41 @@ class SettingsScreen extends ConsumerWidget {
                     subject: 'Listix Feedback',
                   ),
                 ),
-                Divider(height: 1, color: borderColor),
-                ListTile(
-                  key: const Key('settings_rate_app'),
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFB800).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                if (showRateApp) ...[
+                  Divider(height: 1, color: borderColor),
+                  ListTile(
+                    key: const Key('settings_rate_app'),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFB800).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.star_rate_rounded,
+                        color: Color(0xFFFFB800),
+                        size: 22,
+                      ),
                     ),
-                    child: const Icon(
-                      Icons.star_rate_rounded,
-                      color: Color(0xFFFFB800),
-                      size: 22,
+                    title: Text(
+                      tr.rateApp,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: textTitleColor,
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    tr.rateApp,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: textTitleColor,
+                    subtitle: Text(
+                      tr.rateAppSubtitle,
+                      style: TextStyle(fontSize: 12, color: textSubColor),
                     ),
+                    trailing: const Icon(
+                      Icons.open_in_new_rounded,
+                      size: 18,
+                      color: AppColors.textMuted,
+                    ),
+                    onTap: () => urlService.openUrl(storeUrl),
                   ),
-                  subtitle: Text(
-                    tr.rateAppSubtitle,
-                    style: TextStyle(fontSize: 12, color: textSubColor),
-                  ),
-                  trailing: const Icon(
-                    Icons.open_in_new_rounded,
-                    size: 18,
-                    color: AppColors.textMuted,
-                  ),
-                  onTap: () => urlService.openUrl(storeUrl),
-                ),
+                ],
               ],
             ),
           ),

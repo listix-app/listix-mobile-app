@@ -417,10 +417,25 @@ class AppLocalizationsEn extends AppLocalizations {
       'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.';
 
   @override
-  String get shareSystem => 'System sharesheet';
+  String get shareSystem => 'Share via system';
 
   @override
-  String get shareSystemDesc => 'Share using other installed applications';
+  String get shareSystemDesc =>
+      'Send list and link to WhatsApp, Telegram, Email, and more';
+
+  @override
+  String shareInviteLinkPrompt(String url) {
+    return '🔗 Join this list to collaborate in real-time:\n$url';
+  }
+
+  @override
+  String get sharePendingSection => '📝 To buy';
+
+  @override
+  String get shareCompletedSection => '✅ Completed';
+
+  @override
+  String get shareEmptyListNotice => '• (No items in the list yet)';
 
   @override
   String get realtimeLive => 'Live';
@@ -501,4 +516,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enableSharingAction => 'Enable sync';
+
+  @override
+  String get supportAndFeedback => 'Support & Feedback';
 }

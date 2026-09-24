@@ -168,10 +168,20 @@ void main() {
     });
 
     test('isShared boolean serialization and explicit toggle', () {
-      final localList = ShoppingList(id: 'l1', name: 'Solo local', isShared: false, createdAt: now);
+      final localList = ShoppingList(
+        id: 'l1',
+        name: 'Solo local',
+        isShared: false,
+        createdAt: now,
+      );
       expect(localList.isShared, isFalse);
 
-      final sharedList = ShoppingList(id: 'l2', name: 'Compartida nube', isShared: true, createdAt: now);
+      final sharedList = ShoppingList(
+        id: 'l2',
+        name: 'Compartida nube',
+        isShared: true,
+        createdAt: now,
+      );
       expect(sharedList.isShared, isTrue);
 
       final jsonShared = sharedList.toJson();

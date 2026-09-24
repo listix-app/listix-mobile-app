@@ -55,7 +55,10 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     final text = ShareService.formatListForSharing(
       list: list,
       createdWithText: tr.sharedWithListix,
-      inviteLinkText: '${tr.joinList}: $inviteLink',
+      inviteLinkText: tr.shareInviteLinkPrompt(inviteLink),
+      pendingSectionTitle: tr.sharePendingSection,
+      completedSectionTitle: tr.shareCompletedSection,
+      emptyListText: tr.shareEmptyListNotice,
     );
     final subject = tr.shareSubject(list.name);
     final shareService = ref.read(shareServiceProvider);
@@ -66,75 +69,6 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     );
     if (context.mounted && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
-    }
-  }
-
-  Future<void> _shareWhatsApp(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
-    final inviteLink = ShareService.createInviteLink(list.id, list.name);
-    final text = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      inviteLinkText: '${tr.joinList}: $inviteLink',
-    );
-    final shareService = ref.read(shareServiceProvider);
-    await shareService.shareToWhatsApp(text);
-    if (context.mounted && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
-
-  Future<void> _shareGmail(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
-    final subject = tr.shareSubject(list.name);
-    final inviteLink = ShareService.createInviteLink(list.id, list.name);
-    final body = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      inviteLinkText: '${tr.joinList}: $inviteLink',
-    );
-    final shareService = ref.read(shareServiceProvider);
-    await shareService.shareToGmail(subject: subject, body: body);
-    if (context.mounted && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-  }
-
-  Future<void> _copyText(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    final inviteLink = ShareService.createInviteLink(list.id, list.name);
-    final text = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      inviteLinkText: '${tr.joinList}: $inviteLink',
-    );
-    final shareService = ref.read(shareServiceProvider);
-    await shareService.copyToClipboard(text);
-    if (context.mounted) {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(tr.listCopied),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
-        ),
-      );
     }
   }
 
@@ -334,109 +268,74 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       : handleColor,
                 ),
               ),
-              child: SwitchListTile.adaptive(
-                key: const Key('toggle_shared_switch'),
-                value: list.isShared,
-                activeTrackColor: AppColors.primary,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 4,
-                ),
-                secondary: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: (list.isShared
-                            ? AppColors.primary
-                            : (isDark
-                                ? AppColors.borderDark
-                                : AppColors.borderLight))
-                        .withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                clipBehavior: Clip.antiAlias,
+                child: SwitchListTile.adaptive(
+                  key: const Key('toggle_shared_switch'),
+                  value: list.isShared,
+                  activeTrackColor: AppColors.primary,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
                   ),
-                  child: Icon(
+                  secondary: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          (list.isShared
+                                  ? AppColors.primary
+                                  : (isDark
+                                        ? AppColors.borderDark
+                                        : AppColors.borderLight))
+                              .withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      list.isShared
+                          ? Icons.cloud_done_rounded
+                          : Icons.cloud_off_rounded,
+                      color: list.isShared
+                          ? AppColors.primary
+                          : (isDark
+                                ? AppColors.textSecondaryDark
+                                : AppColors.textSecondary),
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    list.isShared ? tr.listIsShared : tr.listIsLocalOnly,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: textTitleColor,
+                    ),
+                  ),
+                  subtitle: Text(
                     list.isShared
-                        ? Icons.cloud_done_rounded
-                        : Icons.cloud_off_rounded,
-                    color: list.isShared
-                        ? AppColors.primary
-                        : (isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondary),
-                    size: 20,
+                        ? tr.listSharedSyncEnabled
+                        : tr.listLocalOnlyDescription,
+                    style: TextStyle(fontSize: 12, color: textMutedColor),
                   ),
+                  onChanged: (bool value) async {
+                    await ref
+                        .read(listsControllerProvider.notifier)
+                        .setListShared(list.id, value);
+                  },
                 ),
-                title: Text(
-                  list.isShared ? tr.listIsShared : tr.listIsLocalOnly,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: textTitleColor,
-                  ),
-                ),
-                subtitle: Text(
-                  list.isShared
-                      ? tr.listSharedSyncEnabled
-                      : tr.listLocalOnlyDescription,
-                  style: TextStyle(fontSize: 12, color: textMutedColor),
-                ),
-                onChanged: (bool value) async {
-                  await ref
-                      .read(listsControllerProvider.notifier)
-                      .setListShared(list.id, value);
-                },
               ),
             ),
 
-            // Section: Export & Sharing options (WhatsApp, System, Gmail, Copy)
+            // Section: System Share
             _ShareOptionTile(
               key: const Key('share_system_tile'),
               icon: Icons.share_rounded,
-              iconColor: const Color(0xFF0284C7),
-              iconBackgroundColor: const Color(
-                0xFF0284C7,
-              ).withValues(alpha: 0.14),
+              iconColor: AppColors.primary,
+              iconBackgroundColor: AppColors.primary.withValues(alpha: 0.14),
               title: tr.shareSystem,
               subtitle: tr.shareSystemDesc,
               onTap: () => _shareSystem(context, ref, list),
-            ),
-            const SizedBox(height: 10),
-
-            _ShareOptionTile(
-              key: const Key('share_whatsapp_tile'),
-              icon: Icons.chat_rounded,
-              iconColor: const Color(0xFF25D366),
-              iconBackgroundColor: const Color(
-                0xFF25D366,
-              ).withValues(alpha: 0.14),
-              title: tr.shareWhatsApp,
-              subtitle: tr.shareWhatsAppDesc,
-              onTap: () => _shareWhatsApp(context, ref, list),
-            ),
-            const SizedBox(height: 10),
-
-            _ShareOptionTile(
-              key: const Key('share_gmail_tile'),
-              icon: Icons.email_rounded,
-              iconColor: const Color(0xFFEA4335),
-              iconBackgroundColor: const Color(
-                0xFFEA4335,
-              ).withValues(alpha: 0.14),
-              title: tr.shareGmail,
-              subtitle: tr.shareGmailDesc,
-              onTap: () => _shareGmail(context, ref, list),
-            ),
-            const SizedBox(height: 10),
-
-            _ShareOptionTile(
-              key: const Key('copy_text_tile'),
-              icon: Icons.copy_rounded,
-              iconColor: const Color(0xFF8B5CF6),
-              iconBackgroundColor: const Color(
-                0xFF8B5CF6,
-              ).withValues(alpha: 0.14),
-              title: tr.copyListText,
-              subtitle: tr.copyListTextDesc,
-              onTap: () => _copyText(context, ref, list),
             ),
 
             const SizedBox(height: 16),

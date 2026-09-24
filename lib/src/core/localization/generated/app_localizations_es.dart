@@ -421,7 +421,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareSystem => 'Compartir en el sistema';
 
   @override
-  String get shareSystemDesc => 'Compartir con otras aplicaciones instaladas';
+  String get shareSystemDesc =>
+      'Enviar lista y enlace a WhatsApp, Telegram, Correo y más';
+
+  @override
+  String shareInviteLinkPrompt(String url) {
+    return '🔗 Únete a esta lista para colaborar en tiempo real:\n$url';
+  }
+
+  @override
+  String get sharePendingSection => '📝 Por comprar';
+
+  @override
+  String get shareCompletedSection => '✅ Comprados';
+
+  @override
+  String get shareEmptyListNotice => '• (Sin productos en la lista todavía)';
 
   @override
   String get realtimeLive => 'En vivo';
@@ -504,4 +519,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get enableSharingAction => 'Habilitar sincronización';
+
+  @override
+  String get supportAndFeedback => 'Soporte y Comentarios';
 }

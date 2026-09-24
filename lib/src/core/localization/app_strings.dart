@@ -181,4 +181,9 @@ class AppStrings {
   String get listSharedSyncEnabled => _l10n.listSharedSyncEnabled;
   String get listLocalOnlyDescription => _l10n.listLocalOnlyDescription;
   String get enableSharingAction => _l10n.enableSharingAction;
+  String shareInviteLinkPrompt(String url) => _l10n.shareInviteLinkPrompt(url);
+  String get sharePendingSection => _l10n.sharePendingSection;
+  String get shareCompletedSection => _l10n.shareCompletedSection;
+  String get shareEmptyListNotice => _l10n.shareEmptyListNotice;
+  String get supportAndFeedback => _l10n.supportAndFeedback;
 }

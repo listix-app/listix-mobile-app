@@ -220,7 +220,18 @@
   "adPolicyTitle": "Política de Anuncios y Privacidad",
   "adPolicyStatement": "Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.",
   "shareSystem": "Compartir en el sistema",
-  "shareSystemDesc": "Compartir con otras aplicaciones instaladas",
+  "shareSystemDesc": "Enviar lista y enlace a WhatsApp, Telegram, Correo y más",
+  "shareInviteLinkPrompt": "🔗 Únete a esta lista para colaborar en tiempo real:\n{url}",
+  "@shareInviteLinkPrompt": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
+  "sharePendingSection": "📝 Por comprar",
+  "shareCompletedSection": "✅ Comprados",
+  "shareEmptyListNotice": "• (Sin productos en la lista todavía)",
   "realtimeLive": "En vivo",
   "realtimeConnecting": "Conectando...",
   "realtimeDisconnected": "Desconectado",
@@ -258,5 +269,6 @@
   "listIsLocalOnly": "Lista privada (solo local)",
   "listSharedSyncEnabled": "Sincronización en tiempo real habilitada con la nube",
   "listLocalOnlyDescription": "Los datos se guardan únicamente en tu dispositivo",
-  "enableSharingAction": "Habilitar sincronización"
+  "enableSharingAction": "Habilitar sincronización",
+  "supportAndFeedback": "Soporte y Comentarios"
 }

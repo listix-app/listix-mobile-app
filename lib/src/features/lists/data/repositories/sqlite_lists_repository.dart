@@ -570,10 +570,7 @@ class SqliteListsRepository implements ListsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.update(
       'shopping_lists',
-      {
-        'is_shared': isShared ? 1 : 0,
-        'updated_at': now,
-      },
+      {'is_shared': isShared ? 1 : 0, 'updated_at': now},
       where: 'id = ?',
       whereArgs: [listId],
     );
