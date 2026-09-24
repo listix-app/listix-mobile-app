@@ -4,30 +4,28 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../controllers/banner_ad_controller.dart';
 
-/// A reusable Banner Ad widget backed by the real Google Mobile Ads SDK.
-///
-/// States:
-/// • **loading** — shows a placeholder `SizedBox` with the banner height.
-/// • **loaded**  — renders the real ad via [AdWidget].
-/// • **failed**  — renders `SizedBox.shrink()` so the UI is not broken.
-///
-/// The ad lifecycle is managed entirely by [BannerAdNotifier]; this widget
-/// simply observes the state and displays the appropriate UI.
 class BannerAdWidget extends ConsumerWidget {
-  const BannerAdWidget({super.key});
+  final bool isDetail;
 
-  /// Standard banner height in logical pixels.
+  const BannerAdWidget({super.key, this.isDetail = false});
+
   static const double _bannerHeight = 50.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final status = ref.watch(bannerAdProvider);
-    final notifier = ref.read(bannerAdProvider.notifier);
+    final status = isDetail
+        ? ref.watch(detailBannerAdProvider)
+        : ref.watch(bannerAdProvider);
+
+    final ad = isDetail
+        ? ref.read(detailBannerAdProvider.notifier).ad
+        : ref.read(bannerAdProvider.notifier).ad;
 
     return switch (status) {
       BannerAdStatus.loading => const SizedBox(height: _bannerHeight),
       BannerAdStatus.failed => const SizedBox.shrink(),
-      BannerAdStatus.loaded => _buildAdContainer(notifier.ad!),
+      BannerAdStatus.loaded =>
+        ad != null ? _buildAdContainer(ad) : const SizedBox.shrink(),
     };
   }
 
@@ -37,7 +35,7 @@ class BannerAdWidget extends ConsumerWidget {
       child: SizedBox(
         width: ad.size.width.toDouble(),
         height: ad.size.height.toDouble(),
-        child: AdWidget(ad: ad),
+        child: AdWidget(key: ObjectKey(ad), ad: ad),
       ),
     );
   }

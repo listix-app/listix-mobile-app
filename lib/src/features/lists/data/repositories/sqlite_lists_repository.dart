@@ -20,11 +20,10 @@ class SqliteListsRepository implements ListsRepository {
   Future<List<ShoppingList>> getLists() async {
     final db = await _db;
 
-    // Fetch lists
     final listMaps = await db.query(
       'shopping_lists',
       where: 'deleted_at IS NULL',
-      orderBy: 'created_at DESC',
+      orderBy: 'is_starred DESC, position ASC, created_at DESC',
     );
 
     if (listMaps.isEmpty) return [];
@@ -32,22 +31,19 @@ class SqliteListsRepository implements ListsRepository {
     final listIds = listMaps.map((m) => m['id'] as String).toList();
     final inPlaceholders = List.filled(listIds.length, '?').join(',');
 
-    // Fetch items for all active lists
     final itemMaps = await db.query(
       'todo_items',
       where: 'list_id IN ($inPlaceholders) AND deleted_at IS NULL',
       whereArgs: listIds,
-      orderBy: 'created_at DESC',
+      orderBy: 'position ASC, created_at DESC',
     );
 
-    // Fetch collaborators for all active lists
     final collabMaps = await db.query(
       'collaborators',
       where: 'list_id IN ($inPlaceholders)',
       whereArgs: listIds,
     );
 
-    // Group items by list_id
     final itemsByList = <String, List<TodoItem>>{};
     for (final row in itemMaps) {
       final listId = row['list_id'] as String;
@@ -57,6 +53,7 @@ class SqliteListsRepository implements ListsRepository {
         title: row['title'] as String,
         isCompleted: (row['is_completed'] as int) == 1,
         isSynced: (row['is_synced'] as int) == 1,
+        position: (row['position'] as int?) ?? 0,
         createdAt: DateTime.fromMillisecondsSinceEpoch(
           row['created_at'] as int,
         ),
@@ -64,7 +61,6 @@ class SqliteListsRepository implements ListsRepository {
       itemsByList.putIfAbsent(listId, () => []).add(item);
     }
 
-    // Group collaborators by list_id
     final collabsByList = <String, List<Collaborator>>{};
     for (final row in collabMaps) {
       final listId = row['list_id'] as String;
@@ -77,13 +73,14 @@ class SqliteListsRepository implements ListsRepository {
       collabsByList.putIfAbsent(listId, () => []).add(collab);
     }
 
-    // Map into domain ShoppingList entities
     return listMaps.map((row) {
       final id = row['id'] as String;
       return ShoppingList(
         id: id,
         name: row['name'] as String,
         isSynced: (row['is_synced'] as int) == 1,
+        isStarred: (row['is_starred'] as int?) == 1,
+        position: (row['position'] as int?) ?? 0,
         items: itemsByList[id] ?? [],
         collaborators: collabsByList[id] ?? [],
         createdAt: DateTime.fromMillisecondsSinceEpoch(
@@ -109,10 +106,17 @@ class SqliteListsRepository implements ListsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = _uuid.v4();
 
+    final maxPosQuery = await db.rawQuery(
+      'SELECT COALESCE(MAX(position), -1) AS max_pos FROM shopping_lists WHERE deleted_at IS NULL',
+    );
+    final nextPosition = ((maxPosQuery.first['max_pos'] as int?) ?? -1) + 1;
+
     await db.insert('shopping_lists', {
       'id': id,
       'name': name.trim(),
-      'is_synced': 0, // Pending sync in local-first
+      'is_synced': 0,
+      'is_starred': 0,
+      'position': nextPosition,
       'created_at': now,
       'updated_at': now,
     });
@@ -121,6 +125,8 @@ class SqliteListsRepository implements ListsRepository {
       id: id,
       name: name.trim(),
       isSynced: false,
+      isStarred: false,
+      position: nextPosition,
       createdAt: DateTime.fromMillisecondsSinceEpoch(now),
       items: const [],
       collaborators: const [],
@@ -151,10 +157,80 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
+  Future<void> toggleListStar(String listId) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.rawUpdate(
+      'UPDATE shopping_lists SET is_starred = CASE WHEN is_starred = 1 THEN 0 ELSE 1 END, updated_at = ? WHERE id = ?',
+      [now, listId],
+    );
+  }
+
+  @override
+  Future<void> reorderLists(List<String> orderedListIds) async {
+    final db = await _db;
+    final batch = db.batch();
+    for (var i = 0; i < orderedListIds.length; i++) {
+      batch.update(
+        'shopping_lists',
+        {'position': i},
+        where: 'id = ?',
+        whereArgs: [orderedListIds[i]],
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  @override
+  Future<void> restoreList(ShoppingList list) async {
+    final db = await _db;
+    await db.transaction((txn) async {
+      await txn.insert('shopping_lists', {
+        'id': list.id,
+        'name': list.name,
+        'is_synced': list.isSynced ? 1 : 0,
+        'is_starred': list.isStarred ? 1 : 0,
+        'position': list.position,
+        'created_at': list.createdAt.millisecondsSinceEpoch,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+      for (final item in list.items) {
+        await txn.insert('todo_items', {
+          'id': item.id,
+          'list_id': list.id,
+          'title': item.title,
+          'is_completed': item.isCompleted ? 1 : 0,
+          'is_synced': item.isSynced ? 1 : 0,
+          'position': item.position,
+          'created_at': item.createdAt.millisecondsSinceEpoch,
+          'updated_at': DateTime.now().millisecondsSinceEpoch,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+
+      for (final collab in list.collaborators) {
+        await txn.insert('collaborators', {
+          'id': collab.id,
+          'list_id': list.id,
+          'name': collab.name,
+          'email': collab.email,
+          'is_owner': collab.isOwner ? 1 : 0,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
+  @override
   Future<TodoItem> addItem(String listId, String title, {String? id}) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     final itemId = id ?? _uuid.v4();
+
+    final maxPosQuery = await db.rawQuery(
+      'SELECT COALESCE(MAX(position), -1) AS max_pos FROM todo_items WHERE list_id = ? AND deleted_at IS NULL',
+      [listId],
+    );
+    final nextPosition = ((maxPosQuery.first['max_pos'] as int?) ?? -1) + 1;
 
     await db.transaction((txn) async {
       await txn.insert('todo_items', {
@@ -163,11 +239,11 @@ class SqliteListsRepository implements ListsRepository {
         'title': title.trim(),
         'is_completed': 0,
         'is_synced': 0,
+        'position': nextPosition,
         'created_at': now,
         'updated_at': now,
       });
 
-      // Mark parent list as updated and pending sync
       await txn.update(
         'shopping_lists',
         {'is_synced': 0, 'updated_at': now},
@@ -182,6 +258,7 @@ class SqliteListsRepository implements ListsRepository {
       title: title.trim(),
       isCompleted: false,
       isSynced: false,
+      position: nextPosition,
       createdAt: DateTime.fromMillisecondsSinceEpoch(now),
     );
   }
@@ -229,6 +306,7 @@ class SqliteListsRepository implements ListsRepository {
       title: existing.first['title'] as String,
       isCompleted: newCompleted,
       isSynced: false,
+      position: (existing.first['position'] as int?) ?? 0,
       createdAt: DateTime.fromMillisecondsSinceEpoch(
         existing.first['created_at'] as int,
       ),
@@ -248,6 +326,46 @@ class SqliteListsRepository implements ListsRepository {
         {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
+      );
+    });
+  }
+
+  @override
+  Future<void> reorderItems(String listId, List<String> orderedItemIds) async {
+    final db = await _db;
+    final batch = db.batch();
+    for (var i = 0; i < orderedItemIds.length; i++) {
+      batch.update(
+        'todo_items',
+        {'position': i},
+        where: 'id = ? AND list_id = ?',
+        whereArgs: [orderedItemIds[i], listId],
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  @override
+  Future<void> restoreItem(TodoItem item) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      await txn.insert('todo_items', {
+        'id': item.id,
+        'list_id': item.listId,
+        'title': item.title,
+        'is_completed': item.isCompleted ? 1 : 0,
+        'is_synced': 0,
+        'position': item.position,
+        'created_at': item.createdAt.millisecondsSinceEpoch,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+      await txn.update(
+        'shopping_lists',
+        {'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [item.listId],
       );
     });
   }
@@ -296,6 +414,28 @@ class SqliteListsRepository implements ListsRepository {
         'shopping_lists',
         {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
+        whereArgs: [listId],
+      );
+    });
+  }
+
+  @override
+  Future<void> syncList(String listId) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'shopping_lists',
+        {'is_synced': 1, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+
+      await txn.update(
+        'todo_items',
+        {'is_synced': 1, 'updated_at': now},
+        where: 'list_id = ?',
         whereArgs: [listId],
       );
     });

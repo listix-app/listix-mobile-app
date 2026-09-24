@@ -4,6 +4,7 @@ class TodoItem {
   final String title;
   final bool isCompleted;
   final bool isSynced;
+  final int position;
   final DateTime createdAt;
 
   const TodoItem({
@@ -12,6 +13,7 @@ class TodoItem {
     required this.title,
     this.isCompleted = false,
     this.isSynced = false,
+    this.position = 0,
     required this.createdAt,
   });
 
@@ -21,6 +23,7 @@ class TodoItem {
     String? title,
     bool? isCompleted,
     bool? isSynced,
+    int? position,
     DateTime? createdAt,
   }) {
     return TodoItem(
@@ -29,6 +32,7 @@ class TodoItem {
       title: title ?? this.title,
       isCompleted: isCompleted ?? this.isCompleted,
       isSynced: isSynced ?? this.isSynced,
+      position: position ?? this.position,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -42,8 +46,10 @@ class TodoItem {
           listId == other.listId &&
           title == other.title &&
           isCompleted == other.isCompleted &&
-          isSynced == other.isSynced;
+          isSynced == other.isSynced &&
+          position == other.position;
 
   @override
-  int get hashCode => Object.hash(id, listId, title, isCompleted, isSynced);
+  int get hashCode =>
+      Object.hash(id, listId, title, isCompleted, isSynced, position);
 }

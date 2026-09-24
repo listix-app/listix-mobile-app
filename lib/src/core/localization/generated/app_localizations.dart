@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTagline.
   ///
   /// In es, this message translates to:
-  /// **'Listas de compras y pendientes rápidas, colaborativas y offline-first.'**
+  /// **'Listas de compras y tareas rápidas, privadas y 100% offline.'**
   String get appTagline;
 
   /// No description provided for @myLists.
@@ -119,19 +119,19 @@ abstract class AppLocalizations {
   /// No description provided for @emptyListsTitle.
   ///
   /// In es, this message translates to:
-  /// **'Aún no tienes listas'**
+  /// **'Tus listas, siempre contigo'**
   String get emptyListsTitle;
 
   /// No description provided for @emptyListsMessage.
   ///
   /// In es, this message translates to:
-  /// **'Crea una lista para organizar tus compras del supermercado, ropa o pendientes del hogar.'**
+  /// **'Crea tu lista de supermercado o pendientes en segundos. Funciona completamente offline.'**
   String get emptyListsMessage;
 
   /// No description provided for @createFirstList.
   ///
   /// In es, this message translates to:
-  /// **'Crea tu primera lista'**
+  /// **'Crear mi primera lista'**
   String get createFirstList;
 
   /// No description provided for @newList.
@@ -227,13 +227,13 @@ abstract class AppLocalizations {
   /// No description provided for @emptyItemsTitle.
   ///
   /// In es, this message translates to:
-  /// **'Lista vacía'**
+  /// **'Lista sin items aún'**
   String get emptyItemsTitle;
 
   /// No description provided for @emptyItemsMessage.
   ///
   /// In es, this message translates to:
-  /// **'Escribe tu primer item en la barra inferior y presiona enter.'**
+  /// **'Escribe tu primer item abajo para agregarlo al instante.'**
   String get emptyItemsMessage;
 
   /// No description provided for @quickAddHint.
@@ -287,7 +287,7 @@ abstract class AppLocalizations {
   /// No description provided for @editListSubheading.
   ///
   /// In es, this message translates to:
-  /// **'El nuevo nombre se guardará en SQLite local y se sincronizará automáticamente.'**
+  /// **'El nuevo nombre se guardará al instante y de forma segura en tu dispositivo.'**
   String get editListSubheading;
 
   /// No description provided for @createListSubheading.
@@ -305,7 +305,7 @@ abstract class AppLocalizations {
   /// No description provided for @listNameHint.
   ///
   /// In es, this message translates to:
-  /// **'Ej. Despensa mensual'**
+  /// **'Ej. Despensa semanal'**
   String get listNameHint;
 
   /// No description provided for @listNameValidation.
@@ -335,8 +335,74 @@ abstract class AppLocalizations {
   /// No description provided for @shareListSubheading.
   ///
   /// In es, this message translates to:
-  /// **'Invita a otras personas a ver y tachar items en tiempo real.'**
+  /// **'Envía esta lista al instante por WhatsApp o Gmail.'**
   String get shareListSubheading;
+
+  /// No description provided for @shareWhatsApp.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir por WhatsApp'**
+  String get shareWhatsApp;
+
+  /// No description provided for @shareWhatsAppDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar lista formateada por chat'**
+  String get shareWhatsAppDesc;
+
+  /// No description provided for @shareGmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir por Gmail'**
+  String get shareGmail;
+
+  /// No description provided for @shareGmailDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar lista completa por correo'**
+  String get shareGmailDesc;
+
+  /// No description provided for @copyListText.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar texto de la lista'**
+  String get copyListText;
+
+  /// No description provided for @copyListTextDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar contenido al portapapeles'**
+  String get copyListTextDesc;
+
+  /// No description provided for @listCopied.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Lista copiada al portapapeles!'**
+  String get listCopied;
+
+  /// No description provided for @shareSubject.
+  ///
+  /// In es, this message translates to:
+  /// **'Listix: {name}'**
+  String shareSubject(String name);
+
+  /// No description provided for @sharedWithListix.
+  ///
+  /// In es, this message translates to:
+  /// **'Creado con Listix — Listas rápidas y 100% offline'**
+  String get sharedWithListix;
+
+  /// No description provided for @offlineNotice.
+  ///
+  /// In es, this message translates to:
+  /// **'Almacenamiento Local Offline'**
+  String get offlineNotice;
+
+  /// No description provided for @offlineNoticeDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Tus datos se guardan de forma local en tu dispositivo con SQLite. La lista se sincroniza únicamente al compartir.'**
+  String get offlineNoticeDesc;
 
   /// No description provided for @copyInviteLink.
   ///
@@ -347,7 +413,7 @@ abstract class AppLocalizations {
   /// No description provided for @linkCopied.
   ///
   /// In es, this message translates to:
-  /// **'Enlace de invitación copiado al portapapeles'**
+  /// **'Enlace copiado al portapapeles'**
   String get linkCopied;
 
   /// No description provided for @inviteByEmail.
@@ -476,6 +542,36 @@ abstract class AppLocalizations {
   /// **'Acerca de Listix'**
   String get aboutApp;
 
+  /// No description provided for @settings.
+  ///
+  /// In es, this message translates to:
+  /// **'Configuración'**
+  String get settings;
+
+  /// No description provided for @themeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tema'**
+  String get themeTitle;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In es, this message translates to:
+  /// **'Sistema'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In es, this message translates to:
+  /// **'Claro'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In es, this message translates to:
+  /// **'Oscuro'**
+  String get themeDark;
+
   /// No description provided for @version.
   ///
   /// In es, this message translates to:
@@ -527,13 +623,13 @@ abstract class AppLocalizations {
   /// No description provided for @privacyStatement.
   ///
   /// In es, this message translates to:
-  /// **'En Listix tu privacidad es absoluta. Todos tus datos residen de forma predeterminada en el almacenamiento SQLite local de tu dispositivo. No recopilamos rastreadores de publicidad, no vendemos datos a terceros ni almacenamos analíticas invasivas.'**
+  /// **'Todas tus listas de compras y productos se guardan localmente en tu dispositivo. Listix muestra anuncios mediante Google AdMob para apoyar el desarrollo continuo. Google AdMob puede recopilar y procesar identificadores del dispositivo, ID de publicidad y datos de uso para mostrar anuncios personalizados y no personalizados de acuerdo con la Política de Privacidad de Google. Nunca vendemos tus datos personales ni el contenido de tus listas.'**
   String get privacyStatement;
 
   /// No description provided for @offlineFirstStatement.
   ///
   /// In es, this message translates to:
-  /// **'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose de manera segura en segundo plano.'**
+  /// **'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose únicamente al compartir.'**
   String get offlineFirstStatement;
 
   /// No description provided for @termsStatement.
@@ -553,6 +649,198 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Error: {error}'**
   String errorPrefix(String error);
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Notificaciones'**
+  String get notificationsTitle;
+
+  /// No description provided for @weeklyReminderTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recordatorio semanal'**
+  String get weeklyReminderTitle;
+
+  /// No description provided for @weeklyReminderSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recibe un recordatorio semanal para planificar tus compras'**
+  String get weeklyReminderSubtitle;
+
+  /// No description provided for @notificationTimeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora del recordatorio'**
+  String get notificationTimeTitle;
+
+  /// No description provided for @notificationTimeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Programada para las {time}'**
+  String notificationTimeSubtitle(String time);
+
+  /// No description provided for @weeklyReminderNotificationTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¡Momento de organizar tus compras!'**
+  String get weeklyReminderNotificationTitle;
+
+  /// No description provided for @weeklyReminderNotificationBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tus listas o crea una nueva para esta semana.'**
+  String get weeklyReminderNotificationBody;
+
+  /// No description provided for @undo.
+  ///
+  /// In es, this message translates to:
+  /// **'Deshacer'**
+  String get undo;
+
+  /// No description provided for @listDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'\"{name}\" eliminada'**
+  String listDeleted(String name);
+
+  /// No description provided for @itemDeleted.
+  ///
+  /// In es, this message translates to:
+  /// **'\"{title}\" eliminado'**
+  String itemDeleted(String title);
+
+  /// No description provided for @starred.
+  ///
+  /// In es, this message translates to:
+  /// **'Favoritas'**
+  String get starred;
+
+  /// No description provided for @starList.
+  ///
+  /// In es, this message translates to:
+  /// **'Destacar lista'**
+  String get starList;
+
+  /// No description provided for @unstarList.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar de destacadas'**
+  String get unstarList;
+
+  /// No description provided for @reorder.
+  ///
+  /// In es, this message translates to:
+  /// **'Reordenar'**
+  String get reorder;
+
+  /// No description provided for @developer.
+  ///
+  /// In es, this message translates to:
+  /// **'Desarrollador'**
+  String get developer;
+
+  /// No description provided for @developerName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nicolas Mena'**
+  String get developerName;
+
+  /// No description provided for @developerEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'nmena.garzon@gmail.com'**
+  String get developerEmail;
+
+  /// No description provided for @contactDeveloper.
+  ///
+  /// In es, this message translates to:
+  /// **'Contactar al desarrollador'**
+  String get contactDeveloper;
+
+  /// No description provided for @buyMeACoffee.
+  ///
+  /// In es, this message translates to:
+  /// **'Invítame un café'**
+  String get buyMeACoffee;
+
+  /// No description provided for @buyMeACoffeeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Apoya el desarrollo de Listix'**
+  String get buyMeACoffeeSubtitle;
+
+  /// No description provided for @sendFeedback.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar comentarios'**
+  String get sendFeedback;
+
+  /// No description provided for @sendFeedbackSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sugerencias, errores o consultas'**
+  String get sendFeedbackSubtitle;
+
+  /// No description provided for @rateApp.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificar app'**
+  String get rateApp;
+
+  /// No description provided for @rateAppSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Deja una reseña en Google Play'**
+  String get rateAppSubtitle;
+
+  /// No description provided for @layoutTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Diseño de listas'**
+  String get layoutTitle;
+
+  /// No description provided for @layoutList.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista'**
+  String get layoutList;
+
+  /// No description provided for @layoutGrid.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloques'**
+  String get layoutGrid;
+
+  /// No description provided for @switchLayout.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar diseño'**
+  String get switchLayout;
+
+  /// No description provided for @adPolicyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de Anuncios y Privacidad'**
+  String get adPolicyTitle;
+
+  /// No description provided for @adPolicyStatement.
+  ///
+  /// In es, this message translates to:
+  /// **'Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.'**
+  String get adPolicyStatement;
+
+  /// No description provided for @shareSystem.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir en el sistema'**
+  String get shareSystem;
+
+  /// No description provided for @shareSystemDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir con otras aplicaciones instaladas'**
+  String get shareSystemDesc;
 }
 
 class _AppLocalizationsDelegate

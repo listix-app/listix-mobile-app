@@ -5,12 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
-import '../../../../core/widgets/sync_indicator.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
-import '../../../sync/presentation/widgets/sync_status_badge.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
+import '../../../ads/data/interstitial_ad_service.dart';
 import 'share_list_sheet.dart';
 
 class ListDetailScreen extends ConsumerStatefulWidget {
@@ -25,10 +24,34 @@ class ListDetailScreen extends ConsumerStatefulWidget {
 class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   bool _isCompletedExpanded = true;
 
+  Future<void> _handleDeleteItem(String listId, String itemId) async {
+    final tr = ref.read(stringsProvider);
+    final deleted = await ref
+        .read(listsControllerProvider.notifier)
+        .deleteItemWithUndo(listId, itemId);
+    if (deleted != null && mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(tr.itemDeleted(deleted.title)),
+          action: SnackBarAction(
+            label: tr.undo,
+            textColor: AppColors.primaryLight,
+            onPressed: () {
+              ref.read(listsControllerProvider.notifier).restoreItem(deleted);
+            },
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final list = ref.watch(shoppingListProvider(widget.listId));
     final tr = ref.watch(stringsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (list == null) {
       return Scaffold(
@@ -44,9 +67,11 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             children: [
               Text(
                 tr.listNotFound,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -71,25 +96,21 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: tr.back,
-          onPressed: () => context.pop(),
+          onPressed: () {
+            ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
+            context.pop();
+          },
         ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                list.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.3,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(width: 6),
-            SyncIndicator(isSynced: list.isSynced),
-          ],
+        title: Text(
+          list.name,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           IconButton(
@@ -98,56 +119,24 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             onPressed: () => context.push('/list/${list.id}/edit'),
           ),
           IconButton(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.person_add_outlined, size: 21),
-                if (list.isShared)
-                  Positioned(
-                    top: -2,
-                    right: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 14,
-                        minHeight: 14,
-                      ),
-                      child: Center(
-                        child: Text(
-                          '${list.collaborators.length}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            icon: const Icon(Icons.share_outlined, size: 21),
             tooltip: tr.shareList,
             onPressed: () => ShareListSheet.show(context, list.id),
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 12.0, left: 4.0),
-            child: SyncStatusBadge(),
-          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // Sub-header with pending count & progress bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: const BoxDecoration(
-              color: AppColors.surfaceLight,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
               border: Border(
-                bottom: BorderSide(color: AppColors.borderLight, width: 1),
+                bottom: BorderSide(
+                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
+                  width: 1,
+                ),
               ),
             ),
             child: Column(
@@ -161,10 +150,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                               list.pendingCount,
                               list.totalCount,
                             ),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondary,
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -172,10 +163,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                     if (list.totalCount > 0)
                       Text(
                         tr.percentCompleted((progress * 100).toInt()),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textMuted,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
                         ),
                       ),
                   ],
@@ -186,7 +179,9 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
                       value: progress,
-                      backgroundColor: AppColors.borderLight,
+                      backgroundColor: isDark
+                          ? AppColors.borderDark
+                          : AppColors.borderLight,
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         AppColors.primary,
                       ),
@@ -198,7 +193,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             ),
           ),
 
-          // Main list content
           Expanded(
             child: list.items.isEmpty
                 ? EmptyStateWidget(
@@ -213,89 +207,99 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                           .manualSync();
                     },
                     color: AppColors.primary,
-                    child: ListView(
+                    child: ReorderableListView.builder(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
                       ),
-                      children: [
-                        // Pending items
-                        ...pendingItems.map(
-                          (item) => TodoItemTile(
-                            item: item,
-                            onToggle: () {
-                              ref
-                                  .read(listsControllerProvider.notifier)
-                                  .toggleItem(list.id, item.id);
-                            },
-                            onDelete: () {
-                              ref
-                                  .read(listsControllerProvider.notifier)
-                                  .deleteItem(list.id, item.id);
-                            },
-                          ),
-                        ),
-
-                        // Completed items section grouped at the bottom
-                        if (completedItems.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                _isCompletedExpanded = !_isCompletedExpanded;
-                              });
-                            },
-                            borderRadius: BorderRadius.circular(8),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 6.0,
-                                horizontal: 4.0,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    _isCompletedExpanded
-                                        ? Icons.expand_more
-                                        : Icons.chevron_right,
-                                    size: 18,
-                                    color: AppColors.textMuted,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    tr.completedGroup(completedItems.length),
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textMuted,
+                      itemCount: pendingItems.length,
+                      onReorderItem: (oldIndex, newIndex) {
+                        ref
+                            .read(listsControllerProvider.notifier)
+                            .reorderItems(list.id, oldIndex, newIndex);
+                      },
+                      itemBuilder: (context, index) {
+                        final item = pendingItems[index];
+                        return TodoItemTile(
+                          key: ValueKey(item.id),
+                          item: item,
+                          onToggle: () {
+                            ref
+                                .read(listsControllerProvider.notifier)
+                                .toggleItem(list.id, item.id);
+                          },
+                          onDelete: () => _handleDeleteItem(list.id, item.id),
+                        );
+                      },
+                      footer: completedItems.isEmpty
+                          ? null
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 12),
+                                InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _isCompletedExpanded =
+                                          !_isCompletedExpanded;
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 6.0,
+                                      horizontal: 4.0,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          _isCompletedExpanded
+                                              ? Icons.expand_more
+                                              : Icons.chevron_right,
+                                          size: 18,
+                                          color: isDark
+                                              ? AppColors.textMutedDark
+                                              : AppColors.textMuted,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          tr.completedGroup(
+                                            completedItems.length,
+                                          ),
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                            color: isDark
+                                                ? AppColors.textMutedDark
+                                                : AppColors.textMuted,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                ],
-                              ),
+                                ),
+                                if (_isCompletedExpanded)
+                                  ...completedItems.map(
+                                    (item) => TodoItemTile(
+                                      key: ValueKey(item.id),
+                                      item: item,
+                                      onToggle: () {
+                                        ref
+                                            .read(
+                                              listsControllerProvider.notifier,
+                                            )
+                                            .toggleItem(list.id, item.id);
+                                      },
+                                      onDelete: () =>
+                                          _handleDeleteItem(list.id, item.id),
+                                    ),
+                                  ),
+                              ],
                             ),
-                          ),
-                          if (_isCompletedExpanded)
-                            ...completedItems.map(
-                              (item) => TodoItemTile(
-                                item: item,
-                                onToggle: () {
-                                  ref
-                                      .read(listsControllerProvider.notifier)
-                                      .toggleItem(list.id, item.id);
-                                },
-                                onDelete: () {
-                                  ref
-                                      .read(listsControllerProvider.notifier)
-                                      .deleteItem(list.id, item.id);
-                                },
-                              ),
-                            ),
-                        ],
-                      ],
                     ),
                   ),
           ),
 
-          // Bottom Quick Add Input
           QuickAddInput(
             autoFocus: false,
             hintText: tr.quickAddHint,
@@ -308,7 +312,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const BannerAdWidget(),
+      bottomNavigationBar: const BannerAdWidget(isDetail: true),
     );
   }
 }

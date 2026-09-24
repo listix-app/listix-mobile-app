@@ -13,20 +13,20 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get appTagline =>
-      'Listas de compras y pendientes rápidas, colaborativas y offline-first.';
+      'Listas de compras y tareas rápidas, privadas y 100% offline.';
 
   @override
   String get myLists => 'Mis Listas';
 
   @override
-  String get emptyListsTitle => 'Aún no tienes listas';
+  String get emptyListsTitle => 'Tus listas, siempre contigo';
 
   @override
   String get emptyListsMessage =>
-      'Crea una lista para organizar tus compras del supermercado, ropa o pendientes del hogar.';
+      'Crea tu lista de supermercado o pendientes en segundos. Funciona completamente offline.';
 
   @override
-  String get createFirstList => 'Crea tu primera lista';
+  String get createFirstList => 'Crear mi primera lista';
 
   @override
   String get newList => 'Nueva lista';
@@ -84,11 +84,11 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get emptyItemsTitle => 'Lista vacía';
+  String get emptyItemsTitle => 'Lista sin items aún';
 
   @override
   String get emptyItemsMessage =>
-      'Escribe tu primer item en la barra inferior y presiona enter.';
+      'Escribe tu primer item abajo para agregarlo al instante.';
 
   @override
   String get quickAddHint => 'Agregar item';
@@ -116,7 +116,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get editListSubheading =>
-      'El nuevo nombre se guardará en SQLite local y se sincronizará automáticamente.';
+      'El nuevo nombre se guardará al instante y de forma segura en tu dispositivo.';
 
   @override
   String get createListSubheading =>
@@ -126,7 +126,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get listNameLabel => 'Nombre de la lista';
 
   @override
-  String get listNameHint => 'Ej. Despensa mensual';
+  String get listNameHint => 'Ej. Despensa semanal';
 
   @override
   String get listNameValidation => 'Por favor ingresa un nombre';
@@ -142,13 +142,50 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shareListSubheading =>
-      'Invita a otras personas a ver y tachar items en tiempo real.';
+      'Envía esta lista al instante por WhatsApp o Gmail.';
+
+  @override
+  String get shareWhatsApp => 'Compartir por WhatsApp';
+
+  @override
+  String get shareWhatsAppDesc => 'Enviar lista formateada por chat';
+
+  @override
+  String get shareGmail => 'Compartir por Gmail';
+
+  @override
+  String get shareGmailDesc => 'Enviar lista completa por correo';
+
+  @override
+  String get copyListText => 'Copiar texto de la lista';
+
+  @override
+  String get copyListTextDesc => 'Copiar contenido al portapapeles';
+
+  @override
+  String get listCopied => '¡Lista copiada al portapapeles!';
+
+  @override
+  String shareSubject(String name) {
+    return 'Listix: $name';
+  }
+
+  @override
+  String get sharedWithListix =>
+      'Creado con Listix — Listas rápidas y 100% offline';
+
+  @override
+  String get offlineNotice => 'Almacenamiento Local Offline';
+
+  @override
+  String get offlineNoticeDesc =>
+      'Tus datos se guardan de forma local en tu dispositivo con SQLite. La lista se sincroniza únicamente al compartir.';
 
   @override
   String get copyInviteLink => 'Copiar enlace de invitación';
 
   @override
-  String get linkCopied => 'Enlace de invitación copiado al portapapeles';
+  String get linkCopied => 'Enlace copiado al portapapeles';
 
   @override
   String get inviteByEmail => 'O invitar por correo';
@@ -218,6 +255,21 @@ class AppLocalizationsEs extends AppLocalizations {
   String get aboutApp => 'Acerca de Listix';
 
   @override
+  String get settings => 'Configuración';
+
+  @override
+  String get themeTitle => 'Tema';
+
+  @override
+  String get themeSystem => 'Sistema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Oscuro';
+
+  @override
   String get version => 'Versión';
 
   @override
@@ -245,11 +297,11 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyStatement =>
-      'En Listix tu privacidad es absoluta. Todos tus datos residen de forma predeterminada en el almacenamiento SQLite local de tu dispositivo. No recopilamos rastreadores de publicidad, no vendemos datos a terceros ni almacenamos analíticas invasivas.';
+      'Todas tus listas de compras y productos se guardan localmente en tu dispositivo. Listix muestra anuncios mediante Google AdMob para apoyar el desarrollo continuo. Google AdMob puede recopilar y procesar identificadores del dispositivo, ID de publicidad y datos de uso para mostrar anuncios personalizados y no personalizados de acuerdo con la Política de Privacidad de Google. Nunca vendemos tus datos personales ni el contenido de tus listas.';
 
   @override
   String get offlineFirstStatement =>
-      'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose de manera segura en segundo plano.';
+      'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose únicamente al compartir.';
 
   @override
   String get termsStatement =>
@@ -264,4 +316,110 @@ class AppLocalizationsEs extends AppLocalizations {
   String errorPrefix(String error) {
     return 'Error: $error';
   }
+
+  @override
+  String get notificationsTitle => 'Notificaciones';
+
+  @override
+  String get weeklyReminderTitle => 'Recordatorio semanal';
+
+  @override
+  String get weeklyReminderSubtitle =>
+      'Recibe un recordatorio semanal para planificar tus compras';
+
+  @override
+  String get notificationTimeTitle => 'Hora del recordatorio';
+
+  @override
+  String notificationTimeSubtitle(String time) {
+    return 'Programada para las $time';
+  }
+
+  @override
+  String get weeklyReminderNotificationTitle =>
+      '¡Momento de organizar tus compras!';
+
+  @override
+  String get weeklyReminderNotificationBody =>
+      'Revisa tus listas o crea una nueva para esta semana.';
+
+  @override
+  String get undo => 'Deshacer';
+
+  @override
+  String listDeleted(String name) {
+    return '\"$name\" eliminada';
+  }
+
+  @override
+  String itemDeleted(String title) {
+    return '\"$title\" eliminado';
+  }
+
+  @override
+  String get starred => 'Favoritas';
+
+  @override
+  String get starList => 'Destacar lista';
+
+  @override
+  String get unstarList => 'Quitar de destacadas';
+
+  @override
+  String get reorder => 'Reordenar';
+
+  @override
+  String get developer => 'Desarrollador';
+
+  @override
+  String get developerName => 'Nicolas Mena';
+
+  @override
+  String get developerEmail => 'nmena.garzon@gmail.com';
+
+  @override
+  String get contactDeveloper => 'Contactar al desarrollador';
+
+  @override
+  String get buyMeACoffee => 'Invítame un café';
+
+  @override
+  String get buyMeACoffeeSubtitle => 'Apoya el desarrollo de Listix';
+
+  @override
+  String get sendFeedback => 'Enviar comentarios';
+
+  @override
+  String get sendFeedbackSubtitle => 'Sugerencias, errores o consultas';
+
+  @override
+  String get rateApp => 'Calificar app';
+
+  @override
+  String get rateAppSubtitle => 'Deja una reseña en Google Play';
+
+  @override
+  String get layoutTitle => 'Diseño de listas';
+
+  @override
+  String get layoutList => 'Lista';
+
+  @override
+  String get layoutGrid => 'Bloques';
+
+  @override
+  String get switchLayout => 'Cambiar diseño';
+
+  @override
+  String get adPolicyTitle => 'Política de Anuncios y Privacidad';
+
+  @override
+  String get adPolicyStatement =>
+      'Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.';
+
+  @override
+  String get shareSystem => 'Compartir en el sistema';
+
+  @override
+  String get shareSystemDesc => 'Compartir con otras aplicaciones instaladas';
 }

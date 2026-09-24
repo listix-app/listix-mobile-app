@@ -75,6 +75,8 @@ void main() {
       expect(AppRoutes.newList, '/lists/new');
       expect(AppRoutes.listDetail, '/list/:id');
       expect(AppRoutes.editList, '/list/:id/edit');
+      expect(AppRoutes.settings, '/settings');
+      expect(AppRoutes.about, '/about');
 
       expect(AppRoutes.listDetailPath('list-123'), '/list/list-123');
       expect(AppRoutes.editListPath('list-456'), '/list/list-456/edit');

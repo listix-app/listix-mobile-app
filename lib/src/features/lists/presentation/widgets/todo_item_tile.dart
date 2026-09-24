@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/sync_indicator.dart';
 import '../../domain/entities/todo_item.dart';
 
 class TodoItemTile extends StatelessWidget {
@@ -19,6 +18,18 @@ class TodoItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tileBg = isDark ? AppColors.cardDark : Colors.white;
+    final borderColor = isDark
+        ? AppColors.borderDark.withValues(alpha: 0.7)
+        : AppColors.borderLight.withValues(alpha: 0.7);
+    final textTitleColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimary;
+    final textDoneColor = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondary;
+
     return Dismissible(
       key: Key(item.id),
       direction: DismissDirection.endToStart,
@@ -46,11 +57,9 @@ class TodoItemTile extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 2),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: tileBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: AppColors.borderLight.withValues(alpha: 0.7),
-            ),
+            border: Border.all(color: borderColor),
           ),
           child: Material(
             color: Colors.transparent,
@@ -67,7 +76,6 @@ class TodoItemTile extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    // Custom minimalist checkbox
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       width: 22,
@@ -80,7 +88,9 @@ class TodoItemTile extends StatelessWidget {
                         border: Border.all(
                           color: item.isCompleted
                               ? AppColors.primary
-                              : AppColors.textMuted,
+                              : (isDark
+                                    ? AppColors.textMutedDark
+                                    : AppColors.textMuted),
                           width: 1.8,
                         ),
                       ),
@@ -93,7 +103,6 @@ class TodoItemTile extends StatelessWidget {
                           : null,
                     ),
                     const SizedBox(width: 12),
-                    // Item title with animated strikethrough
                     Expanded(
                       child: AnimatedDefaultTextStyle(
                         duration: const Duration(milliseconds: 200),
@@ -101,12 +110,12 @@ class TodoItemTile extends StatelessWidget {
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: item.isCompleted
-                              ? AppColors.textSecondary
-                              : AppColors.textPrimary,
+                              ? textDoneColor
+                              : textTitleColor,
                           decoration: item.isCompleted
                               ? TextDecoration.lineThrough
                               : TextDecoration.none,
-                          decorationColor: AppColors.textSecondary,
+                          decorationColor: textDoneColor,
                           decorationThickness: 1.5,
                         ),
                         child: Text(
@@ -116,8 +125,16 @@ class TodoItemTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    SyncIndicator(isSynced: item.isSynced),
+                    if (!item.isCompleted) ...[
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.drag_handle_rounded,
+                        size: 18,
+                        color: isDark
+                            ? AppColors.textMutedDark.withValues(alpha: 0.4)
+                            : AppColors.textMuted.withValues(alpha: 0.5),
+                      ),
+                    ],
                   ],
                 ),
               ),

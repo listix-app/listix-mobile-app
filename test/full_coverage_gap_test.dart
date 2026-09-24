@@ -1,3 +1,5 @@
+import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
+import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +19,6 @@ import 'package:listix/src/features/lists/presentation/controllers/lists_control
 import 'package:listix/src/features/lists/presentation/screens/create_edit_list_screen.dart';
 import 'package:listix/src/features/lists/presentation/screens/home_screen.dart';
 import 'package:listix/src/features/lists/presentation/screens/list_detail_screen.dart';
-import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.dart';
 import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
 import 'package:listix/src/features/sync/domain/sync_status.dart';
 import 'package:listix/src/features/sync/presentation/sync_controller.dart';
@@ -109,6 +110,53 @@ void main() {
         expect(tr.privacyStatement, isNotEmpty);
         expect(tr.offlineFirstStatement, isNotEmpty);
         expect(tr.termsStatement, isNotEmpty);
+        expect(tr.themeTitle, isNotEmpty);
+        expect(tr.themeSystem, isNotEmpty);
+        expect(tr.themeLight, isNotEmpty);
+        expect(tr.themeDark, isNotEmpty);
+        expect(tr.shareWhatsApp, isNotEmpty);
+        expect(tr.shareGmail, isNotEmpty);
+        expect(tr.copyListText, isNotEmpty);
+        expect(tr.listCopied, isNotEmpty);
+        expect(tr.shareSubject('Test'), contains('Test'));
+        expect(tr.sharedWithListix, isNotEmpty);
+        expect(tr.offlineNoticeDesc, isNotEmpty);
+        expect(tr.shareWhatsAppDesc, isNotEmpty);
+        expect(tr.shareGmailDesc, isNotEmpty);
+        expect(tr.copyListTextDesc, isNotEmpty);
+        expect(tr.offlineNotice, isNotEmpty);
+        expect(tr.notificationsTitle, isNotEmpty);
+        expect(tr.weeklyReminderTitle, isNotEmpty);
+        expect(tr.weeklyReminderSubtitle, isNotEmpty);
+        expect(tr.weeklyReminderNotificationTitle, isNotEmpty);
+        expect(tr.weeklyReminderNotificationBody, isNotEmpty);
+        expect(tr.undo, isNotEmpty);
+        expect(tr.listDeleted('Test'), contains('Test'));
+        expect(tr.itemDeleted('Test'), contains('Test'));
+        expect(tr.starred, isNotEmpty);
+        expect(tr.starList, isNotEmpty);
+        expect(tr.unstarList, isNotEmpty);
+        expect(tr.reorder, isNotEmpty);
+        expect(tr.developer, isNotEmpty);
+        expect(tr.developerName, isNotEmpty);
+        expect(tr.developerEmail, isNotEmpty);
+        expect(tr.contactDeveloper, isNotEmpty);
+        expect(tr.buyMeACoffee, isNotEmpty);
+        expect(tr.buyMeACoffeeSubtitle, isNotEmpty);
+        expect(tr.sendFeedback, isNotEmpty);
+        expect(tr.sendFeedbackSubtitle, isNotEmpty);
+        expect(tr.rateApp, isNotEmpty);
+        expect(tr.rateAppSubtitle, isNotEmpty);
+        expect(tr.layoutTitle, isNotEmpty);
+        expect(tr.layoutList, isNotEmpty);
+        expect(tr.layoutGrid, isNotEmpty);
+        expect(tr.switchLayout, isNotEmpty);
+        expect(tr.adPolicyTitle, isNotEmpty);
+        expect(tr.adPolicyStatement, isNotEmpty);
+        expect(tr.notificationTimeTitle, isNotEmpty);
+        expect(tr.notificationTimeSubtitle('10:00 AM'), contains('10:00 AM'));
+        expect(tr.shareSystem, isNotEmpty);
+        expect(tr.shareSystemDesc, isNotEmpty);
       }
     });
 
@@ -187,7 +235,6 @@ void main() {
       );
       expect(tables.isNotEmpty, isTrue);
 
-      // Test resolveDatabasePath branches
       final overridePath = await AppDatabase.resolveDatabasePath(
         override: '/custom/path.db',
       );
@@ -343,9 +390,6 @@ void main() {
         ),
       );
 
-      // _ErrorListsController.build() schedules a Future.microtask that sets
-      // state = AsyncError. Pumping processes that microtask and triggers the
-      // widget rebuild so HomeScreen renders the error branch.
       await tester.pump();
 
       expect(find.textContaining('Simulated Failure'), findsOneWidget);
@@ -410,20 +454,21 @@ void main() {
         await tester.tap(find.text('Go Detail'));
         await tester.pumpAndSettle();
 
-        // Swipe delete pending item
         await tester.drag(
           find.widgetWithText(Dismissible, 'Pending Item'),
           const Offset(-500, 0),
         );
         await tester.pumpAndSettle();
         expect(fakeController.deletedItemIds, contains('i1'));
+        expect(find.text('Deshacer'), findsOneWidget);
+        await tester.tap(find.text('Deshacer'));
+        await tester.pumpAndSettle();
+        expect(fakeController.restoredItems.length, 1);
 
-        // Toggle completed item
         await tester.tap(find.text('Done Item'));
         await tester.pump();
         expect(fakeController.toggledItemIds, contains('i2'));
 
-        // Swipe delete completed item
         await tester.drag(
           find.widgetWithText(Dismissible, 'Done Item'),
           const Offset(-500, 0),
@@ -431,7 +476,6 @@ void main() {
         await tester.pumpAndSettle();
         expect(fakeController.deletedItemIds, contains('i2'));
 
-        // Tap back button
         await tester.tap(find.byTooltip('Volver'));
         await tester.pumpAndSettle();
         expect(find.text('Go Detail'), findsOneWidget);
@@ -475,12 +519,10 @@ void main() {
         await tester.tap(find.text('Go Missing'));
         await tester.pumpAndSettle();
 
-        // Tap leading back button on ListDetailScreen
         await tester.tap(find.byIcon(Icons.arrow_back_rounded));
         await tester.pumpAndSettle();
         expect(find.text('Go Missing'), findsOneWidget);
 
-        // Navigate again to test FilledButton 'Volver'
         await tester.tap(find.text('Go Missing'));
         await tester.pumpAndSettle();
         expect(find.text('Lista no encontrada'), findsOneWidget);
@@ -491,33 +533,49 @@ void main() {
       },
     );
 
-    testWidgets('ShareListSheet onFieldSubmitted keyboard invite', (
+    testWidgets('AboutScreen and TodoItemTile dark mode coverage', (
       tester,
     ) async {
-      final fakeController = _ScreensTestListsController([]);
-      final list = ShoppingList(
-        id: 'test_sheet',
-        name: 'Test Sheet',
-        createdAt: now,
-      );
-
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            shoppingListProvider('test_sheet').overrideWithValue(list),
-            listsControllerProvider.overrideWith(() => fakeController),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(body: ShareListSheet(listId: 'test_sheet')),
+          child: MaterialApp(
+            theme: ThemeData.dark(),
+            darkTheme: ThemeData.dark(),
+            themeMode: ThemeMode.dark,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(body: AboutScreen()),
           ),
         ),
       );
+      await tester.pumpAndSettle();
+      expect(find.byType(AboutScreen), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.dark_mode_rounded),
+        200,
+      );
+      await tester.tap(find.byIcon(Icons.dark_mode_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.light_mode_rounded));
+      await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField), 'invitee@test.com');
-      await tester.testTextInput.receiveAction(TextInputAction.send);
-      await tester.pump();
-
-      expect(fakeController.collaboratorsAdded.isNotEmpty, isTrue);
+      final item = TodoItem(
+        id: 'dark_item',
+        listId: 'l1',
+        title: 'Dark Mode Item',
+        isCompleted: false,
+        createdAt: now,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(
+            body: TodoItemTile(item: item, onToggle: () {}, onDelete: () {}),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Dark Mode Item'), findsOneWidget);
     });
   });
 
@@ -528,14 +586,12 @@ void main() {
         'synchronize offline simulation returns false and handles mid-sync offline',
         () async {
           final service = MockBackendSyncService();
-          // Start offline
           service.toggleSimulatedOffline();
           expect(service.isSimulatedOffline, isTrue);
           final result = await service.synchronize();
           expect(result, isFalse);
           expect(service.currentStatus, SyncStatus.offline);
 
-          // Turn back online
           service.toggleSimulatedOffline();
           expect(service.isSimulatedOffline, isFalse);
 
@@ -550,7 +606,6 @@ void main() {
             'updated_at': DateTime.now().millisecondsSinceEpoch,
           });
 
-          // Mid-sync offline trigger with unsynced item present
           final syncTask = service.synchronize();
           service.toggleSimulatedOffline();
           final midSyncResult = await syncTask;
@@ -586,6 +641,8 @@ class _ScreensTestListsController extends ListsController {
   final List<String> deletedItemIds = [];
   final List<String> toggledItemIds = [];
   final List<String> collaboratorsAdded = [];
+  final List<String> syncedListIds = [];
+  final List<TodoItem> restoredItems = [];
 
   _ScreensTestListsController(this._lists);
 
@@ -613,8 +670,25 @@ class _ScreensTestListsController extends ListsController {
   }
 
   @override
+  Future<TodoItem?> deleteItemWithUndo(String listId, String itemId) async {
+    deletedItemIds.add(itemId);
+    final list = _lists.where((l) => l.id == listId).firstOrNull;
+    return list?.items.where((i) => i.id == itemId).firstOrNull;
+  }
+
+  @override
+  Future<void> restoreItem(TodoItem item) async {
+    restoredItems.add(item);
+  }
+
+  @override
   Future<void> addCollaborator(String listId, String email) async {
     collaboratorsAdded.add(email);
+  }
+
+  @override
+  Future<void> syncListOnShare(String listId) async {
+    syncedListIds.add(listId);
   }
 }
 
@@ -630,16 +704,12 @@ class _LoadingListsController extends ListsController {
 class _ErrorListsController extends ListsController {
   @override
   Future<List<ShoppingList>> build() async {
-    // Schedule a state override to AsyncError after build() returns.
-    // Throwing directly in build() causes Riverpod to enter a perpetual
-    // AsyncLoading retry cycle, never reaching a stable AsyncError state.
     Future.microtask(() {
       state = AsyncError<List<ShoppingList>>(
         Exception('Simulated Failure'),
         StackTrace.current,
       );
     });
-    // Return a future that never completes so the override above wins.
     return Completer<List<ShoppingList>>().future;
   }
 }

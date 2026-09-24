@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/lists_controller.dart';
+import '../../../ads/data/interstitial_ad_service.dart';
 
 class CreateEditListScreen extends ConsumerStatefulWidget {
   final String? listId;
@@ -58,6 +59,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
         if (mounted) context.pop();
       } else {
         final created = await notifier.createList(name);
+        ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
         if (mounted) {
           context.pushReplacement('/list/${created.id}');
         }

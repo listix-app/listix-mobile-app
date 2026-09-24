@@ -13,17 +13,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTagline =>
-      'Fast, collaborative, offline-first shopping and todo lists.';
+      'Fast, private, offline-first shopping and todo lists.';
 
   @override
   String get myLists => 'My Lists';
 
   @override
-  String get emptyListsTitle => 'No lists yet';
+  String get emptyListsTitle => 'Your lists, always with you';
 
   @override
   String get emptyListsMessage =>
-      'Create a list to organize your groceries, clothing, or household tasks.';
+      'Create your grocery or task list in seconds. It works completely offline.';
 
   @override
   String get createFirstList => 'Create your first list';
@@ -88,7 +88,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emptyItemsMessage =>
-      'Type your first item in the bottom bar and press enter.';
+      'Type your first item below to add it instantly.';
 
   @override
   String get quickAddHint => 'Add item';
@@ -116,7 +116,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editListSubheading =>
-      'The updated name is saved locally in SQLite and synced automatically.';
+      'The updated name is saved instantly and securely on your device.';
 
   @override
   String get createListSubheading =>
@@ -126,7 +126,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listNameLabel => 'List name';
 
   @override
-  String get listNameHint => 'e.g. Monthly Pantry';
+  String get listNameHint => 'e.g. Weekly Groceries';
 
   @override
   String get listNameValidation => 'Please enter a name';
@@ -142,7 +142,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareListSubheading =>
-      'Invite others to view and check off items in real time.';
+      'Send this list instantly via WhatsApp or Gmail.';
+
+  @override
+  String get shareWhatsApp => 'Share via WhatsApp';
+
+  @override
+  String get shareWhatsAppDesc => 'Send formatted list directly in chat';
+
+  @override
+  String get shareGmail => 'Share via Gmail';
+
+  @override
+  String get shareGmailDesc => 'Send complete list via email';
+
+  @override
+  String get copyListText => 'Copy list text';
+
+  @override
+  String get copyListTextDesc => 'Copy list content to clipboard';
+
+  @override
+  String get listCopied => 'List copied to clipboard!';
+
+  @override
+  String shareSubject(String name) {
+    return 'Listix: $name';
+  }
+
+  @override
+  String get sharedWithListix =>
+      'Created with Listix — Fast & 100% Offline Lists';
+
+  @override
+  String get offlineNotice => 'Offline Local Storage';
+
+  @override
+  String get offlineNoticeDesc =>
+      'Your data is stored locally on your device with SQLite. The list is synchronized only when sharing.';
 
   @override
   String get copyInviteLink => 'Copy invitation link';
@@ -218,6 +255,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aboutApp => 'About Listix';
 
   @override
+  String get settings => 'Settings';
+
+  @override
+  String get themeTitle => 'Appearance';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
   String get version => 'Version';
 
   @override
@@ -245,11 +297,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyStatement =>
-      'At Listix, your privacy is absolute. All your data lives by default on your device’s local SQLite storage. We do not use advertising trackers, sell personal data to third parties, or run invasive analytics.';
+      'All shopping lists and items are stored locally on your device. Listix displays advertisements via Google AdMob to support continuous development. Google AdMob may collect and process device identifiers, advertising IDs, and usage analytics to serve non-personalized and personalized ads in accordance with Google\'s Privacy Policy. We never sell your personal data or list contents.';
 
   @override
   String get offlineFirstStatement =>
-      'Offline-First Architecture: Every creation, check-off, and edit occurs at native speed with zero latency on local storage, syncing securely in the background.';
+      'Offline-First Architecture: Every creation, check-off, and edit occurs at native speed with zero latency on local storage, syncing only when sharing.';
 
   @override
   String get termsStatement =>
@@ -264,4 +316,109 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorPrefix(String error) {
     return 'Error: $error';
   }
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get weeklyReminderTitle => 'Weekly reminder';
+
+  @override
+  String get weeklyReminderSubtitle =>
+      'Receive a weekly reminder to plan your shopping';
+
+  @override
+  String get notificationTimeTitle => 'Reminder time';
+
+  @override
+  String notificationTimeSubtitle(String time) {
+    return 'Scheduled for $time';
+  }
+
+  @override
+  String get weeklyReminderNotificationTitle => 'Time to plan your shopping!';
+
+  @override
+  String get weeklyReminderNotificationBody =>
+      'Review your lists or create a new one for the week.';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String listDeleted(String name) {
+    return '\"$name\" deleted';
+  }
+
+  @override
+  String itemDeleted(String title) {
+    return '\"$title\" deleted';
+  }
+
+  @override
+  String get starred => 'Starred';
+
+  @override
+  String get starList => 'Star list';
+
+  @override
+  String get unstarList => 'Unstar list';
+
+  @override
+  String get reorder => 'Reorder';
+
+  @override
+  String get developer => 'Developer';
+
+  @override
+  String get developerName => 'Nicolas Mena';
+
+  @override
+  String get developerEmail => 'nmena.garzon@gmail.com';
+
+  @override
+  String get contactDeveloper => 'Contact developer';
+
+  @override
+  String get buyMeACoffee => 'Buy me a coffee';
+
+  @override
+  String get buyMeACoffeeSubtitle => 'Support the development of Listix';
+
+  @override
+  String get sendFeedback => 'Send feedback';
+
+  @override
+  String get sendFeedbackSubtitle => 'Suggestions, bugs or questions';
+
+  @override
+  String get rateApp => 'Rate app';
+
+  @override
+  String get rateAppSubtitle => 'Leave a review on Google Play';
+
+  @override
+  String get layoutTitle => 'List layout';
+
+  @override
+  String get layoutList => 'List';
+
+  @override
+  String get layoutGrid => 'Blocks';
+
+  @override
+  String get switchLayout => 'Switch layout';
+
+  @override
+  String get adPolicyTitle => 'Ad Policy & Privacy';
+
+  @override
+  String get adPolicyStatement =>
+      'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.';
+
+  @override
+  String get shareSystem => 'System sharesheet';
+
+  @override
+  String get shareSystemDesc => 'Share using other installed applications';
 }

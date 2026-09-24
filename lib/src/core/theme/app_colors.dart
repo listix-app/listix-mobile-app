@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppColors {
-  // Primary palette (Refined Forest Teal & Slate)
   static const Color primary = Color(0xFF0D9488); // Teal 600
   static const Color primaryDark = Color(0xFF0F766E); // Teal 700
   static const Color primaryLight = Color(0xFFCCFBF1); // Teal 100
   static const Color primarySubtle = Color(0xFFF0FDFA); // Teal 50
   static const Color onPrimary = Colors.white;
 
-  // Backgrounds & Surfaces (Light)
   static const Color surfaceLight = Color(0xFFF8FAFC); // Slate 50
   static const Color cardLight = Colors.white;
   static const Color borderLight = Color(0xFFE2E8F0); // Slate 200
   static const Color borderFocus = Color(0xFF0D9488); // Teal 600
 
-  // Backgrounds & Surfaces (Dark)
   static const Color surfaceDark = Color(0xFF0F172A); // Slate 900
   static const Color cardDark = Color(0xFF1E293B); // Slate 800
   static const Color borderDark = Color(0xFF334155); // Slate 700
@@ -22,7 +19,6 @@ abstract final class AppColors {
   static const Color textSecondaryDark = Color(0xFF94A3B8); // Slate 400
   static const Color textMutedDark = Color(0xFF64748B); // Slate 500
 
-  // Text with strict contrast
   static const Color textPrimary = Color(
     0xFF0F172A,
   ); // Slate 900 (15.5:1 ratio)
@@ -31,7 +27,6 @@ abstract final class AppColors {
   ); // Slate 600 (5.8:1 ratio - AA & AAA compliant)
   static const Color textMuted = Color(0xFF64748B); // Slate 500 (4.6:1 ratio)
 
-  // Status & Actions
   static const Color syncPending = Color(0xFFF59E0B); // Amber 500
   static const Color syncPendingSubtle = Color(0xFFFEF3C7); // Amber 100
   static const Color syncDone = Color(0xFF10B981); // Emerald 500

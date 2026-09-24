@@ -5,23 +5,26 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-/// SQLite Database manager with offline-first synchronization metadata.
 class AppDatabase {
   AppDatabase._internal();
   static final AppDatabase instance = AppDatabase._internal();
 
   static Database? _database;
-
-  /// Optional override for testing purposes (e.g. inMemoryDatabasePath).
   static String? overrideDbPath;
+  static Future<Database>? _initFuture;
 
   Future<Database> get database async {
     if (_database != null && _database!.isOpen) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    if (_initFuture != null) return await _initFuture!;
+    _initFuture = _initDatabase();
+    try {
+      _database = await _initFuture!;
+      return _database!;
+    } finally {
+      _initFuture = null;
+    }
   }
 
-  /// Resolves the database file path according to the current platform.
   static Future<String> resolveDatabasePath({
     String? override,
     bool isDesktop = false,
@@ -56,8 +59,9 @@ class AppDatabase {
 
     return await openDatabase(
       dbPath,
-      version: 1,
+      version: 3,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
     );
   }
@@ -66,12 +70,35 @@ class AppDatabase {
     await db.execute('PRAGMA foreign_keys = ON');
   }
 
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE shopping_lists ADD COLUMN is_starred INTEGER NOT NULL DEFAULT 0;',
+      );
+      await db.execute(
+        'ALTER TABLE shopping_lists ADD COLUMN position INTEGER NOT NULL DEFAULT 0;',
+      );
+      await db.execute(
+        'ALTER TABLE todo_items ADD COLUMN position INTEGER NOT NULL DEFAULT 0;',
+      );
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS app_settings (
+          key TEXT PRIMARY KEY NOT NULL,
+          value TEXT NOT NULL
+        );
+      ''');
+    }
+  }
+
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE shopping_lists (
-        id TEXT PRIMARY KEY NOT NULL,
+      CREATE TABLE shopping_lists (\n        id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
         is_synced INTEGER NOT NULL DEFAULT 0,
+        is_starred INTEGER NOT NULL DEFAULT 0,
+        position INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         deleted_at INTEGER
@@ -79,12 +106,12 @@ class AppDatabase {
     ''');
 
     await db.execute('''
-      CREATE TABLE todo_items (
-        id TEXT PRIMARY KEY NOT NULL,
+      CREATE TABLE todo_items (\n        id TEXT PRIMARY KEY NOT NULL,
         list_id TEXT NOT NULL,
         title TEXT NOT NULL,
         is_completed INTEGER NOT NULL DEFAULT 0,
         is_synced INTEGER NOT NULL DEFAULT 0,
+        position INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         deleted_at INTEGER,
@@ -93,8 +120,7 @@ class AppDatabase {
     ''');
 
     await db.execute('''
-      CREATE TABLE collaborators (
-        id TEXT PRIMARY KEY NOT NULL,
+      CREATE TABLE collaborators (\n        id TEXT PRIMARY KEY NOT NULL,
         list_id TEXT NOT NULL,
         name TEXT NOT NULL,
         email TEXT NOT NULL,
@@ -116,6 +142,13 @@ class AppDatabase {
       'CREATE INDEX idx_collaborators_list_id ON collaborators(list_id);',
     );
 
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    ''');
+
     await _seedInitialData(db);
   }
 
@@ -126,6 +159,8 @@ class AppDatabase {
       'id': 'list-1',
       'name': 'Supermercado semanal',
       'is_synced': 1,
+      'is_starred': 1,
+      'position': 0,
       'created_at': now - 86400000 * 2,
       'updated_at': now - 86400000 * 2,
     });
@@ -151,6 +186,7 @@ class AppDatabase {
       'title': 'Leche deslactosada',
       'is_completed': 0,
       'is_synced': 1,
+      'position': 0,
       'created_at': now - 14400000,
       'updated_at': now - 14400000,
     });
@@ -160,6 +196,7 @@ class AppDatabase {
       'title': 'Huevos de campo x30',
       'is_completed': 0,
       'is_synced': 1,
+      'position': 1,
       'created_at': now - 10800000,
       'updated_at': now - 10800000,
     });
@@ -169,6 +206,7 @@ class AppDatabase {
       'title': 'Aguacates maduros',
       'is_completed': 0,
       'is_synced': 0,
+      'position': 2,
       'created_at': now - 7200000,
       'updated_at': now - 7200000,
     });
@@ -178,6 +216,7 @@ class AppDatabase {
       'title': 'Café en grano tostado',
       'is_completed': 1,
       'is_synced': 1,
+      'position': 3,
       'created_at': now - 86400000,
       'updated_at': now - 86400000,
     });
@@ -187,6 +226,7 @@ class AppDatabase {
       'title': 'Pan integral de masa madre',
       'is_completed': 1,
       'is_synced': 1,
+      'position': 4,
       'created_at': now - 86400000,
       'updated_at': now - 86400000,
     });
@@ -195,6 +235,8 @@ class AppDatabase {
       'id': 'list-2',
       'name': 'Ferretería y Hogar',
       'is_synced': 1,
+      'is_starred': 0,
+      'position': 1,
       'created_at': now - 86400000 * 4,
       'updated_at': now - 86400000 * 4,
     });
@@ -204,6 +246,7 @@ class AppDatabase {
       'title': 'Bombillos LED luz cálida',
       'is_completed': 0,
       'is_synced': 1,
+      'position': 0,
       'created_at': now - 36000000,
       'updated_at': now - 36000000,
     });
@@ -213,6 +256,7 @@ class AppDatabase {
       'title': 'Cinta aislante negra',
       'is_completed': 0,
       'is_synced': 1,
+      'position': 1,
       'created_at': now - 28800000,
       'updated_at': now - 28800000,
     });
@@ -221,6 +265,8 @@ class AppDatabase {
       'id': 'list-3',
       'name': 'Ropa para vacaciones',
       'is_synced': 0,
+      'is_starred': 0,
+      'position': 2,
       'created_at': now - 3600000,
       'updated_at': now - 3600000,
     });
@@ -237,13 +283,40 @@ class AppDatabase {
       'title': 'Gafas de sol polarizadas',
       'is_completed': 0,
       'is_synced': 0,
+      'position': 0,
       'created_at': now - 2400000,
       'updated_at': now - 2400000,
     });
   }
 
-  /// Closes database instance for resetting state in testing.
+  Future<String?> getSetting(String key) async {
+    try {
+      final db = await database;
+      final results = await db.query(
+        'app_settings',
+        where: 'key = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      if (results.isEmpty) return null;
+      return results.first['value'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> setSetting(String key, String value) async {
+    try {
+      final db = await database;
+      await db.insert('app_settings', {
+        'key': key,
+        'value': value,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    } catch (_) {}
+  }
+
   Future<void> close() async {
+    _initFuture = null;
     final db = _database;
     if (db != null) {
       await db.close();

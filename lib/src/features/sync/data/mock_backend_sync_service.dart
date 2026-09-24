@@ -37,7 +37,6 @@ class MockBackendSyncService {
 
     final db = await _appDatabase.database;
 
-    // Check if there are un-synced items or lists
     final unsyncedLists = await db.query(
       'shopping_lists',
       where: 'is_synced = 0',
@@ -51,7 +50,6 @@ class MockBackendSyncService {
 
     _updateStatus(SyncStatus.syncing);
 
-    // Simulate backend network latency
     await Future.delayed(const Duration(milliseconds: 900));
 
     if (_isSimulatedOffline) {
@@ -61,13 +59,11 @@ class MockBackendSyncService {
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    // Mark lists as synced in SQLite
     await db.update('shopping_lists', {
       'is_synced': 1,
       'updated_at': now,
     }, where: 'is_synced = 0');
 
-    // Mark items as synced in SQLite
     await db.update('todo_items', {
       'is_synced': 1,
       'updated_at': now,
