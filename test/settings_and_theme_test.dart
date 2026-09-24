@@ -116,6 +116,9 @@ void main() {
       await tester.tap(find.text('Español'));
       await tester.pumpAndSettle();
       expect(find.text('Configuración'), findsOneWidget);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
     });
 
     testWidgets('SettingsScreen pop button taps without error', (tester) async {
@@ -146,6 +149,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Open Settings'), findsOneWidget);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
     });
   });
 }

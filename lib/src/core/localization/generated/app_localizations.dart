@@ -665,8 +665,20 @@ abstract class AppLocalizations {
   /// No description provided for @weeklyReminderSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'Recibe un recordatorio cada domingo a las 10:00 AM para planificar tus compras'**
+  /// **'Recibe un recordatorio semanal para planificar tus compras'**
   String get weeklyReminderSubtitle;
+
+  /// No description provided for @notificationTimeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Hora del recordatorio'**
+  String get notificationTimeTitle;
+
+  /// No description provided for @notificationTimeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Programada para las {time}'**
+  String notificationTimeSubtitle(String time);
 
   /// No description provided for @weeklyReminderNotificationTitle.
   ///
@@ -817,6 +829,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.'**
   String get adPolicyStatement;
+
+  /// No description provided for @shareSystem.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir en el sistema'**
+  String get shareSystem;
+
+  /// No description provided for @shareSystemDesc.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartir con otras aplicaciones instaladas'**
+  String get shareSystemDesc;
 }
 
 class _AppLocalizationsDelegate

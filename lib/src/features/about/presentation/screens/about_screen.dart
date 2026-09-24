@@ -95,25 +95,6 @@ class AboutScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           _ActionCard(
-            key: const Key('developer_card'),
-            icon: Icons.person_rounded,
-            iconColor: AppColors.primary,
-            title: tr.developer,
-            subtitle: '${tr.developerName} • ${tr.developerEmail}',
-            actionLabel: tr.contactDeveloper,
-            onTap: () {
-              urlService.openEmail(
-                feedbackEmail,
-                subject: 'Listix App Inquiry',
-              );
-            },
-            cardBg: cardBg,
-            borderColor: borderColor,
-            titleColor: textTitleColor,
-            subColor: textSubColor,
-          ),
-          const SizedBox(height: 16),
-          _ActionCard(
             key: const Key('buy_coffee_card'),
             icon: Icons.coffee_rounded,
             iconColor: const Color(0xFFFF813F),
@@ -331,7 +312,6 @@ class _ActionCard extends StatelessWidget {
   final Color iconColor;
   final String title;
   final String subtitle;
-  final String? actionLabel;
   final VoidCallback onTap;
   final Color cardBg;
   final Color borderColor;
@@ -344,7 +324,6 @@ class _ActionCard extends StatelessWidget {
     required this.iconColor,
     required this.title,
     required this.subtitle,
-    this.actionLabel,
     required this.onTap,
     required this.cardBg,
     required this.borderColor,
@@ -392,17 +371,7 @@ class _ActionCard extends StatelessWidget {
                     subtitle,
                     style: TextStyle(fontSize: 12, color: subColor),
                   ),
-                  if (actionLabel != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      actionLabel!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
+
                 ],
               ),
             ),

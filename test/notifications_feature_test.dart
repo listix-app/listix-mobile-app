@@ -1,8 +1,10 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/features/notifications/data/services/notification_service.dart';
 import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -117,6 +119,12 @@ class MockLocalNotificationsPlugin implements FlutterLocalNotificationsPlugin {
 }
 
 void main() {
+  setUpAll(() async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    AppDatabase.overrideDbPath = inMemoryDatabasePath;
+    await AppDatabase.instance.database;
+  });
   group('LocalNotificationService Tests', () {
     late MockLocalNotificationsPlugin mockPlugin;
     late LocalNotificationService service;
@@ -219,8 +227,8 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final isEnabled = container.read(notificationsControllerProvider);
-      expect(isEnabled, isFalse);
+      final state = container.read(notificationsControllerProvider);
+      expect(state.isEnabled, isFalse);
       expect(fakeService.scheduleCallCount, 0);
     });
 
@@ -244,7 +252,7 @@ void main() {
         );
 
         expect(success, isTrue);
-        expect(container.read(notificationsControllerProvider), isTrue);
+        expect(container.read(notificationsControllerProvider).isEnabled, isTrue);
         expect(fakeService.scheduleCallCount, 1);
         expect(fakeService.lastTitle, 'Recordatorio');
         expect(fakeService.lastBody, 'Revisa tus listas');
@@ -259,7 +267,7 @@ void main() {
 
       final notifier = container.read(notificationsControllerProvider.notifier);
       notifier.setEnabledState(true);
-      expect(container.read(notificationsControllerProvider), isTrue);
+      expect(container.read(notificationsControllerProvider).isEnabled, isTrue);
 
       final success = await notifier.toggleWeeklyNotifications(
         enabled: false,
@@ -268,8 +276,74 @@ void main() {
       );
 
       expect(success, isTrue);
-      expect(container.read(notificationsControllerProvider), isFalse);
+      expect(container.read(notificationsControllerProvider).isEnabled, isFalse);
       expect(fakeService.cancelCallCount, 1);
+    });
+
+    test('setReminderTime updates time and reschedules if enabled', () async {
+      final container = ProviderContainer(
+        overrides: [notificationServiceProvider.overrideWithValue(fakeService)],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(notificationsControllerProvider.notifier);
+      await notifier.toggleWeeklyNotifications(
+        enabled: true,
+        title: 'Title',
+        body: 'Body',
+      );
+      expect(fakeService.scheduleCallCount, 1);
+
+      await notifier.setReminderTime(
+        hour: 15,
+        minute: 30,
+        title: 'New Title',
+        body: 'New Body',
+      );
+      final state = container.read(notificationsControllerProvider);
+      expect(state.hour, 15);
+      expect(state.minute, 30);
+      expect(fakeService.scheduleCallCount, 2);
+    });
+
+    test('NotificationsController loads persisted settings from database', () async {
+      await AppDatabase.instance.setSetting('notification_enabled', 'true');
+      await AppDatabase.instance.setSetting('notification_hour', '14');
+      await AppDatabase.instance.setSetting('notification_minute', '45');
+
+      final controller = NotificationsController();
+      final container = ProviderContainer(
+        overrides: [
+          notificationsControllerProvider.overrideWith(() => controller),
+          notificationServiceProvider.overrideWithValue(fakeService),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(notificationsControllerProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+
+      final state = container.read(notificationsControllerProvider);
+      expect(state.isEnabled, isTrue);
+      expect(state.hour, 14);
+      expect(state.minute, 45);
+    });
+
+    test('NotificationsState copyWith, equals and hashCode', () {
+      const state1 = NotificationsState(isEnabled: true, hour: 11, minute: 15);
+      final state2 = state1.copyWith(minute: 20);
+      expect(state2.minute, 20);
+      expect(state2.hour, 11);
+      expect(state2.isEnabled, isTrue);
+
+      final state3 = state2.copyWith(hour: 12, isEnabled: false);
+      expect(state3.hour, 12);
+      expect(state3.isEnabled, isFalse);
+
+      const state4 = NotificationsState(isEnabled: true, hour: 11, minute: 15);
+      expect(state1, equals(state4));
+      expect(state1.hashCode, state4.hashCode);
+      expect(state1 == state2, isFalse);
     });
 
     test(

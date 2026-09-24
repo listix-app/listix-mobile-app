@@ -153,6 +153,10 @@ void main() {
         expect(tr.switchLayout, isNotEmpty);
         expect(tr.adPolicyTitle, isNotEmpty);
         expect(tr.adPolicyStatement, isNotEmpty);
+        expect(tr.notificationTimeTitle, isNotEmpty);
+        expect(tr.notificationTimeSubtitle('10:00 AM'), contains('10:00 AM'));
+        expect(tr.shareSystem, isNotEmpty);
+        expect(tr.shareSystemDesc, isNotEmpty);
       }
     });
 

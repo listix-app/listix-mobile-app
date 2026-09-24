@@ -18,6 +18,8 @@ import 'package:listix/src/features/lists/presentation/controllers/list_layout_c
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
 import 'package:listix/src/features/lists/presentation/screens/home_screen.dart';
 import 'package:listix/src/features/lists/presentation/widgets/list_grid_card.dart';
+import 'package:listix/src/features/notifications/data/services/notification_service.dart';
+import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:listix/src/features/settings/presentation/screens/settings_screen.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -773,9 +775,6 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('developer_card')));
-      expect(openedFeedback, isTrue);
-
       await tester.tap(find.byKey(const Key('buy_coffee_card')));
       expect(openedCoffee, isTrue);
 
@@ -810,6 +809,9 @@ void main() {
           ProviderScope(
             overrides: [
               urlLauncherServiceProvider.overrideWithValue(testLauncher),
+              notificationServiceProvider.overrideWithValue(
+                _TestSettingsNotificationService(),
+              ),
             ],
             child: const MaterialApp(home: SettingsScreen()),
           ),
@@ -832,8 +834,18 @@ void main() {
         await tester.tap(find.byKey(const Key('settings_rate_app')));
         expect(openedStore, isTrue);
 
-        await tester.tap(find.byKey(const Key('settings_developer_card')));
-        expect(openedFeedback, isTrue);
+        await tester.ensureVisible(find.byKey(const Key('weekly_notification_switch')));
+        await tester.pumpAndSettle();
+        final switchFinder = find.byType(Switch);
+        await tester.tap(switchFinder.first);
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('notification_time_tile')), findsOneWidget);
+        await tester.tap(find.byKey(const Key('notification_time_tile')));
+        await tester.pumpAndSettle();
+        if (find.text('OK').evaluate().isNotEmpty) {
+          await tester.tap(find.text('OK'));
+          await tester.pumpAndSettle();
+        }
 
         await tester.pump(const Duration(seconds: 15));
         await tester.pumpAndSettle();
@@ -934,4 +946,24 @@ class _FakeRepoWithLists implements ListsRepository {
 
   @override
   Future<void> syncList(String listId) async {}
+}
+
+class _TestSettingsNotificationService implements NotificationService {
+  @override
+  Future<bool> initialize() async => true;
+
+  @override
+  Future<bool> requestPermissions() async => true;
+
+  @override
+  Future<bool> scheduleWeeklyReminder({
+    required String title,
+    required String body,
+    int dayOfWeek = DateTime.sunday,
+    int hour = 10,
+    int minute = 0,
+  }) async => true;
+
+  @override
+  Future<void> cancelWeeklyReminder() async {}
 }

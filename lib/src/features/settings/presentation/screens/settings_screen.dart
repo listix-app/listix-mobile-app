@@ -25,7 +25,7 @@ class SettingsScreen extends ConsumerWidget {
     final localeNotifier = ref.read(localeControllerProvider.notifier);
     final currentThemeMode = ref.watch(themeModeControllerProvider);
     final themeNotifier = ref.read(themeModeControllerProvider.notifier);
-    final notificationsEnabled = ref.watch(notificationsControllerProvider);
+    final notifState = ref.watch(notificationsControllerProvider);
     final layoutMode = ref.watch(listLayoutControllerProvider);
     final layoutNotifier = ref.read(listLayoutControllerProvider.notifier);
     final urlService = ref.read(urlLauncherServiceProvider);
@@ -199,33 +199,95 @@ class SettingsScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: borderColor),
             ),
-            child: SwitchListTile.adaptive(
-              key: const Key('weekly_notification_switch'),
-              value: notificationsEnabled,
-              onChanged: (bool value) {
-                ref
-                    .read(notificationsControllerProvider.notifier)
-                    .toggleWeeklyNotifications(
-                      enabled: value,
-                      title: tr.weeklyReminderNotificationTitle,
-                      body: tr.weeklyReminderNotificationBody,
-                    );
-              },
-              title: Text(
-                tr.weeklyReminderTitle,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: textTitleColor,
+            child: Column(
+              children: [
+                SwitchListTile.adaptive(
+                  key: const Key('weekly_notification_switch'),
+                  value: notifState.isEnabled,
+                  onChanged: (bool value) {
+                    ref
+                        .read(notificationsControllerProvider.notifier)
+                        .toggleWeeklyNotifications(
+                          enabled: value,
+                          title: tr.weeklyReminderNotificationTitle,
+                          body: tr.weeklyReminderNotificationBody,
+                        );
+                  },
+                  title: Text(
+                    tr.weeklyReminderTitle,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: textTitleColor,
+                    ),
+                  ),
+                  subtitle: Text(
+                    tr.weeklyReminderSubtitle,
+                    style: TextStyle(fontSize: 12, color: textSubColor),
+                  ),
+                  secondary: const Icon(
+                    Icons.notifications_active_rounded,
+                    color: AppColors.primary,
+                  ),
                 ),
-              ),
-              subtitle: Text(
-                tr.weeklyReminderSubtitle,
-                style: TextStyle(fontSize: 12, color: textSubColor),
-              ),
-              secondary: const Icon(
-                Icons.notifications_active_rounded,
-                color: AppColors.primary,
-              ),
+                if (notifState.isEnabled) ...[
+                  Divider(height: 1, color: borderColor),
+                  ListTile(
+                    key: const Key('notification_time_tile'),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.access_time_rounded,
+                        color: AppColors.primary,
+                        size: 22,
+                      ),
+                    ),
+                    title: Text(
+                      tr.notificationTimeTitle,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: textTitleColor,
+                      ),
+                    ),
+                    subtitle: Text(
+                      tr.notificationTimeSubtitle(
+                        TimeOfDay(
+                          hour: notifState.hour,
+                          minute: notifState.minute,
+                        ).format(context),
+                      ),
+                      style: TextStyle(fontSize: 12, color: textSubColor),
+                    ),
+                    trailing: const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: AppColors.textMuted,
+                    ),
+                    onTap: () async {
+                      final picked = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay(
+                          hour: notifState.hour,
+                          minute: notifState.minute,
+                        ),
+                      );
+                      if (picked != null) {
+                        ref
+                            .read(notificationsControllerProvider.notifier)
+                            .setReminderTime(
+                              hour: picked.hour,
+                              minute: picked.minute,
+                              title: tr.weeklyReminderNotificationTitle,
+                              body: tr.weeklyReminderNotificationBody,
+                            );
+                      }
+                    },
+                  ),
+                ],
+              ],
             ),
           ),
           const SizedBox(height: 24),
@@ -347,49 +409,6 @@ class SettingsScreen extends ConsumerWidget {
 
           _SettingsSectionTitle(title: tr.aboutApp),
           const SizedBox(height: 10),
-          Card(
-            key: const Key('settings_developer_card'),
-            color: cardBg,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: borderColor),
-            ),
-            child: ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.person_rounded,
-                  color: AppColors.primary,
-                  size: 22,
-                ),
-              ),
-              title: Text(
-                tr.developer,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: textTitleColor,
-                ),
-              ),
-              subtitle: Text(
-                '${tr.developerName} • ${tr.developerEmail}',
-                style: TextStyle(fontSize: 12, color: textSubColor),
-              ),
-              trailing: const Icon(
-                Icons.email_outlined,
-                size: 20,
-                color: AppColors.primary,
-              ),
-              onTap: () => urlService.openEmail(
-                feedbackEmail,
-                subject: 'Listix Developer Inquiry',
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
           _SettingsInfoCard(
             icon: Icons.cloud_off_rounded,
             title: '100% Offline-First',

@@ -21,7 +21,7 @@ import 'widget_test.dart' as widget_test;
 import 'widgets_presentation_test.dart' as widgets_test;
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     sqfliteFfiInit();
     try {
       if (databaseFactory != databaseFactoryFfi) {
@@ -31,6 +31,7 @@ void main() {
       databaseFactory = databaseFactoryFfi;
     }
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
+    await AppDatabase.instance.database;
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(instanceManager.channel, (

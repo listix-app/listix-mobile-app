@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
@@ -33,6 +34,17 @@ class _FakeShareService extends ShareService {
   bool whatsAppShared = false;
   bool gmailShared = false;
   bool copied = false;
+  bool systemShared = false;
+
+  @override
+  Future<ShareResult> shareWithSystem({
+    required String text,
+    String? subject,
+    Rect? sharePositionOrigin,
+  }) async {
+    systemShared = true;
+    return const ShareResult('success', ShareResultStatus.success);
+  }
 
   @override
   Future<bool> shareToWhatsApp(String text) async {
@@ -447,9 +459,14 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text('Compartir "Asado familiar"'), findsOneWidget);
+        expect(find.text('Compartir en el sistema'), findsOneWidget);
         expect(find.text('Compartir por WhatsApp'), findsOneWidget);
         expect(find.text('Compartir por Gmail'), findsOneWidget);
         expect(find.text('Copiar texto de la lista'), findsOneWidget);
+
+        await tester.tap(find.text('Compartir en el sistema'));
+        await tester.pumpAndSettle();
+        expect(fakeShare.systemShared, isTrue);
 
         await tester.tap(find.text('Compartir por WhatsApp'));
         await tester.pumpAndSettle();
@@ -505,6 +522,12 @@ void main() {
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
         expect(find.text('Compartir "Lista sola"'), findsOneWidget);
+        await tester.tap(find.text('Compartir en el sistema'));
+        await tester.pumpAndSettle();
+        expect(fakeShare.systemShared, isTrue);
+
+        await tester.tap(find.text('Open Modal'));
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Compartir por WhatsApp'));
         await tester.pumpAndSettle();
         expect(fakeShare.whatsAppShared, isTrue);

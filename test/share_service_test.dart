@@ -1,4 +1,6 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
@@ -69,7 +71,6 @@ void main() {
           urlLauncher:
               (uri, {LaunchMode mode = LaunchMode.platformDefault}) async {
                 launchedUris.add(uri.toString());
-                // Native fails, so fallback is triggered
                 if (uri.scheme == 'whatsapp') return false;
                 return true;
               },
@@ -152,6 +153,36 @@ void main() {
     test('copyToClipboard copies formatted text without errors', () async {
       final service = ShareService();
       await service.copyToClipboard('Texto de prueba');
+    });
+
+    test('shareWithSystem with custom launcher succeeds', () async {
+      final service = ShareService(
+        systemShare: (text, {subject, sharePositionOrigin}) async {
+          return const ShareResult('success', ShareResultStatus.success);
+        },
+      );
+      final result = await service.shareWithSystem(text: 'Mi lista');
+      expect(result.status, ShareResultStatus.success);
+    });
+
+    test('shareWithSystem with default SharePlus and channel', () async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            const MethodChannel('dev.fluttercommunity.plus/share'),
+            (MethodCall call) async {
+              if (call.method == 'share') {
+                return 'android.intent.action.SEND';
+              }
+              return null;
+            },
+          );
+      final service = const ShareService();
+      final result = await service.shareWithSystem(
+        text: 'Mi lista',
+        subject: 'Asunto',
+        sharePositionOrigin: const Rect.fromLTWH(0, 0, 100, 100),
+      );
+      expect(result.status, ShareResultStatus.success);
     });
 
     test('shareServiceProvider provides ShareService instance', () {

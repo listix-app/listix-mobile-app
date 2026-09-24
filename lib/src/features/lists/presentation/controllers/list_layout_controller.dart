@@ -6,11 +6,14 @@ enum ListLayoutMode { list, grid }
 
 class ListLayoutController extends Notifier<ListLayoutMode> {
   final AppDatabase _db;
+  bool _isDisposed = false;
 
   ListLayoutController([AppDatabase? db]) : _db = db ?? AppDatabase.instance;
 
   @override
   ListLayoutMode build() {
+    _isDisposed = false;
+    ref.onDispose(() => _isDisposed = true);
     _loadSavedMode();
     return ListLayoutMode.list;
   }
@@ -18,6 +21,7 @@ class ListLayoutController extends Notifier<ListLayoutMode> {
   Future<void> _loadSavedMode() async {
     try {
       final saved = await _db.getSetting('list_layout_mode');
+      if (_isDisposed) return;
       if (saved == 'grid') {
         state = ListLayoutMode.grid;
       } else if (saved == 'list') {

@@ -11,11 +11,18 @@ class AppDatabase {
 
   static Database? _database;
   static String? overrideDbPath;
+  static Future<Database>? _initFuture;
 
   Future<Database> get database async {
     if (_database != null && _database!.isOpen) return _database!;
-    _database = await _initDatabase();
-    return _database!;
+    if (_initFuture != null) return await _initFuture!;
+    _initFuture = _initDatabase();
+    try {
+      _database = await _initFuture!;
+      return _database!;
+    } finally {
+      _initFuture = null;
+    }
   }
 
   static Future<String> resolveDatabasePath({
@@ -310,6 +317,7 @@ class AppDatabase {
   }
 
   Future<void> close() async {
+    _initFuture = null;
     final db = _database;
     if (db != null) {
       await db.close();

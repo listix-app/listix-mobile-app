@@ -170,7 +170,16 @@
   },
   "notificationsTitle": "Notificaciones",
   "weeklyReminderTitle": "Recordatorio semanal",
-  "weeklyReminderSubtitle": "Recibe un recordatorio cada domingo a las 10:00 AM para planificar tus compras",
+  "weeklyReminderSubtitle": "Recibe un recordatorio semanal para planificar tus compras",
+  "notificationTimeTitle": "Hora del recordatorio",
+  "notificationTimeSubtitle": "Programada para las {time}",
+  "@notificationTimeSubtitle": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "weeklyReminderNotificationTitle": "¡Momento de organizar tus compras!",
   "weeklyReminderNotificationBody": "Revisa tus listas o crea una nueva para esta semana.",
   "undo": "Deshacer",
@@ -209,5 +218,7 @@
   "layoutGrid": "Bloques",
   "switchLayout": "Cambiar diseño",
   "adPolicyTitle": "Política de Anuncios y Privacidad",
-  "adPolicyStatement": "Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia."
+  "adPolicyStatement": "Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.",
+  "shareSystem": "Compartir en el sistema",
+  "shareSystemDesc": "Compartir con otras aplicaciones instaladas"
 }

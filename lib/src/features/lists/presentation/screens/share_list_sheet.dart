@@ -21,6 +21,32 @@ class ShareListSheet extends ConsumerWidget {
     );
   }
 
+  Future<void> _shareSystem(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin =
+        box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+    final tr = ref.read(stringsProvider);
+    await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
+    final text = ShareService.formatListForSharing(
+      list: list,
+      createdWithText: tr.sharedWithListix,
+    );
+    final subject = tr.shareSubject(list.name);
+    final shareService = ref.read(shareServiceProvider);
+    await shareService.shareWithSystem(
+      text: text,
+      subject: subject,
+      sharePositionOrigin: sharePositionOrigin,
+    );
+    if (context.mounted && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _shareWhatsApp(
     BuildContext context,
     WidgetRef ref,
@@ -171,6 +197,21 @@ class ShareListSheet extends ConsumerWidget {
             const SizedBox(height: 20),
 
             _ShareOptionTile(
+              key: const Key('share_system_tile'),
+              icon: Icons.share_rounded,
+              iconColor: const Color(0xFF0284C7),
+              iconBackgroundColor: const Color(
+                0xFF0284C7,
+              ).withValues(alpha: 0.14),
+              title: tr.shareSystem,
+              subtitle: tr.shareSystemDesc,
+              onTap: () => _shareSystem(context, ref, list),
+            ),
+
+            const SizedBox(height: 12),
+
+            _ShareOptionTile(
+              key: const Key('share_whatsapp_tile'),
               icon: Icons.chat_rounded,
               iconColor: const Color(0xFF25D366),
               iconBackgroundColor: const Color(
@@ -184,6 +225,7 @@ class ShareListSheet extends ConsumerWidget {
             const SizedBox(height: 12),
 
             _ShareOptionTile(
+              key: const Key('share_gmail_tile'),
               icon: Icons.email_rounded,
               iconColor: const Color(0xFFEA4335),
               iconBackgroundColor: const Color(
@@ -197,6 +239,7 @@ class ShareListSheet extends ConsumerWidget {
             const SizedBox(height: 12),
 
             _ShareOptionTile(
+              key: const Key('share_copy_tile'),
               icon: Icons.copy_rounded,
               iconColor: AppColors.primary,
               iconBackgroundColor: AppColors.primaryLight,
@@ -253,6 +296,7 @@ class _ShareOptionTile extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ShareOptionTile({
+    super.key,
     required this.icon,
     required this.iconColor,
     required this.iconBackgroundColor,
@@ -264,25 +308,25 @@ class _ShareOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
-    final textSubColor = isDark
+    final textMutedColor = isDark
         ? AppColors.textSecondaryDark
         : AppColors.textSecondary;
+    final tileBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: cardBg,
-            borderRadius: BorderRadius.circular(14),
+            color: tileBg,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: borderColor),
           ),
           child: Row(
@@ -294,7 +338,7 @@ class _ShareOptionTile extends StatelessWidget {
                   color: iconBackgroundColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: iconColor, size: 24),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -312,7 +356,7 @@ class _ShareOptionTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 12, color: textSubColor),
+                      style: TextStyle(fontSize: 12, color: textMutedColor),
                     ),
                   ],
                 ),
@@ -320,7 +364,7 @@ class _ShareOptionTile extends StatelessWidget {
               Icon(
                 Icons.chevron_right_rounded,
                 size: 20,
-                color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                color: textMutedColor,
               ),
             ],
           ),

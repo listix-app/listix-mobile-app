@@ -509,6 +509,9 @@ void main() {
       container.read(appRouterProvider).go(AppRoutes.settings);
       await tester.pumpAndSettle();
       expect(find.text('Configuración'), findsWidgets);
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)),
+      );
     });
   });
 }

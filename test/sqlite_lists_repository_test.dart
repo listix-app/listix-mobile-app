@@ -303,6 +303,7 @@ void main() {
         await AppDatabase.instance.close();
         await databaseFactory.deleteDatabase(migrationDbPath);
         AppDatabase.overrideDbPath = inMemoryDatabasePath;
+        await AppDatabase.instance.database;
       },
     );
   });

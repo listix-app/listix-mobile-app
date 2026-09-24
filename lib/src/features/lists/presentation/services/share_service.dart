@@ -1,16 +1,25 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../domain/entities/shopping_list.dart';
 
 typedef UrlLauncherFn = Future<bool> Function(Uri url, {LaunchMode mode});
+typedef SystemShareFn =
+    Future<ShareResult> Function(
+      String text, {
+      String? subject,
+      Rect? sharePositionOrigin,
+    });
 
 class ShareService {
   final UrlLauncherFn _urlLauncher;
+  final SystemShareFn? _systemShare;
 
-  const ShareService({UrlLauncherFn? urlLauncher})
-    : _urlLauncher = urlLauncher ?? launchUrl;
+  const ShareService({UrlLauncherFn? urlLauncher, SystemShareFn? systemShare})
+    : _urlLauncher = urlLauncher ?? launchUrl,
+      _systemShare = systemShare;
 
   static String formatListForSharing({
     required ShoppingList list,
@@ -43,6 +52,27 @@ class ShareService {
     buffer.writeln();
     buffer.write(createdWithText);
     return buffer.toString();
+  }
+
+  Future<ShareResult> shareWithSystem({
+    required String text,
+    String? subject,
+    Rect? sharePositionOrigin,
+  }) async {
+    if (_systemShare != null) {
+      return await _systemShare(
+        text,
+        subject: subject,
+        sharePositionOrigin: sharePositionOrigin,
+      );
+    }
+    return await SharePlus.instance.share(
+      ShareParams(
+        text: text,
+        subject: subject,
+        sharePositionOrigin: sharePositionOrigin,
+      ),
+    );
   }
 
   Future<bool> shareToWhatsApp(String text) async {

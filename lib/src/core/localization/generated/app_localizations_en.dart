@@ -325,7 +325,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weeklyReminderSubtitle =>
-      'Receive a reminder every Sunday at 10:00 AM to plan your shopping';
+      'Receive a weekly reminder to plan your shopping';
+
+  @override
+  String get notificationTimeTitle => 'Reminder time';
+
+  @override
+  String notificationTimeSubtitle(String time) {
+    return 'Scheduled for $time';
+  }
 
   @override
   String get weeklyReminderNotificationTitle => 'Time to plan your shopping!';
@@ -407,4 +415,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get adPolicyStatement =>
       'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.';
+
+  @override
+  String get shareSystem => 'System sharesheet';
+
+  @override
+  String get shareSystemDesc => 'Share using other installed applications';
 }
