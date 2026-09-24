@@ -134,4 +134,21 @@ class AppStrings {
   String get termsStatement => _l10n.termsStatement;
   String copyrightFooter(int year) => _l10n.copyrightFooter(year);
   String errorPrefix(String error) => _l10n.errorPrefix(error);
+
+  String get developer => _l10n.developer;
+  String get developerName => _l10n.developerName;
+  String get developerEmail => _l10n.developerEmail;
+  String get contactDeveloper => _l10n.contactDeveloper;
+  String get buyMeACoffee => _l10n.buyMeACoffee;
+  String get buyMeACoffeeSubtitle => _l10n.buyMeACoffeeSubtitle;
+  String get sendFeedback => _l10n.sendFeedback;
+  String get sendFeedbackSubtitle => _l10n.sendFeedbackSubtitle;
+  String get rateApp => _l10n.rateApp;
+  String get rateAppSubtitle => _l10n.rateAppSubtitle;
+  String get layoutTitle => _l10n.layoutTitle;
+  String get layoutList => _l10n.layoutList;
+  String get layoutGrid => _l10n.layoutGrid;
+  String get switchLayout => _l10n.switchLayout;
+  String get adPolicyTitle => _l10n.adPolicyTitle;
+  String get adPolicyStatement => _l10n.adPolicyStatement;
 }

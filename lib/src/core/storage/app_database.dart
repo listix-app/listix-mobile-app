@@ -52,7 +52,7 @@ class AppDatabase {
 
     return await openDatabase(
       dbPath,
-      version: 2,
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -74,6 +74,14 @@ class AppDatabase {
       await db.execute(
         'ALTER TABLE todo_items ADD COLUMN position INTEGER NOT NULL DEFAULT 0;',
       );
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS app_settings (
+          key TEXT PRIMARY KEY NOT NULL,
+          value TEXT NOT NULL
+        );
+      ''');
     }
   }
 
@@ -126,6 +134,13 @@ class AppDatabase {
     await db.execute(
       'CREATE INDEX idx_collaborators_list_id ON collaborators(list_id);',
     );
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY NOT NULL,
+        value TEXT NOT NULL
+      );
+    ''');
 
     await _seedInitialData(db);
   }
@@ -265,6 +280,33 @@ class AppDatabase {
       'created_at': now - 2400000,
       'updated_at': now - 2400000,
     });
+  }
+
+  Future<String?> getSetting(String key) async {
+    try {
+      final db = await database;
+      final results = await db.query(
+        'app_settings',
+        where: 'key = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      if (results.isEmpty) return null;
+      return results.first['value'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> setSetting(String key, String value) async {
+    try {
+      final db = await database;
+      await db.insert(
+        'app_settings',
+        {'key': key, 'value': value},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (_) {}
   }
 
   Future<void> close() async {

@@ -8,20 +8,20 @@ import 'package:listix/src/features/ads/data/ad_config.dart';
 import 'package:listix/src/features/ads/presentation/controllers/banner_ad_controller.dart';
 import 'package:listix/src/features/ads/presentation/widgets/banner_ad_widget.dart';
 
+int lastAdId = 0;
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  int lastAdId = 0;
 
   setUpAll(() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(instanceManager.channel, (
           MethodCall call,
         ) async {
-          if (call.method == 'loadBannerAd') {
+          if (call.method == 'loadBannerAd' || call.method == 'loadInterstitialAd') {
             lastAdId = call.arguments['adId'] as int;
             return null;
-          } else if (call.method == 'disposeAd') {
+          } else if (call.method == 'disposeAd' || call.method == 'showAdWithoutView') {
             return null;
           }
           return null;
@@ -48,7 +48,6 @@ void main() {
         ),
       );
 
-      // Loading state renders SizedBox with height 50
       final sizedBoxes = tester.widgetList<SizedBox>(find.byType(SizedBox));
       expect(sizedBoxes.any((box) => box.height == 50.0), isTrue);
     });
@@ -74,7 +73,6 @@ void main() {
         final notifier = container.read(bannerAdProvider.notifier);
         expect(notifier.ad, isNotNull);
 
-        // Simulate native onAdLoaded event
         final ByteData message = instanceManager.channel.codec.encodeMethodCall(
           MethodCall('onAdEvent', {
             'adId': lastAdId,
@@ -115,7 +113,6 @@ void main() {
 
         final notifier = container.read(bannerAdProvider.notifier);
 
-        // Simulate native onAdFailedToLoad event
         final error = LoadAdError(1, 'domain', 'Network timeout', null);
         final ByteData message = instanceManager.channel.codec.encodeMethodCall(
           MethodCall('onAdEvent', {
@@ -137,7 +134,6 @@ void main() {
         expect(notifier.ad, isNull);
         expect(find.byType(AdWidget), findsNothing);
 
-        // Test reload
         notifier.reload();
         expect(container.read(bannerAdProvider), BannerAdStatus.loading);
         expect(notifier.ad, isNotNull);
@@ -147,7 +143,6 @@ void main() {
     testWidgets(
       'BannerAdNotifier handles load failure gracefully and disposes',
       (tester) async {
-        // Set handler to throw error on loadBannerAd
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
             .setMockMethodCallHandler(instanceManager.channel, (
               MethodCall call,
@@ -167,17 +162,22 @@ void main() {
         final status = container.read(bannerAdProvider);
         expect(status, BannerAdStatus.loading);
 
-        // Process microtasks in widget test
         await tester.pump();
 
         expect(container.read(bannerAdProvider), BannerAdStatus.failed);
 
-        // Restore mock handler
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(
-              instanceManager.channel,
-              (MethodCall call) async => null,
-            );
+            .setMockMethodCallHandler(instanceManager.channel, (
+              MethodCall call,
+            ) async {
+              if (call.method == 'loadBannerAd' || call.method == 'loadInterstitialAd') {
+                lastAdId = call.arguments['adId'] as int;
+                return null;
+              } else if (call.method == 'disposeAd' || call.method == 'showAdWithoutView') {
+                return null;
+              }
+              return null;
+            });
       },
     );
   });

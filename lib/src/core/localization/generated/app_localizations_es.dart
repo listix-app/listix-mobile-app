@@ -297,7 +297,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get privacyStatement =>
-      'En Listix tu privacidad es absoluta. Todos tus datos residen de forma predeterminada en el almacenamiento SQLite local de tu dispositivo. No recopilamos rastreadores de publicidad, no vendemos datos a terceros ni almacenamos analíticas invasivas.';
+      'Todas tus listas de compras y productos se guardan localmente en tu dispositivo. Listix muestra anuncios mediante Google AdMob para apoyar el desarrollo continuo. Google AdMob puede recopilar y procesar identificadores del dispositivo, ID de publicidad y datos de uso para mostrar anuncios personalizados y no personalizados de acuerdo con la Política de Privacidad de Google. Nunca vendemos tus datos personales ni el contenido de tus listas.';
 
   @override
   String get offlineFirstStatement =>
@@ -359,4 +359,53 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reorder => 'Reordenar';
+
+  @override
+  String get developer => 'Desarrollador';
+
+  @override
+  String get developerName => 'Nicolas Mena';
+
+  @override
+  String get developerEmail => 'nmena.garzon@gmail.com';
+
+  @override
+  String get contactDeveloper => 'Contactar al desarrollador';
+
+  @override
+  String get buyMeACoffee => 'Invítame un café';
+
+  @override
+  String get buyMeACoffeeSubtitle => 'Apoya el desarrollo de Listix';
+
+  @override
+  String get sendFeedback => 'Enviar comentarios';
+
+  @override
+  String get sendFeedbackSubtitle => 'Sugerencias, errores o consultas';
+
+  @override
+  String get rateApp => 'Calificar app';
+
+  @override
+  String get rateAppSubtitle => 'Deja una reseña en Google Play';
+
+  @override
+  String get layoutTitle => 'Diseño de listas';
+
+  @override
+  String get layoutList => 'Lista';
+
+  @override
+  String get layoutGrid => 'Bloques';
+
+  @override
+  String get switchLayout => 'Cambiar diseño';
+
+  @override
+  String get adPolicyTitle => 'Política de Anuncios y Privacidad';
+
+  @override
+  String get adPolicyStatement =>
+      'Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.';
 }

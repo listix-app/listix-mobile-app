@@ -3,13 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/widgets/listix_logo.dart';
+import '../../../lists/presentation/controllers/list_layout_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
+  static const String coffeeUrl = 'https://buymeacoffee.com/nmenag';
+  static const String feedbackEmail = 'nmena.garzon@gmail.com';
+  static const String storeUrl =
+      'https://play.google.com/store/apps/details?id=com.nmenag.listix';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,6 +26,9 @@ class SettingsScreen extends ConsumerWidget {
     final currentThemeMode = ref.watch(themeModeControllerProvider);
     final themeNotifier = ref.read(themeModeControllerProvider.notifier);
     final notificationsEnabled = ref.watch(notificationsControllerProvider);
+    final layoutMode = ref.watch(listLayoutControllerProvider);
+    final layoutNotifier = ref.read(listLayoutControllerProvider.notifier);
+    final urlService = ref.read(urlLauncherServiceProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final cardBg = isDark ? AppColors.cardDark : Colors.white;
@@ -78,6 +88,39 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 28),
+
+          _SettingsSectionTitle(title: tr.layoutTitle),
+          const SizedBox(height: 10),
+          Card(
+            color: cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SegmentedButton<ListLayoutMode>(
+                key: const Key('layout_segmented_button'),
+                segments: [
+                  ButtonSegment<ListLayoutMode>(
+                    value: ListLayoutMode.list,
+                    label: Text(tr.layoutList),
+                    icon: const Icon(Icons.view_agenda_outlined),
+                  ),
+                  ButtonSegment<ListLayoutMode>(
+                    value: ListLayoutMode.grid,
+                    label: Text(tr.layoutGrid),
+                    icon: const Icon(Icons.grid_view_rounded),
+                  ),
+                ],
+                selected: {layoutMode},
+                onSelectionChanged: (Set<ListLayoutMode> newSelection) {
+                  layoutNotifier.setLayoutMode(newSelection.first);
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
 
           _SettingsSectionTitle(title: tr.themeTitle),
           const SizedBox(height: 10),
@@ -187,12 +230,180 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          _SettingsSectionTitle(title: tr.buyMeACoffee),
+          const SizedBox(height: 10),
+          Card(
+            color: cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor),
+            ),
+            child: Column(
+              children: [
+                ListTile(
+                  key: const Key('settings_buy_coffee'),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF813F).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.coffee_rounded,
+                      color: Color(0xFFFF813F),
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    tr.buyMeACoffee,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: textTitleColor,
+                    ),
+                  ),
+                  subtitle: Text(
+                    tr.buyMeACoffeeSubtitle,
+                    style: TextStyle(fontSize: 12, color: textSubColor),
+                  ),
+                  trailing: const Icon(
+                    Icons.open_in_new_rounded,
+                    size: 18,
+                    color: AppColors.textMuted,
+                  ),
+                  onTap: () => urlService.openUrl(coffeeUrl),
+                ),
+                Divider(height: 1, color: borderColor),
+                ListTile(
+                  key: const Key('settings_send_feedback'),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.feedback_outlined,
+                      color: Color(0xFF6366F1),
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    tr.sendFeedback,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: textTitleColor,
+                    ),
+                  ),
+                  subtitle: Text(
+                    tr.sendFeedbackSubtitle,
+                    style: TextStyle(fontSize: 12, color: textSubColor),
+                  ),
+                  trailing: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textMuted,
+                  ),
+                  onTap: () => urlService.openEmail(
+                    feedbackEmail,
+                    subject: 'Listix Feedback',
+                  ),
+                ),
+                Divider(height: 1, color: borderColor),
+                ListTile(
+                  key: const Key('settings_rate_app'),
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFB800).withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.star_rate_rounded,
+                      color: Color(0xFFFFB800),
+                      size: 22,
+                    ),
+                  ),
+                  title: Text(
+                    tr.rateApp,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: textTitleColor,
+                    ),
+                  ),
+                  subtitle: Text(
+                    tr.rateAppSubtitle,
+                    style: TextStyle(fontSize: 12, color: textSubColor),
+                  ),
+                  trailing: const Icon(
+                    Icons.open_in_new_rounded,
+                    size: 18,
+                    color: AppColors.textMuted,
+                  ),
+                  onTap: () => urlService.openUrl(storeUrl),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
           _SettingsSectionTitle(title: tr.aboutApp),
           const SizedBox(height: 10),
+          Card(
+            key: const Key('settings_developer_card'),
+            color: cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor),
+            ),
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              title: Text(
+                tr.developer,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textTitleColor,
+                ),
+              ),
+              subtitle: Text(
+                '${tr.developerName} • ${tr.developerEmail}',
+                style: TextStyle(fontSize: 12, color: textSubColor),
+              ),
+              trailing: const Icon(
+                Icons.email_outlined,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              onTap: () => urlService.openEmail(
+                feedbackEmail,
+                subject: 'Listix Developer Inquiry',
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           _SettingsInfoCard(
             icon: Icons.cloud_off_rounded,
             title: '100% Offline-First',
             content: tr.offlineFirstStatement,
+            cardBg: cardBg,
+            borderColor: borderColor,
+            titleColor: textTitleColor,
+            subColor: textSubColor,
+          ),
+          const SizedBox(height: 12),
+          _SettingsInfoCard(
+            icon: Icons.ads_click_rounded,
+            title: tr.adPolicyTitle,
+            content: tr.adPolicyStatement,
             cardBg: cardBg,
             borderColor: borderColor,
             titleColor: textTitleColor,
@@ -297,7 +508,7 @@ class _SettingsInfoCard extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: titleColor,
                   ),
@@ -307,7 +518,7 @@ class _SettingsInfoCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               content,
-              style: TextStyle(fontSize: 13, height: 1.45, color: subColor),
+              style: TextStyle(fontSize: 13, height: 1.5, color: subColor),
             ),
           ],
         ),

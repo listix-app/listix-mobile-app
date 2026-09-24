@@ -8,6 +8,7 @@ import 'about_and_localization_test.dart' as about_test;
 import 'banner_ad_widget_test.dart' as banner_ad_test;
 import 'domain_entities_test.dart' as domain_test;
 import 'full_coverage_gap_test.dart' as gap_test;
+import 'interstitial_and_layout_test.dart' as interstitial_and_layout_test;
 import 'lists_controller_test.dart' as lists_controller_test;
 import 'mock_sync_service_and_controller_test.dart' as sync_test;
 import 'notifications_feature_test.dart' as notif_test;
@@ -32,10 +33,20 @@ void main() {
     AppDatabase.overrideDbPath = inMemoryDatabasePath;
 
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(
-          instanceManager.channel,
-          (MethodCall call) async => null,
-        );
+        .setMockMethodCallHandler(instanceManager.channel, (
+          MethodCall call,
+        ) async {
+          if (call.method == 'loadBannerAd' ||
+              call.method == 'loadInterstitialAd') {
+            banner_ad_test.lastAdId = call.arguments['adId'] as int;
+            return null;
+          }
+          if (call.method == 'disposeAd' ||
+              call.method == 'showAdWithoutView') {
+            return null;
+          }
+          return null;
+        });
   });
 
   about_test.main();
@@ -52,4 +63,5 @@ void main() {
   settings_test.main();
   share_test.main();
   notif_test.main();
+  interstitial_and_layout_test.main();
 }

@@ -107,10 +107,12 @@ void main() {
       expect(find.text('System'), findsOneWidget);
       expect(find.text('Light'), findsOneWidget);
       expect(find.text('Dark'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Terms of Service'), 300);
       expect(find.text('100% Offline-First'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
       expect(find.text('Terms of Service'), findsOneWidget);
 
+      await tester.scrollUntilVisible(find.text('Español'), -300);
       await tester.tap(find.text('Español'));
       await tester.pumpAndSettle();
       expect(find.text('Configuración'), findsOneWidget);

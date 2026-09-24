@@ -137,6 +137,22 @@ void main() {
         expect(tr.starList, isNotEmpty);
         expect(tr.unstarList, isNotEmpty);
         expect(tr.reorder, isNotEmpty);
+        expect(tr.developer, isNotEmpty);
+        expect(tr.developerName, isNotEmpty);
+        expect(tr.developerEmail, isNotEmpty);
+        expect(tr.contactDeveloper, isNotEmpty);
+        expect(tr.buyMeACoffee, isNotEmpty);
+        expect(tr.buyMeACoffeeSubtitle, isNotEmpty);
+        expect(tr.sendFeedback, isNotEmpty);
+        expect(tr.sendFeedbackSubtitle, isNotEmpty);
+        expect(tr.rateApp, isNotEmpty);
+        expect(tr.rateAppSubtitle, isNotEmpty);
+        expect(tr.layoutTitle, isNotEmpty);
+        expect(tr.layoutList, isNotEmpty);
+        expect(tr.layoutGrid, isNotEmpty);
+        expect(tr.switchLayout, isNotEmpty);
+        expect(tr.adPolicyTitle, isNotEmpty);
+        expect(tr.adPolicyStatement, isNotEmpty);
       }
     });
 
@@ -530,6 +546,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(AboutScreen), findsOneWidget);
+      await tester.scrollUntilVisible(find.byIcon(Icons.dark_mode_rounded), 200);
       await tester.tap(find.byIcon(Icons.dark_mode_rounded));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.light_mode_rounded));

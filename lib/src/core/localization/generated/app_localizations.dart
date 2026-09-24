@@ -623,7 +623,7 @@ abstract class AppLocalizations {
   /// No description provided for @privacyStatement.
   ///
   /// In es, this message translates to:
-  /// **'En Listix tu privacidad es absoluta. Todos tus datos residen de forma predeterminada en el almacenamiento SQLite local de tu dispositivo. No recopilamos rastreadores de publicidad, no vendemos datos a terceros ni almacenamos analíticas invasivas.'**
+  /// **'Todas tus listas de compras y productos se guardan localmente en tu dispositivo. Listix muestra anuncios mediante Google AdMob para apoyar el desarrollo continuo. Google AdMob puede recopilar y procesar identificadores del dispositivo, ID de publicidad y datos de uso para mostrar anuncios personalizados y no personalizados de acuerdo con la Política de Privacidad de Google. Nunca vendemos tus datos personales ni el contenido de tus listas.'**
   String get privacyStatement;
 
   /// No description provided for @offlineFirstStatement.
@@ -721,6 +721,102 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Reordenar'**
   String get reorder;
+
+  /// No description provided for @developer.
+  ///
+  /// In es, this message translates to:
+  /// **'Desarrollador'**
+  String get developer;
+
+  /// No description provided for @developerName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nicolas Mena'**
+  String get developerName;
+
+  /// No description provided for @developerEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'nmena.garzon@gmail.com'**
+  String get developerEmail;
+
+  /// No description provided for @contactDeveloper.
+  ///
+  /// In es, this message translates to:
+  /// **'Contactar al desarrollador'**
+  String get contactDeveloper;
+
+  /// No description provided for @buyMeACoffee.
+  ///
+  /// In es, this message translates to:
+  /// **'Invítame un café'**
+  String get buyMeACoffee;
+
+  /// No description provided for @buyMeACoffeeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Apoya el desarrollo de Listix'**
+  String get buyMeACoffeeSubtitle;
+
+  /// No description provided for @sendFeedback.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar comentarios'**
+  String get sendFeedback;
+
+  /// No description provided for @sendFeedbackSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Sugerencias, errores o consultas'**
+  String get sendFeedbackSubtitle;
+
+  /// No description provided for @rateApp.
+  ///
+  /// In es, this message translates to:
+  /// **'Calificar app'**
+  String get rateApp;
+
+  /// No description provided for @rateAppSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Deja una reseña en Google Play'**
+  String get rateAppSubtitle;
+
+  /// No description provided for @layoutTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Diseño de listas'**
+  String get layoutTitle;
+
+  /// No description provided for @layoutList.
+  ///
+  /// In es, this message translates to:
+  /// **'Lista'**
+  String get layoutList;
+
+  /// No description provided for @layoutGrid.
+  ///
+  /// In es, this message translates to:
+  /// **'Bloques'**
+  String get layoutGrid;
+
+  /// No description provided for @switchLayout.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar diseño'**
+  String get switchLayout;
+
+  /// No description provided for @adPolicyTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de Anuncios y Privacidad'**
+  String get adPolicyTitle;
+
+  /// No description provided for @adPolicyStatement.
+  ///
+  /// In es, this message translates to:
+  /// **'Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.'**
+  String get adPolicyStatement;
 }
 
 class _AppLocalizationsDelegate

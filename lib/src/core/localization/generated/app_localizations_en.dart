@@ -297,7 +297,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyStatement =>
-      'At Listix, your privacy is absolute. All your data lives by default on your device’s local SQLite storage. We do not use advertising trackers, sell personal data to third parties, or run invasive analytics.';
+      'All shopping lists and items are stored locally on your device. Listix displays advertisements via Google AdMob to support continuous development. Google AdMob may collect and process device identifiers, advertising IDs, and usage analytics to serve non-personalized and personalized ads in accordance with Google\'s Privacy Policy. We never sell your personal data or list contents.';
 
   @override
   String get offlineFirstStatement =>
@@ -358,4 +358,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reorder => 'Reorder';
+
+  @override
+  String get developer => 'Developer';
+
+  @override
+  String get developerName => 'Nicolas Mena';
+
+  @override
+  String get developerEmail => 'nmena.garzon@gmail.com';
+
+  @override
+  String get contactDeveloper => 'Contact developer';
+
+  @override
+  String get buyMeACoffee => 'Buy me a coffee';
+
+  @override
+  String get buyMeACoffeeSubtitle => 'Support the development of Listix';
+
+  @override
+  String get sendFeedback => 'Send feedback';
+
+  @override
+  String get sendFeedbackSubtitle => 'Suggestions, bugs or questions';
+
+  @override
+  String get rateApp => 'Rate app';
+
+  @override
+  String get rateAppSubtitle => 'Leave a review on Google Play';
+
+  @override
+  String get layoutTitle => 'List layout';
+
+  @override
+  String get layoutList => 'List';
+
+  @override
+  String get layoutGrid => 'Blocks';
+
+  @override
+  String get switchLayout => 'Switch layout';
+
+  @override
+  String get adPolicyTitle => 'Ad Policy & Privacy';
+
+  @override
+  String get adPolicyStatement =>
+      'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.';
 }

@@ -9,6 +9,7 @@ import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
+import '../../../ads/data/interstitial_ad_service.dart';
 import 'share_list_sheet.dart';
 
 class ListDetailScreen extends ConsumerStatefulWidget {
@@ -95,7 +96,10 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: tr.back,
-          onPressed: () => context.pop(),
+          onPressed: () {
+            ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
+            context.pop();
+          },
         ),
         title: Text(
           list.name,

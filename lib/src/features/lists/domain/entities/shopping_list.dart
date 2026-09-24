@@ -29,6 +29,8 @@ class ShoppingList {
   int get pendingCount => totalCount - completedCount;
 
   String get progressText => '$pendingCount de $totalCount';
+  double get completionProgress =>
+      totalCount == 0 ? 0.0 : completedCount / totalCount;
 
   bool get isShared => collaborators.isNotEmpty;
 
