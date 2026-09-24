@@ -371,7 +371,6 @@ class _ActionCard extends StatelessWidget {
                     subtitle,
                     style: TextStyle(fontSize: 12, color: subColor),
                   ),
-
                 ],
               ),
             ),

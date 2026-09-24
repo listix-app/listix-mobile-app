@@ -152,7 +152,8 @@ class AppStrings {
   String get adPolicyTitle => _l10n.adPolicyTitle;
   String get adPolicyStatement => _l10n.adPolicyStatement;
   String get notificationTimeTitle => _l10n.notificationTimeTitle;
-  String notificationTimeSubtitle(String time) => _l10n.notificationTimeSubtitle(time);
+  String notificationTimeSubtitle(String time) =>
+      _l10n.notificationTimeSubtitle(time);
   String get shareSystem => _l10n.shareSystem;
   String get shareSystemDesc => _l10n.shareSystemDesc;
 }

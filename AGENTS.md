@@ -345,21 +345,24 @@ class ItemsScreen extends ConsumerWidget {
    - Widgets: test UI rendering with `ProviderScope(overrides: [...])`.
 6. **Code Cleanliness & Analysis**:
    - Run `flutter analyze` after making changes and resolve all errors and warnings (0 issues).
-   - Follow Flutter and Dart formatting guidelines (`dart format --output=none --set-exit-if-changed .`).
-7. **Strictly No Comments on Code**:
+   - Follow Flutter and Dart formatting guidelines.
+7. **Always Run `dart format .` After Applying Changes**:
+   - **Mandatory Formatting**: Always execute `dart format .` immediately after creating, modifying, or refactoring any code or test files before proceeding to analysis or tests.
+   - **Enforcement**: Ensure that `dart format .` runs cleanly and all Dart files in the workspace strictly adhere to canonical Dart formatting conventions. Never skip running `dart format .` after applying changes.
+8. **Strictly No Comments on Code**:
    - **Do NOT add comments on code**: Do not write comments in production or test files. No inline comments, explanatory comments, block comments, decorative banners, or doc-comments on self-explanatory code.
    - **Self-Documenting Code**: Code must be inherently self-documenting. Use clear, intention-revealing names for classes, methods, parameters, and variables.
    - Never leave commented-out code; delete unused code completely.
-8. **Strict Git Prohibitions — Never Run `git add .`, `git commit`, Nor `git push`**:
+9. **Strict Git Prohibitions — Never Run `git add .`, `git commit`, Nor `git push`**:
    - **Never run `git add .`**: Do NOT run `git add .` or blanket staging commands under any circumstance. Blanket staging risks staging untracked temp files, cache artifacts, credentials, or unintended modifications.
    - **Never run `git commit`**: AI agents must NEVER execute `git commit` to create commits. Commits must remain solely under the user's manual control and review. The agent's responsibility is to prepare, test, analyze, and verify code changes, leaving git commit actions entirely to the user.
    - **Never run `git push`**: AI agents must NEVER execute `git push` or publish branches to remote repositories. Pushing code is strictly reserved for the human user.
    - **No Automated Git Mutations**: Agents must not stage, commit, or push changes autonomously. The agent's role is strictly limited to authoring, formatting, analyzing, and verifying code in the local working directory.
-9. **Commit & PR Conventions**:
+10. **Commit & PR Conventions**:
    - Commit messages and PR titles must adhere to **Conventional Commits**: `<type>(<optional scope>): <description>`.
    - Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
    - Keep pull requests small and focused (< 500 lines of reviewed changes) to facilitate rapid, effective code reviews.
-10. **Pull Request Protocol**:
+11. **Pull Request Protocol**:
    - When the user asks for a **"pull request"** (or writes "pull request"), immediately produce a comprehensive Pull Request description formatted in Markdown following the template in Section 6.
 
 ---

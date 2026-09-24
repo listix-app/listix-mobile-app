@@ -312,7 +312,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const BannerAdWidget(),
+      bottomNavigationBar: const BannerAdWidget(isDetail: true),
     );
   }
 }

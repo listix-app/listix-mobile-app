@@ -308,11 +308,10 @@ class AppDatabase {
   Future<void> setSetting(String key, String value) async {
     try {
       final db = await database;
-      await db.insert(
-        'app_settings',
-        {'key': key, 'value': value},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('app_settings', {
+        'key': key,
+        'value': value,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     } catch (_) {}
   }
 

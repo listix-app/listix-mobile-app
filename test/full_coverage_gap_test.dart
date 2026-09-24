@@ -550,7 +550,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(AboutScreen), findsOneWidget);
-      await tester.scrollUntilVisible(find.byIcon(Icons.dark_mode_rounded), 200);
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.dark_mode_rounded),
+        200,
+      );
       await tester.tap(find.byIcon(Icons.dark_mode_rounded));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.light_mode_rounded));

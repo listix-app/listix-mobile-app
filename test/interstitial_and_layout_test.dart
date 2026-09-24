@@ -834,7 +834,9 @@ void main() {
         await tester.tap(find.byKey(const Key('settings_rate_app')));
         expect(openedStore, isTrue);
 
-        await tester.ensureVisible(find.byKey(const Key('weekly_notification_switch')));
+        await tester.ensureVisible(
+          find.byKey(const Key('weekly_notification_switch')),
+        );
         await tester.pumpAndSettle();
         final switchFinder = find.byType(Switch);
         await tester.tap(switchFinder.first);

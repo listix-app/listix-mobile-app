@@ -18,10 +18,12 @@ void main() {
         .setMockMethodCallHandler(instanceManager.channel, (
           MethodCall call,
         ) async {
-          if (call.method == 'loadBannerAd' || call.method == 'loadInterstitialAd') {
+          if (call.method == 'loadBannerAd' ||
+              call.method == 'loadInterstitialAd') {
             lastAdId = call.arguments['adId'] as int;
             return null;
-          } else if (call.method == 'disposeAd' || call.method == 'showAdWithoutView') {
+          } else if (call.method == 'disposeAd' ||
+              call.method == 'showAdWithoutView') {
             return null;
           }
           return null;
@@ -170,14 +172,172 @@ void main() {
             .setMockMethodCallHandler(instanceManager.channel, (
               MethodCall call,
             ) async {
-              if (call.method == 'loadBannerAd' || call.method == 'loadInterstitialAd') {
+              if (call.method == 'loadBannerAd' ||
+                  call.method == 'loadInterstitialAd') {
                 lastAdId = call.arguments['adId'] as int;
                 return null;
-              } else if (call.method == 'disposeAd' || call.method == 'showAdWithoutView') {
+              } else if (call.method == 'disposeAd' ||
+                  call.method == 'showAdWithoutView') {
                 return null;
               }
               return null;
             });
+      },
+    );
+
+    testWidgets(
+      'DetailBannerAdNotifier updates on onAdLoaded and renders AdWidget for isDetail: true',
+      (tester) async {
+        late ProviderContainer container;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            child: Consumer(
+              builder: (context, ref, _) {
+                container = ProviderScope.containerOf(context);
+                return const MaterialApp(
+                  home: Scaffold(
+                    bottomNavigationBar: BannerAdWidget(isDetail: true),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        final notifier = container.read(detailBannerAdProvider.notifier);
+        expect(notifier.ad, isNotNull);
+
+        final ByteData message = instanceManager.channel.codec.encodeMethodCall(
+          MethodCall('onAdEvent', {
+            'adId': lastAdId,
+            'eventName': 'onAdLoaded',
+          }),
+        );
+        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(
+              instanceManager.channel.name,
+              message,
+              (data) {},
+            );
+
+        await tester.pumpAndSettle();
+
+        expect(container.read(detailBannerAdProvider), BannerAdStatus.loaded);
+        expect(find.byType(AdWidget), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'DetailBannerAdNotifier updates to failed state on onAdFailedToLoad event and reloads',
+      (tester) async {
+        late ProviderContainer container;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            child: Consumer(
+              builder: (context, ref, _) {
+                container = ProviderScope.containerOf(context);
+                return const MaterialApp(
+                  home: Scaffold(
+                    bottomNavigationBar: BannerAdWidget(isDetail: true),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+
+        final notifier = container.read(detailBannerAdProvider.notifier);
+
+        final error = LoadAdError(1, 'domain', 'Network timeout', null);
+        final ByteData message = instanceManager.channel.codec.encodeMethodCall(
+          MethodCall('onAdEvent', {
+            'adId': lastAdId,
+            'eventName': 'onAdFailedToLoad',
+            'loadAdError': error,
+          }),
+        );
+        await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .handlePlatformMessage(
+              instanceManager.channel.name,
+              message,
+              (data) {},
+            );
+
+        await tester.pumpAndSettle();
+
+        expect(container.read(detailBannerAdProvider), BannerAdStatus.failed);
+        expect(notifier.ad, isNull);
+        expect(find.byType(AdWidget), findsNothing);
+
+        notifier.reload();
+        expect(container.read(detailBannerAdProvider), BannerAdStatus.loading);
+        expect(notifier.ad, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'DetailBannerAdNotifier handles load failure gracefully and disposes',
+      (tester) async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(instanceManager.channel, (
+              MethodCall call,
+            ) async {
+              if (call.method == 'loadBannerAd') {
+                throw PlatformException(
+                  code: 'ERROR',
+                  message: 'Failed to load',
+                );
+              }
+              return null;
+            });
+
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
+
+        final status = container.read(detailBannerAdProvider);
+        expect(status, BannerAdStatus.loading);
+
+        await tester.pump();
+
+        expect(container.read(detailBannerAdProvider), BannerAdStatus.failed);
+
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(instanceManager.channel, (
+              MethodCall call,
+            ) async {
+              if (call.method == 'loadBannerAd' ||
+                  call.method == 'loadInterstitialAd') {
+                lastAdId = call.arguments['adId'] as int;
+                return null;
+              } else if (call.method == 'disposeAd' ||
+                  call.method == 'showAdWithoutView') {
+                return null;
+              }
+              return null;
+            });
+      },
+    );
+
+    testWidgets(
+      'HomeScreen and ListDetailScreen simultaneous banners do not collide',
+      (tester) async {
+        await tester.pumpWidget(
+          const ProviderScope(
+            child: MaterialApp(
+              home: Column(
+                children: [
+                  BannerAdWidget(isDetail: false),
+                  BannerAdWidget(isDetail: true),
+                ],
+              ),
+            ),
+          ),
+        );
+
+        final sizedBoxes = tester.widgetList<SizedBox>(find.byType(SizedBox));
+        expect(sizedBoxes.where((box) => box.height == 50.0).length, 2);
       },
     );
   });

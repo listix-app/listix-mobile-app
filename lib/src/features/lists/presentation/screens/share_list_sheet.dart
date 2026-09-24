@@ -27,8 +27,9 @@ class ShareListSheet extends ConsumerWidget {
     ShoppingList list,
   ) async {
     final box = context.findRenderObject() as RenderBox?;
-    final sharePositionOrigin =
-        box != null ? box.localToGlobal(Offset.zero) & box.size : null;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
     final tr = ref.read(stringsProvider);
     await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
     final text = ShareService.formatListForSharing(
