@@ -13,11 +13,25 @@ class Collaborator {
 
   String get initials {
     final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
     return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'email': email,
+    'isOwner': isOwner,
+  };
+
+  factory Collaborator.fromJson(Map<String, dynamic> json) => Collaborator(
+    id: json['id'] as String,
+    name: json['name'] as String,
+    email: json['email'] as String,
+    isOwner: json['isOwner'] as bool? ?? false,
+  );
 
   @override
   bool operator ==(Object other) =>

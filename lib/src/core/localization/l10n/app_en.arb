@@ -220,5 +220,38 @@
   "adPolicyTitle": "Ad Policy & Privacy",
   "adPolicyStatement": "Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.",
   "shareSystem": "System sharesheet",
-  "shareSystemDesc": "Share using other installed applications"
+  "shareSystemDesc": "Share using other installed applications",
+  "realtimeLive": "Live",
+  "realtimeConnecting": "Connecting...",
+  "realtimeDisconnected": "Disconnected",
+  "realtimeCollaborating": "Real-time collaboration active",
+  "realtimeOnlineUsers": "{count} online",
+  "@realtimeOnlineUsers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "joinList": "Join list",
+  "joinListTitle": "Join a shared list",
+  "joinListPrompt": "Enter the invite code or link to collaborate in real time.",
+  "joinListHint": "List code or invite link",
+  "joinAction": "Join",
+  "listJoined": "You joined \"{name}\"",
+  "@listJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidInviteCode": "Invalid invitation code or link",
+  "alreadyJoined": "You already have access to this list",
+  "collaborators": "Collaborators",
+  "inviteColleague": "Invite friends or colleagues",
+  "inviteColleagueSubtitle": "Collaborate in real time adding and completing items",
+  "simulateColleagueAction": "Simulate colleague action",
+  "simulateColleagueTooltip": "Simulates a colleague adding or completing an item in real time",
+  "simulatedItemAdded": "A colleague added an item in real time"
 }

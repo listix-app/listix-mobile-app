@@ -156,4 +156,24 @@ class AppStrings {
       _l10n.notificationTimeSubtitle(time);
   String get shareSystem => _l10n.shareSystem;
   String get shareSystemDesc => _l10n.shareSystemDesc;
+
+  String get realtimeLive => _l10n.realtimeLive;
+  String get realtimeConnecting => _l10n.realtimeConnecting;
+  String get realtimeDisconnected => _l10n.realtimeDisconnected;
+  String get realtimeCollaborating => _l10n.realtimeCollaborating;
+  String realtimeOnlineUsers(int count) => _l10n.realtimeOnlineUsers(count);
+  String get joinList => _l10n.joinList;
+  String get joinListTitle => _l10n.joinListTitle;
+  String get joinListPrompt => _l10n.joinListPrompt;
+  String get joinListHint => _l10n.joinListHint;
+  String get joinAction => _l10n.joinAction;
+  String listJoined(String name) => _l10n.listJoined(name);
+  String get invalidInviteCode => _l10n.invalidInviteCode;
+  String get alreadyJoined => _l10n.alreadyJoined;
+  String get collaborators => _l10n.collaborators;
+  String get inviteColleague => _l10n.inviteColleague;
+  String get inviteColleagueSubtitle => _l10n.inviteColleagueSubtitle;
+  String get simulateColleagueAction => _l10n.simulateColleagueAction;
+  String get simulateColleagueTooltip => _l10n.simulateColleagueTooltip;
+  String get simulatedItemAdded => _l10n.simulatedItemAdded;
 }

@@ -420,6 +420,124 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
+  Future<ShoppingList> joinSharedList(
+    String listId,
+    String name, {
+    String? ownerName,
+    String? ownerEmail,
+  }) async {
+    final db = await _db;
+    final existing = await getListById(listId);
+    if (existing != null) {
+      return existing;
+    }
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      await txn.insert('shopping_lists', {
+        'id': listId,
+        'name': name.trim().isEmpty ? 'Lista compartida' : name.trim(),
+        'is_synced': 1,
+        'is_starred': 0,
+        'position': 0,
+        'created_at': now,
+        'updated_at': now,
+        'deleted_at': null,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+      if (ownerEmail != null && ownerEmail.isNotEmpty) {
+        await txn.insert('collaborators', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'name': ownerName ?? ownerEmail.split('@').first,
+          'email': ownerEmail,
+          'is_owner': 1,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+    });
+
+    final created = await getListById(listId);
+    return created ??
+        ShoppingList(
+          id: listId,
+          name: name,
+          items: const [],
+          createdAt: DateTime.fromMillisecondsSinceEpoch(now),
+        );
+  }
+
+  @override
+  Future<void> applyRemoteItem(TodoItem item) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert('todo_items', {
+      'id': item.id,
+      'list_id': item.listId,
+      'title': item.title,
+      'is_completed': item.isCompleted ? 1 : 0,
+      'is_synced': 1,
+      'position': item.position,
+      'created_at': item.createdAt.millisecondsSinceEpoch,
+      'updated_at': now,
+      'deleted_at': null,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> applyRemoteItemToggle(
+    String listId,
+    String itemId,
+    bool isCompleted,
+  ) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'todo_items',
+      {'is_completed': isCompleted ? 1 : 0, 'is_synced': 1, 'updated_at': now},
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [itemId, listId],
+    );
+  }
+
+  @override
+  Future<void> applyRemoteItemDelete(String listId, String itemId) async {
+    final db = await _db;
+    await db.delete(
+      'todo_items',
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [itemId, listId],
+    );
+  }
+
+  @override
+  Future<void> applyRemoteCollaborator(
+    String listId,
+    Collaborator collaborator,
+  ) async {
+    final db = await _db;
+    await db.insert('collaborators', {
+      'id': collaborator.id,
+      'list_id': listId,
+      'name': collaborator.name,
+      'email': collaborator.email,
+      'is_owner': collaborator.isOwner ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> applyRemoteCollaboratorRemove(
+    String listId,
+    String collaboratorId,
+  ) async {
+    final db = await _db;
+    await db.delete(
+      'collaborators',
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [collaboratorId, listId],
+    );
+  }
+
+  @override
   Future<void> syncList(String listId) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;

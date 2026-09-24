@@ -841,6 +841,120 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Compartir con otras aplicaciones instaladas'**
   String get shareSystemDesc;
+
+  /// No description provided for @realtimeLive.
+  ///
+  /// In es, this message translates to:
+  /// **'En vivo'**
+  String get realtimeLive;
+
+  /// No description provided for @realtimeConnecting.
+  ///
+  /// In es, this message translates to:
+  /// **'Conectando...'**
+  String get realtimeConnecting;
+
+  /// No description provided for @realtimeDisconnected.
+  ///
+  /// In es, this message translates to:
+  /// **'Desconectado'**
+  String get realtimeDisconnected;
+
+  /// No description provided for @realtimeCollaborating.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaboración en tiempo real activa'**
+  String get realtimeCollaborating;
+
+  /// No description provided for @realtimeOnlineUsers.
+  ///
+  /// In es, this message translates to:
+  /// **'{count} en línea'**
+  String realtimeOnlineUsers(int count);
+
+  /// No description provided for @joinList.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirse a lista'**
+  String get joinList;
+
+  /// No description provided for @joinListTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirse a una lista compartida'**
+  String get joinListTitle;
+
+  /// No description provided for @joinListPrompt.
+  ///
+  /// In es, this message translates to:
+  /// **'Ingresa el código o enlace de invitación para colaborar en tiempo real.'**
+  String get joinListPrompt;
+
+  /// No description provided for @joinListHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Código o enlace de la lista'**
+  String get joinListHint;
+
+  /// No description provided for @joinAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Unirse'**
+  String get joinAction;
+
+  /// No description provided for @listJoined.
+  ///
+  /// In es, this message translates to:
+  /// **'Te has unido a \"{name}\"'**
+  String listJoined(String name);
+
+  /// No description provided for @invalidInviteCode.
+  ///
+  /// In es, this message translates to:
+  /// **'Código o enlace de invitación inválido'**
+  String get invalidInviteCode;
+
+  /// No description provided for @alreadyJoined.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tienes acceso a esta lista'**
+  String get alreadyJoined;
+
+  /// No description provided for @collaborators.
+  ///
+  /// In es, this message translates to:
+  /// **'Colaboradores'**
+  String get collaborators;
+
+  /// No description provided for @inviteColleague.
+  ///
+  /// In es, this message translates to:
+  /// **'Invitar amigos o colegas'**
+  String get inviteColleague;
+
+  /// No description provided for @inviteColleagueSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Colabora en tiempo real agregando y tachando productos'**
+  String get inviteColleagueSubtitle;
+
+  /// No description provided for @simulateColleagueAction.
+  ///
+  /// In es, this message translates to:
+  /// **'Simular acción de colega'**
+  String get simulateColleagueAction;
+
+  /// No description provided for @simulateColleagueTooltip.
+  ///
+  /// In es, this message translates to:
+  /// **'Simula que un colega agrega o tacha un producto en tiempo real'**
+  String get simulateColleagueTooltip;
+
+  /// No description provided for @simulatedItemAdded.
+  ///
+  /// In es, this message translates to:
+  /// **'Un colega agregó un producto en tiempo real'**
+  String get simulatedItemAdded;
 }
 
 class _AppLocalizationsDelegate

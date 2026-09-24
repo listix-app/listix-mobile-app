@@ -220,5 +220,38 @@
   "adPolicyTitle": "Política de Anuncios y Privacidad",
   "adPolicyStatement": "Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.",
   "shareSystem": "Compartir en el sistema",
-  "shareSystemDesc": "Compartir con otras aplicaciones instaladas"
+  "shareSystemDesc": "Compartir con otras aplicaciones instaladas",
+  "realtimeLive": "En vivo",
+  "realtimeConnecting": "Conectando...",
+  "realtimeDisconnected": "Desconectado",
+  "realtimeCollaborating": "Colaboración en tiempo real activa",
+  "realtimeOnlineUsers": "{count} en línea",
+  "@realtimeOnlineUsers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "joinList": "Unirse a lista",
+  "joinListTitle": "Unirse a una lista compartida",
+  "joinListPrompt": "Ingresa el código o enlace de invitación para colaborar en tiempo real.",
+  "joinListHint": "Código o enlace de la lista",
+  "joinAction": "Unirse",
+  "listJoined": "Te has unido a \"{name}\"",
+  "@listJoined": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invalidInviteCode": "Código o enlace de invitación inválido",
+  "alreadyJoined": "Ya tienes acceso a esta lista",
+  "collaborators": "Colaboradores",
+  "inviteColleague": "Invitar amigos o colegas",
+  "inviteColleagueSubtitle": "Colabora en tiempo real agregando y tachando productos",
+  "simulateColleagueAction": "Simular acción de colega",
+  "simulateColleagueTooltip": "Simula que un colega agrega o tacha un producto en tiempo real",
+  "simulatedItemAdded": "Un colega agregó un producto en tiempo real"
 }

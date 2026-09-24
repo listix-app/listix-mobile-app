@@ -21,9 +21,15 @@ class ShareService {
     : _urlLauncher = urlLauncher ?? launchUrl,
       _systemShare = systemShare;
 
+  static String createInviteLink(String listId, String listName) {
+    final encodedName = Uri.encodeComponent(listName);
+    return 'https://listix.app/join?listId=$listId&name=$encodedName';
+  }
+
   static String formatListForSharing({
     required ShoppingList list,
     required String createdWithText,
+    String? inviteLinkText,
   }) {
     final buffer = StringBuffer();
     buffer.writeln('📋 *${list.name}*');
@@ -47,6 +53,11 @@ class ShareService {
 
     if (list.items.isEmpty) {
       buffer.writeln('• (Empty)');
+    }
+
+    if (inviteLinkText != null && inviteLinkText.isNotEmpty) {
+      buffer.writeln();
+      buffer.writeln(inviteLinkText);
     }
 
     buffer.writeln();

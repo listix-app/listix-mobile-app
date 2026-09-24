@@ -422,4 +422,69 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get shareSystemDesc => 'Compartir con otras aplicaciones instaladas';
+
+  @override
+  String get realtimeLive => 'En vivo';
+
+  @override
+  String get realtimeConnecting => 'Conectando...';
+
+  @override
+  String get realtimeDisconnected => 'Desconectado';
+
+  @override
+  String get realtimeCollaborating => 'Colaboración en tiempo real activa';
+
+  @override
+  String realtimeOnlineUsers(int count) {
+    return '$count en línea';
+  }
+
+  @override
+  String get joinList => 'Unirse a lista';
+
+  @override
+  String get joinListTitle => 'Unirse a una lista compartida';
+
+  @override
+  String get joinListPrompt =>
+      'Ingresa el código o enlace de invitación para colaborar en tiempo real.';
+
+  @override
+  String get joinListHint => 'Código o enlace de la lista';
+
+  @override
+  String get joinAction => 'Unirse';
+
+  @override
+  String listJoined(String name) {
+    return 'Te has unido a \"$name\"';
+  }
+
+  @override
+  String get invalidInviteCode => 'Código o enlace de invitación inválido';
+
+  @override
+  String get alreadyJoined => 'Ya tienes acceso a esta lista';
+
+  @override
+  String get collaborators => 'Colaboradores';
+
+  @override
+  String get inviteColleague => 'Invitar amigos o colegas';
+
+  @override
+  String get inviteColleagueSubtitle =>
+      'Colabora en tiempo real agregando y tachando productos';
+
+  @override
+  String get simulateColleagueAction => 'Simular acción de colega';
+
+  @override
+  String get simulateColleagueTooltip =>
+      'Simula que un colega agrega o tacha un producto en tiempo real';
+
+  @override
+  String get simulatedItemAdded =>
+      'Un colega agregó un producto en tiempo real';
 }

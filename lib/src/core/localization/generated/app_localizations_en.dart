@@ -421,4 +421,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareSystemDesc => 'Share using other installed applications';
+
+  @override
+  String get realtimeLive => 'Live';
+
+  @override
+  String get realtimeConnecting => 'Connecting...';
+
+  @override
+  String get realtimeDisconnected => 'Disconnected';
+
+  @override
+  String get realtimeCollaborating => 'Real-time collaboration active';
+
+  @override
+  String realtimeOnlineUsers(int count) {
+    return '$count online';
+  }
+
+  @override
+  String get joinList => 'Join list';
+
+  @override
+  String get joinListTitle => 'Join a shared list';
+
+  @override
+  String get joinListPrompt =>
+      'Enter the invite code or link to collaborate in real time.';
+
+  @override
+  String get joinListHint => 'List code or invite link';
+
+  @override
+  String get joinAction => 'Join';
+
+  @override
+  String listJoined(String name) {
+    return 'You joined \"$name\"';
+  }
+
+  @override
+  String get invalidInviteCode => 'Invalid invitation code or link';
+
+  @override
+  String get alreadyJoined => 'You already have access to this list';
+
+  @override
+  String get collaborators => 'Collaborators';
+
+  @override
+  String get inviteColleague => 'Invite friends or colleagues';
+
+  @override
+  String get inviteColleagueSubtitle =>
+      'Collaborate in real time adding and completing items';
+
+  @override
+  String get simulateColleagueAction => 'Simulate colleague action';
+
+  @override
+  String get simulateColleagueTooltip =>
+      'Simulates a colleague adding or completing an item in real time';
+
+  @override
+  String get simulatedItemAdded => 'A colleague added an item in real time';
 }

@@ -1,3 +1,4 @@
+import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -948,6 +949,45 @@ class _FakeRepoWithLists implements ListsRepository {
 
   @override
   Future<void> syncList(String listId) async {}
+
+  @override
+  Future<ShoppingList> joinSharedList(
+    String listId,
+    String name, {
+    String? ownerName,
+    String? ownerEmail,
+  }) async {
+    final l = ShoppingList(
+      id: listId,
+      name: name,
+      createdAt: DateTime.now(),
+      collaborators: [
+        Collaborator(
+          id: 'collab_owner',
+          name: ownerName ?? 'Owner',
+          email: ownerEmail ?? 'owner@listix.local',
+          isOwner: true,
+        ),
+      ],
+    );
+    lists.add(l);
+    return l;
+  }
+
+  @override
+  Future<void> applyRemoteItem(TodoItem item) async {}
+
+  @override
+  Future<void> applyRemoteItemToggle(String listId, String itemId, bool isCompleted) async {}
+
+  @override
+  Future<void> applyRemoteItemDelete(String listId, String itemId) async {}
+
+  @override
+  Future<void> applyRemoteCollaborator(String listId, Collaborator collaborator) async {}
+
+  @override
+  Future<void> applyRemoteCollaboratorRemove(String listId, String collaboratorId) async {}
 }
 
 class _TestSettingsNotificationService implements NotificationService {

@@ -5,11 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../ads/data/interstitial_ad_service.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
+import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
+import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
-import '../../../ads/data/interstitial_ad_service.dart';
 import 'share_list_sheet.dart';
 
 class ListDetailScreen extends ConsumerStatefulWidget {
@@ -23,6 +25,28 @@ class ListDetailScreen extends ConsumerStatefulWidget {
 
 class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   bool _isCompletedExpanded = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(collaborationControllerProvider.notifier)
+            .joinListRoom(widget.listId);
+      }
+    });
+  }
+
+  @override
+  void deactivate() {
+    try {
+      ref
+          .read(collaborationControllerProvider.notifier)
+          .leaveListRoom(widget.listId);
+    } catch (_) {}
+    super.deactivate();
+  }
 
   Future<void> _handleDeleteItem(String listId, String itemId) async {
     final tr = ref.read(stringsProvider);
@@ -113,6 +137,11 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          Center(
+            child: RealtimePresenceBadge(
+              onTap: () => ShareListSheet.show(context, list.id),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.edit_outlined, size: 20),
             tooltip: tr.rename,
@@ -187,6 +216,65 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                       ),
                       minHeight: 4,
                     ),
+                  ),
+                ],
+                if (list.collaborators.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.group_outlined,
+                        size: 14,
+                        color: isDark
+                            ? AppColors.textMutedDark
+                            : AppColors.textMuted,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${tr.collaborators}:',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: SizedBox(
+                          height: 22,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: list.collaborators.map((c) {
+                              return Container(
+                                margin: const EdgeInsets.only(right: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? AppColors.cardDark
+                                      : AppColors.primaryLight,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  c.name,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: isDark
+                                        ? AppColors.textPrimaryDark
+                                        : AppColors.primaryDark,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ],
