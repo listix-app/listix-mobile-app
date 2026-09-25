@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyInviteLink.
   ///
   /// In es, this message translates to:
-  /// **'Copiar enlace de invitación'**
+  /// **'Compartir enlace de invitación'**
   String get copyInviteLink;
 
   /// No description provided for @linkCopied.

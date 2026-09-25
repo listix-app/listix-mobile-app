@@ -3,8 +3,12 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/services/supabase_service.dart';
+import '../../../collaboration/data/repositories/supabase_collaboration_repository.dart';
 import '../../../collaboration/domain/entities/collaboration_event.dart';
+import '../../../collaboration/domain/services/invite_token_service.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
+import '../../../sync/presentation/sync_controller.dart';
 import '../../data/repositories/sqlite_lists_repository.dart';
 import '../../domain/entities/collaborator.dart';
 import '../../domain/entities/shopping_list.dart';
@@ -28,78 +32,42 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final list = state.value?.where((l) => l.id == event.listId).firstOrNull;
       if (list != null && !list.isShared) {
-        return; // List is local only: do not broadcast
+        return;
       }
-      final repo = ref.read(collaborationRepositoryProvider);
-      repo.sendEvent(event);
+      ref
+          .read(collaborationControllerProvider.notifier)
+          .broadcastEvent(event.listId, event);
     } catch (_) {}
   }
 
   String _getCurrentEmail() {
-    try {
-      return ref
-          .read(collaborationControllerProvider.notifier)
-          .currentUserEmail;
-    } catch (_) {
-      return 'user@listix.local';
-    }
+    return 'user@listix.local';
   }
 
   String _getCurrentName() {
-    try {
-      return ref.read(collaborationControllerProvider.notifier).currentUserName;
-    } catch (_) {
-      return 'Tú';
-    }
+    return 'Tú';
   }
 
   Future<void> syncListOnShare(String listId) async {
     final repository = ref.read(listsRepositoryProvider);
     await repository.setListShared(listId, true);
     await repository.syncList(listId);
+    if (ref.read(supabaseServiceProvider).isReady) {
+      await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
+    }
     state = AsyncData(await repository.getLists());
-    try {
-      await ref
-          .read(collaborationControllerProvider.notifier)
-          .joinListRoom(listId);
-    } catch (_) {}
   }
 
   Future<void> setListShared(String listId, bool isShared) async {
-    final currentLists = state.value;
-    if (currentLists != null) {
-      final updatedLists = currentLists.map((l) {
-        if (l.id == listId) {
-          return l.copyWith(isShared: isShared);
-        }
-        return l;
-      }).toList();
-      state = AsyncData(updatedLists);
-    }
-
-    try {
-      final repository = ref.read(listsRepositoryProvider);
-      await repository.setListShared(listId, isShared);
-      if (isShared) {
-        await repository.syncList(listId);
-        state = AsyncData(await repository.getLists());
-        try {
-          await ref
-              .read(collaborationControllerProvider.notifier)
-              .joinListRoom(listId);
-        } catch (_) {}
-      } else {
-        try {
-          await ref
-              .read(collaborationControllerProvider.notifier)
-              .leaveListRoom(listId);
-        } catch (_) {}
+    final repository = ref.read(listsRepositoryProvider);
+    await repository.setListShared(listId, isShared);
+    if (isShared) {
+      await repository.syncList(listId);
+      if (ref.read(supabaseServiceProvider).isReady) {
+        await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
       }
-    } catch (_) {
-      final repository = ref.read(listsRepositoryProvider);
-      state = AsyncData(await repository.getLists());
-      rethrow;
     }
+    state = AsyncData(await repository.getLists());
   }
 
   Future<ShoppingList> createList(String name) async {
@@ -124,6 +92,37 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     );
     state = AsyncData(await repository.getLists());
     return joined;
+  }
+
+  /// Joins a shared list using a secure invitation token or URL via Supabase RPC.
+  /// Validates token hash, 5-member limit, downloads list to SQLite, and initializes Realtime.
+  Future<ShoppingList> joinListByInviteToken(
+    String tokenOrUrl, {
+    String? displayName,
+    String? email,
+  }) async {
+    final supabaseService = ref.read(supabaseServiceProvider);
+
+    if (supabaseService.isReady) {
+      final supabaseCollab = ref.read(supabaseCollaborationRepositoryProvider);
+      final joinResult = await supabaseCollab.joinListByToken(
+        tokenOrUrl: tokenOrUrl,
+        displayName: displayName,
+        email: email,
+      );
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.saveRemoteList(joinResult.list);
+      state = AsyncData(await repository.getLists());
+
+      // Start Realtime channel for this list
+      ref.read(supabaseSyncServiceProvider).subscribeToList(joinResult.list.id);
+      return joinResult.list;
+    }
+
+    // Fallback: parse direct token or list id for offline / mock testing
+    final cleanId =
+        InviteTokenService.extractToken(tokenOrUrl) ?? tokenOrUrl.trim();
+    return await joinList(cleanId, 'Lista Compartida');
   }
 
   Future<void> updateListName(String id, String newName) async {
@@ -282,10 +281,8 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     if (currentLists != null) {
       final updatedLists = currentLists.map((l) {
         if (l.id == listId) {
-          return l.copyWith(
-            isSynced: false,
-            items: [...l.items, optimisticItem],
-          );
+          final updatedItems = [...l.items, optimisticItem];
+          return l.copyWith(isSynced: false, items: updatedItems);
         }
         return l;
       }).toList();
@@ -313,16 +310,14 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
   Future<void> toggleItem(String listId, String itemId) async {
     final currentLists = state.value;
     bool? newCompleted;
+
     if (currentLists != null) {
       final updatedLists = currentLists.map((l) {
         if (l.id == listId) {
           final updatedItems = l.items.map((item) {
             if (item.id == itemId) {
               newCompleted = !item.isCompleted;
-              return item.copyWith(
-                isCompleted: !item.isCompleted,
-                isSynced: false,
-              );
+              return item.copyWith(isCompleted: newCompleted!, isSynced: false);
             }
             return item;
           }).toList();

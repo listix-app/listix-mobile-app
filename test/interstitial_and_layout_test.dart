@@ -1,3 +1,4 @@
+import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:flutter/material.dart';
@@ -1136,6 +1137,26 @@ class _FakeRepoWithLists implements ListsRepository {
     String listId,
     String collaboratorId,
   ) async {}
+
+  @override
+  Future<void> saveRemoteList(ShoppingList list) async {
+    final idx = lists.indexWhere((l) => l.id == list.id);
+    if (idx != -1) {
+      lists[idx] = list;
+    } else {
+      lists.add(list);
+    }
+  }
+
+  @override
+  Future<List<PendingOperation>> getPendingOperations({String? listId}) async =>
+      [];
+
+  @override
+  Future<void> removePendingOperation(String id) async {}
+
+  @override
+  Future<void> clearPendingOperationsForList(String listId) async {}
 }
 
 class _TestSettingsNotificationService implements NotificationService {

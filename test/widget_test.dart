@@ -38,9 +38,8 @@ void main() {
       expect(find.byType(ListixLogo), findsOneWidget);
       expect(find.text('Listix', findRichText: true), findsOneWidget);
       expect(find.text('Mis Listas'), findsOneWidget);
-      expect(find.text('Supermercado semanal'), findsOneWidget);
-      expect(find.text('Ferretería y Hogar'), findsOneWidget);
-      expect(find.text('Ropa para vacaciones'), findsOneWidget);
+      expect(find.text('Mi lista'), findsOneWidget);
+      expect(find.text('Otra lista'), findsOneWidget);
       expect(find.text('Nueva lista'), findsOneWidget);
     },
   );
@@ -60,11 +59,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap on first list to open ListDetailScreen
-      await tester.tap(find.text('Supermercado semanal'));
+      await tester.tap(find.text('Mi lista'));
       await tester.pumpAndSettle();
 
       // Verify ListDetailScreen is open
-      expect(find.text('Supermercado semanal'), findsWidgets);
+      expect(find.text('Mi lista'), findsWidgets);
 
       // Find the QuickAddInput TextField
       final textFieldFinder = find.byType(TextField);

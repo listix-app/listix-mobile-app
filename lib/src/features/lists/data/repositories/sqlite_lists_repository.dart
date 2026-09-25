@@ -1,4 +1,5 @@
-import 'package:sqflite/sqflite.dart';
+import 'dart:convert';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/storage/app_database.dart';
@@ -6,97 +7,111 @@ import '../../domain/entities/collaborator.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/todo_item.dart';
 import '../../domain/repositories/lists_repository.dart';
+import '../../../sync/domain/pending_operation.dart';
 
 class SqliteListsRepository implements ListsRepository {
-  final AppDatabase _appDatabase;
+  final Future<Database> _db;
   final Uuid _uuid;
 
-  SqliteListsRepository({AppDatabase? appDatabase, Uuid? uuid})
-    : _appDatabase = appDatabase ?? AppDatabase.instance,
+  SqliteListsRepository({Future<Database>? db, Uuid? uuid})
+    : _db = db ?? AppDatabase.instance.database,
       _uuid = uuid ?? const Uuid();
 
-  Future<Database> get _db => _appDatabase.database;
+  Future<bool> _isListShared(DatabaseExecutor executor, String listId) async {
+    final res = await executor.query(
+      'lists',
+      columns: ['is_shared'],
+      where: 'id = ?',
+      whereArgs: [listId],
+      limit: 1,
+    );
+    if (res.isEmpty) return false;
+    return (res.first['is_shared'] as int?) == 1;
+  }
 
   @override
   Future<List<ShoppingList>> getLists() async {
     final db = await _db;
 
-    final listMaps = await db.query(
+    final listsData = await db.query(
       'lists',
       where: 'deleted_at IS NULL',
       orderBy: 'is_starred DESC, position ASC, created_at DESC',
     );
 
-    if (listMaps.isEmpty) return [];
+    if (listsData.isEmpty) return [];
 
-    final listIds = listMaps.map((m) => m['id'] as String).toList();
-    final inPlaceholders = List.filled(listIds.length, '?').join(',');
+    final listIds = listsData.map((l) => l['id'] as String).toList();
+    final placeholders = List.filled(listIds.length, '?').join(',');
 
-    final itemMaps = await db.query(
+    final itemsData = await db.query(
       'items',
-      where: 'list_id IN ($inPlaceholders) AND deleted_at IS NULL',
+      where: 'list_id IN ($placeholders) AND deleted_at IS NULL',
       whereArgs: listIds,
-      orderBy: 'position ASC, created_at DESC',
+      orderBy: 'position ASC, created_at ASC',
     );
 
-    final collabMaps = await db.query(
+    final collaboratorsData = await db.query(
       'collaborators',
-      where: 'list_id IN ($inPlaceholders)',
+      where: 'list_id IN ($placeholders)',
       whereArgs: listIds,
     );
 
     final itemsByList = <String, List<TodoItem>>{};
-    for (final row in itemMaps) {
-      final listId = row['list_id'] as String;
-      final item = TodoItem(
-        id: row['id'] as String,
-        listId: listId,
-        title: row['title'] as String,
-        isCompleted: (row['is_completed'] as int) == 1,
-        isSynced: (row['is_synced'] as int) == 1,
-        position: (row['position'] as int?) ?? 0,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(
-          row['created_at'] as int,
-        ),
-      );
-      itemsByList.putIfAbsent(listId, () => []).add(item);
+    for (final item in itemsData) {
+      final listId = item['list_id'] as String;
+      itemsByList
+          .putIfAbsent(listId, () => [])
+          .add(
+            TodoItem(
+              id: item['id'] as String,
+              listId: listId,
+              title: item['title'] as String,
+              isCompleted: (item['is_completed'] as int) == 1,
+              isSynced: (item['is_synced'] as int) == 1,
+              position: (item['position'] as int?) ?? 0,
+              createdAt: DateTime.fromMillisecondsSinceEpoch(
+                item['created_at'] as int,
+              ),
+            ),
+          );
     }
 
-    final collabsByList = <String, List<Collaborator>>{};
-    for (final row in collabMaps) {
-      final listId = row['list_id'] as String;
-      final roleStr = row['role'] as String?;
-      final isOwner = (row['is_owner'] as int) == 1;
-      final role = roleStr != null
-          ? CollaboratorRole.values.firstWhere(
-              (r) => r.name == roleStr,
-              orElse: () =>
-                  isOwner ? CollaboratorRole.owner : CollaboratorRole.member,
-            )
-          : (isOwner ? CollaboratorRole.owner : CollaboratorRole.member);
-      final collab = Collaborator(
-        id: row['id'] as String,
-        name: row['name'] as String,
-        email: row['email'] as String,
-        role: role,
-        isOwner: isOwner,
+    final collaboratorsByList = <String, List<Collaborator>>{};
+    for (final collab in collaboratorsData) {
+      final listId = collab['list_id'] as String;
+      final roleStr = collab['role'] as String? ?? 'member';
+      final role = CollaboratorRole.values.firstWhere(
+        (r) => r.name == roleStr,
+        orElse: () => CollaboratorRole.member,
       );
-      collabsByList.putIfAbsent(listId, () => []).add(collab);
+
+      collaboratorsByList
+          .putIfAbsent(listId, () => [])
+          .add(
+            Collaborator(
+              id: collab['id'] as String,
+              name: collab['name'] as String,
+              email: collab['email'] as String,
+              isOwner: (collab['is_owner'] as int) == 1,
+              role: role,
+            ),
+          );
     }
 
-    return listMaps.map((row) {
-      final id = row['id'] as String;
+    return listsData.map((list) {
+      final id = list['id'] as String;
       return ShoppingList(
         id: id,
-        name: row['name'] as String,
-        isSynced: (row['is_synced'] as int) == 1,
-        isStarred: (row['is_starred'] as int?) == 1,
-        isShared: (row['is_shared'] as int?) == 1,
-        position: (row['position'] as int?) ?? 0,
+        name: list['name'] as String,
+        isSynced: (list['is_synced'] as int) == 1,
+        isStarred: (list['is_starred'] as int) == 1,
+        isShared: (list['is_shared'] as int) == 1,
+        position: (list['position'] as int?) ?? 0,
         items: itemsByList[id] ?? [],
-        collaborators: collabsByList[id] ?? [],
+        collaborators: collaboratorsByList[id] ?? [],
         createdAt: DateTime.fromMillisecondsSinceEpoch(
-          row['created_at'] as int,
+          list['created_at'] as int,
         ),
       );
     }).toList();
@@ -152,12 +167,27 @@ class SqliteListsRepository implements ListsRepository {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await db.update(
-      'lists',
-      {'name': newName.trim(), 'is_synced': 0, 'updated_at': now},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    await db.transaction((txn) async {
+      await txn.update(
+        'lists',
+        {'name': newName.trim(), 'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [id],
+      );
+
+      final isShared = await _isListShared(txn, id);
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': id,
+          'entity_type': PendingEntityType.list.name,
+          'entity_id': id,
+          'op_type': PendingOpType.upsert.name,
+          'payload': jsonEncode({'name': newName.trim(), 'updated_at': now}),
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
 
     final updated = await getListById(id);
     if (updated == null) throw Exception('Lista no encontrada tras actualizar');
@@ -167,32 +197,101 @@ class SqliteListsRepository implements ListsRepository {
   @override
   Future<void> deleteList(String id) async {
     final db = await _db;
-    await db.delete('lists', where: 'id = ?', whereArgs: [id]);
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      final isShared = await _isListShared(txn, id);
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': id,
+          'entity_type': PendingEntityType.list.name,
+          'entity_id': id,
+          'op_type': PendingOpType.delete.name,
+          'payload': null,
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+
+      await txn.delete('lists', where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   @override
   Future<void> toggleListStar(String listId) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.rawUpdate(
-      'UPDATE lists SET is_starred = CASE WHEN is_starred = 1 THEN 0 ELSE 1 END, updated_at = ? WHERE id = ?',
-      [now, listId],
-    );
+    await db.transaction((txn) async {
+      await txn.rawUpdate(
+        'UPDATE lists SET is_starred = CASE WHEN is_starred = 1 THEN 0 ELSE 1 END, updated_at = ?, is_synced = 0 WHERE id = ?',
+        [now, listId],
+      );
+      if (await _isListShared(txn, listId)) {
+        final row = await txn.query(
+          'lists',
+          where: 'id = ?',
+          whereArgs: [listId],
+          limit: 1,
+        );
+        if (row.isNotEmpty) {
+          await txn.insert('pending_operations', {
+            'id': _uuid.v4(),
+            'list_id': listId,
+            'entity_type': PendingEntityType.list.name,
+            'entity_id': listId,
+            'op_type': PendingOpType.upsert.name,
+            'payload': jsonEncode({
+              'name': row.first['name'],
+              'is_starred': row.first['is_starred'],
+              'position': row.first['position'],
+              'updated_at': now,
+            }),
+            'created_at': now,
+          });
+        }
+      }
+    });
   }
 
   @override
   Future<void> reorderLists(List<String> orderedListIds) async {
     final db = await _db;
-    final batch = db.batch();
-    for (var i = 0; i < orderedListIds.length; i++) {
-      batch.update(
-        'lists',
-        {'position': i},
-        where: 'id = ?',
-        whereArgs: [orderedListIds[i]],
-      );
-    }
-    await batch.commit(noResult: true);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      for (var i = 0; i < orderedListIds.length; i++) {
+        final id = orderedListIds[i];
+        await txn.update(
+          'lists',
+          {'position': i, 'is_synced': 0, 'updated_at': now},
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        if (await _isListShared(txn, id)) {
+          final row = await txn.query(
+            'lists',
+            where: 'id = ?',
+            whereArgs: [id],
+            limit: 1,
+          );
+          if (row.isNotEmpty) {
+            await txn.insert('pending_operations', {
+              'id': _uuid.v4(),
+              'list_id': id,
+              'entity_type': PendingEntityType.list.name,
+              'entity_id': id,
+              'op_type': PendingOpType.upsert.name,
+              'payload': jsonEncode({
+                'name': row.first['name'],
+                'is_starred': row.first['is_starred'],
+                'position': i,
+                'updated_at': now,
+              }),
+              'created_at': now,
+            });
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -260,12 +359,33 @@ class SqliteListsRepository implements ListsRepository {
         'updated_at': now,
       });
 
+      final isShared = await _isListShared(txn, listId);
       await txn.update(
         'lists',
-        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
+        {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
+
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'entity_type': PendingEntityType.item.name,
+          'entity_id': itemId,
+          'op_type': PendingOpType.upsert.name,
+          'payload': jsonEncode({
+            'id': itemId,
+            'list_id': listId,
+            'title': title.trim(),
+            'is_completed': 0,
+            'position': nextPosition,
+            'created_at': now,
+            'updated_at': now,
+          }),
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
     });
 
     return TodoItem(
@@ -308,12 +428,32 @@ class SqliteListsRepository implements ListsRepository {
         whereArgs: [itemId],
       );
 
+      final isShared = await _isListShared(txn, listId);
       await txn.update(
         'lists',
-        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
+        {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
+
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'entity_type': PendingEntityType.item.name,
+          'entity_id': itemId,
+          'op_type': PendingOpType.upsert.name,
+          'payload': jsonEncode({
+            'id': itemId,
+            'list_id': listId,
+            'title': existing.first['title'] as String,
+            'is_completed': newCompleted ? 1 : 0,
+            'position': (existing.first['position'] as int?) ?? 0,
+            'updated_at': now,
+          }),
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
     });
 
     return TodoItem(
@@ -337,28 +477,69 @@ class SqliteListsRepository implements ListsRepository {
     await db.transaction((txn) async {
       await txn.delete('items', where: 'id = ?', whereArgs: [itemId]);
 
+      final isShared = await _isListShared(txn, listId);
       await txn.update(
         'lists',
-        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
+        {'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
+
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'entity_type': PendingEntityType.item.name,
+          'entity_id': itemId,
+          'op_type': PendingOpType.delete.name,
+          'payload': null,
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
     });
   }
 
   @override
   Future<void> reorderItems(String listId, List<String> orderedItemIds) async {
     final db = await _db;
-    final batch = db.batch();
-    for (var i = 0; i < orderedItemIds.length; i++) {
-      batch.update(
-        'items',
-        {'position': i},
-        where: 'id = ? AND list_id = ?',
-        whereArgs: [orderedItemIds[i], listId],
-      );
-    }
-    await batch.commit(noResult: true);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      final isShared = await _isListShared(txn, listId);
+      for (var i = 0; i < orderedItemIds.length; i++) {
+        final itemId = orderedItemIds[i];
+        await txn.update(
+          'items',
+          {'position': i, 'is_synced': 0, 'updated_at': now},
+          where: 'id = ? AND list_id = ?',
+          whereArgs: [itemId, listId],
+        );
+        if (isShared) {
+          final rows = await txn.query(
+            'items',
+            where: 'id = ? AND list_id = ?',
+            whereArgs: [itemId, listId],
+            limit: 1,
+          );
+          if (rows.isNotEmpty) {
+            final item = rows.first;
+            await txn.insert('pending_operations', {
+              'id': _uuid.v4(),
+              'list_id': listId,
+              'entity_type': PendingEntityType.item.name,
+              'entity_id': itemId,
+              'op_type': PendingOpType.upsert.name,
+              'payload': jsonEncode({
+                'title': item['title'],
+                'is_completed': item['is_completed'],
+                'position': i,
+                'updated_at': now,
+              }),
+              'created_at': now,
+            });
+          }
+        }
+      }
+    });
   }
 
   @override
@@ -383,6 +564,27 @@ class SqliteListsRepository implements ListsRepository {
         where: 'id = ?',
         whereArgs: [item.listId],
       );
+
+      final isShared = await _isListShared(txn, item.listId);
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': item.listId,
+          'entity_type': PendingEntityType.item.name,
+          'entity_id': item.id,
+          'op_type': PendingOpType.upsert.name,
+          'payload': jsonEncode({
+            'id': item.id,
+            'list_id': item.listId,
+            'title': item.title,
+            'is_completed': item.isCompleted ? 1 : 0,
+            'position': item.position,
+            'created_at': item.createdAt.millisecondsSinceEpoch,
+            'updated_at': now,
+          }),
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
     });
   }
 
@@ -510,6 +712,59 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
+  Future<void> saveRemoteList(ShoppingList list) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      await txn.delete('items', where: 'list_id = ?', whereArgs: [list.id]);
+      await txn.delete(
+        'collaborators',
+        where: 'list_id = ?',
+        whereArgs: [list.id],
+      );
+      await txn.insert('lists', {
+        'id': list.id,
+        'name': list.name,
+        'is_synced': 1,
+        'is_starred': list.isStarred ? 1 : 0,
+        'is_shared': 1,
+        'position': list.position,
+        'created_at': list.createdAt.millisecondsSinceEpoch,
+        'updated_at': now,
+        'deleted_at': null,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+      // Save collaborators
+      for (final collab in list.collaborators) {
+        await txn.insert('collaborators', {
+          'id': collab.id,
+          'list_id': list.id,
+          'name': collab.name,
+          'email': collab.email,
+          'is_owner': collab.isOwner ? 1 : 0,
+          'role': collab.role.name,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+
+      // Save items
+      for (final item in list.items) {
+        await txn.insert('items', {
+          'id': item.id,
+          'list_id': list.id,
+          'title': item.title,
+          'is_completed': item.isCompleted ? 1 : 0,
+          'is_synced': 1,
+          'position': item.position,
+          'created_at': item.createdAt.millisecondsSinceEpoch,
+          'updated_at': now,
+          'deleted_at': null,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
+  @override
   Future<void> applyRemoteItem(TodoItem item) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -622,10 +877,112 @@ class SqliteListsRepository implements ListsRepository {
   Future<void> setListShared(String listId, bool isShared) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.update(
+    await db.transaction((txn) async {
+      await txn.update(
+        'lists',
+        {'is_shared': isShared ? 1 : 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+
+      if (isShared) {
+        // Enqueue list upsert
+        final listQuery = await txn.query(
+          'lists',
+          where: 'id = ?',
+          whereArgs: [listId],
+          limit: 1,
+        );
+        if (listQuery.isNotEmpty) {
+          final l = listQuery.first;
+          await txn.insert('pending_operations', {
+            'id': _uuid.v4(),
+            'list_id': listId,
+            'entity_type': PendingEntityType.list.name,
+            'entity_id': listId,
+            'op_type': PendingOpType.upsert.name,
+            'payload': jsonEncode({
+              'id': listId,
+              'name': l['name'] as String,
+              'is_starred': l['is_starred'] as int,
+              'position': l['position'] as int,
+              'updated_at': now,
+            }),
+            'created_at': now,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+          // Also enqueue existing items
+          final items = await txn.query(
+            'items',
+            where: 'list_id = ? AND deleted_at IS NULL',
+            whereArgs: [listId],
+          );
+          for (final item in items) {
+            await txn.insert('pending_operations', {
+              'id': _uuid.v4(),
+              'list_id': listId,
+              'entity_type': PendingEntityType.item.name,
+              'entity_id': item['id'] as String,
+              'op_type': PendingOpType.upsert.name,
+              'payload': jsonEncode({
+                'id': item['id'] as String,
+                'list_id': listId,
+                'title': item['title'] as String,
+                'is_completed': item['is_completed'] as int,
+                'position': item['position'] as int? ?? 0,
+                'updated_at': item['updated_at'] as int? ?? now,
+              }),
+              'created_at': now,
+            }, conflictAlgorithm: ConflictAlgorithm.replace);
+          }
+        }
+      }
+    });
+  }
+
+  @override
+  Future<List<PendingOperation>> getPendingOperations({String? listId}) async {
+    final db = await _db;
+    final List<Map<String, dynamic>> rows;
+    if (listId != null) {
+      rows = await db.query(
+        'pending_operations',
+        where: 'list_id = ?',
+        whereArgs: [listId],
+        orderBy: 'created_at ASC, rowid ASC',
+      );
+    } else {
+      rows = await db.query(
+        'pending_operations',
+        orderBy: 'created_at ASC, rowid ASC',
+      );
+    }
+    final sharedListRows = await db.query(
       'lists',
-      {'is_shared': isShared ? 1 : 0, 'updated_at': now},
-      where: 'id = ?',
+      columns: ['id'],
+      where: 'is_shared = 1',
+    );
+    final sharedListIds = sharedListRows
+        .map((row) => row['id'] as String)
+        .toSet();
+    return rows
+        .where((row) => sharedListIds.contains(row['list_id']))
+        .map(PendingOperation.fromMap)
+        .toList();
+  }
+
+  @override
+  Future<void> removePendingOperation(String id) async {
+    final db = await _db;
+    await db.delete('pending_operations', where: 'id = ?', whereArgs: [id]);
+  }
+
+  @override
+  Future<void> clearPendingOperationsForList(String listId) async {
+    final db = await _db;
+    await db.delete(
+      'pending_operations',
+      where: 'list_id = ?',
       whereArgs: [listId],
     );
   }

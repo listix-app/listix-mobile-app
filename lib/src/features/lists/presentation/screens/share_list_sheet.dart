@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/services/supabase_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
+import '../../../collaboration/data/repositories/supabase_collaboration_repository.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../controllers/lists_controller.dart';
@@ -30,7 +31,21 @@ class ShareListSheet extends ConsumerStatefulWidget {
 }
 
 class _ShareListSheetState extends ConsumerState<ShareListSheet> {
-  Future<void> _shareSystem(
+  Future<String> _getOrGenerateInviteLink(
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final supabaseService = ref.read(supabaseServiceProvider);
+    if (supabaseService.isReady) {
+      final supabaseCollab = ref.read(supabaseCollaborationRepositoryProvider);
+      return await supabaseCollab.createInviteLink(listId: list.id);
+    }
+    throw StateError(
+      'Supabase no está disponible. Verifica Anonymous Sign-Ins en el proyecto.',
+    );
+  }
+
+  Future<void> _shareInviteLink(
     BuildContext context,
     WidgetRef ref,
     ShoppingList list,
@@ -40,69 +55,34 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
         ? box.localToGlobal(Offset.zero) & box.size
         : null;
     final tr = ref.read(stringsProvider);
-    await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
-    final inviteLink = ShareService.createInviteLink(list.id, list.name);
-    final text = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      inviteLinkText: tr.shareInviteLinkPrompt(inviteLink),
-      pendingSectionTitle: tr.sharePendingSection,
-      completedSectionTitle: tr.shareCompletedSection,
-      emptyListText: tr.shareEmptyListNotice,
-    );
-    final subject = tr.shareSubject(list.name);
-    final shareService = ref.read(shareServiceProvider);
-    await shareService.shareWithSystem(
-      text: text,
-      subject: subject,
-      sharePositionOrigin: sharePositionOrigin,
-    );
-    if (context.mounted && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+    try {
+      await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
+      final inviteLink = await _getOrGenerateInviteLink(ref, list);
+      await ref
+          .read(shareServiceProvider)
+          .shareWithSystem(
+            text: tr.shareInviteLinkPrompt(inviteLink),
+            subject: tr.shareSubject(list.name),
+            sharePositionOrigin: sharePositionOrigin,
+          );
+      if (context.mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+    } catch (error) {
+      if (context.mounted) _showShareError(context, error);
     }
   }
 
-  Future<void> _copyInviteLink(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    final inviteLink = ShareService.createInviteLink(list.id, list.name);
-    final shareService = ref.read(shareServiceProvider);
-    await shareService.copyToClipboard(inviteLink);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
+  void _showShareError(BuildContext context, Object error) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
         SnackBar(
-          content: Text(tr.linkCopied),
+          content: Text('No se pudo crear el enlace de invitación: $error'),
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
         ),
       );
-    }
-  }
-
-  Future<void> _simulateColleagueAction(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-    AppStrings tr,
-  ) async {
-    await ref
-        .read(collaborationControllerProvider.notifier)
-        .simulatePeerAction(list.id);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(tr.simulatedItemAdded),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.syncDone,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
   }
 
   @override
@@ -303,7 +283,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       .read(listsControllerProvider.notifier)
                       .setListShared(list.id, true);
                   if (context.mounted) {
-                    await _shareSystem(context, ref, list);
+                    await _shareInviteLink(context, ref, list);
                   }
                 },
                 onEnableCollaboration: () async {
@@ -312,34 +292,10 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       .setListShared(list.id, true);
                 },
               ),
-              const SizedBox(height: 8),
-              // Section: System Share
-              _ShareOptionTile(
-                key: const Key('share_system_tile'),
-                icon: Icons.share_rounded,
-                iconColor: AppColors.primary,
-                iconBackgroundColor: AppColors.primary.withValues(alpha: 0.14),
-                title: tr.shareSystem,
-                subtitle: tr.shareSystemDesc,
-                onTap: () => _shareSystem(context, ref, list),
-              ),
             ] else ...[
-              // When active: show full Collaborators and Sharing Screen
-              _ShareOptionTile(
-                key: const Key('share_system_tile'),
-                icon: Icons.share_rounded,
-                iconColor: AppColors.primary,
-                iconBackgroundColor: AppColors.primary.withValues(alpha: 0.14),
-                title: tr.shareSystem,
-                subtitle: tr.shareSystemDesc,
-                onTap: () => _shareSystem(context, ref, list),
-              ),
-              const SizedBox(height: 10),
-
-              // Copy invite link button
               OutlinedButton.icon(
-                key: const Key('copy_invite_link_button'),
-                icon: const Icon(Icons.link_rounded, size: 18),
+                key: const Key('share_invite_link_button'),
+                icon: const Icon(Icons.share_rounded, size: 18),
                 label: Text(tr.copyInviteLink),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
@@ -349,35 +305,21 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () => _copyInviteLink(context, ref, list),
+                onPressed: () => _shareInviteLink(context, ref, list),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
               // Section: Current Collaborators
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '${tr.collaboratorsHeading} (${list.collaborators.length})',
+                    '${tr.collaboratorsHeading} (${list.collaborators.length}/5 máx.)',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: textTitleColor,
                     ),
-                  ),
-                  TextButton.icon(
-                    key: const Key('simulate_peer_button'),
-                    icon: const Icon(Icons.bolt_rounded, size: 16),
-                    label: Text(
-                      tr.simulateColleagueAction,
-                      style: const TextStyle(fontSize: 11),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.syncDone,
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    onPressed: () =>
-                        _simulateColleagueAction(context, ref, list, tr),
                   ),
                 ],
               ),
@@ -443,99 +385,6 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
   }
 }
 
-class _ShareOptionTile extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBackgroundColor;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ShareOptionTile({
-    super.key,
-    required this.icon,
-    required this.iconColor,
-    required this.iconBackgroundColor,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? AppColors.borderDark : AppColors.borderLight,
-              width: 1,
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconBackgroundColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.textPrimaryDark
-                            : AppColors.textPrimary,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondary,
-                        letterSpacing: -0.1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: isDark
-                    ? AppColors.textSecondaryDark
-                    : AppColors.textSecondary,
-                size: 20,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _InactiveShareInviteComponent extends StatelessWidget {
   final ShoppingList list;
   final AppStrings tr;
@@ -562,20 +411,11 @@ class _InactiveShareInviteComponent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      key: const Key('inactive_share_invite_component'),
-      margin: const EdgeInsets.only(top: 4, bottom: 14),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: cardBg,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -583,135 +423,85 @@ class _InactiveShareInviteComponent extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.14),
+                  color: AppColors.primary.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.group_add_rounded,
+                  Icons.person_add_alt_1_rounded,
                   color: AppColors.primary,
-                  size: 26,
+                  size: 20,
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr.inactiveShareInviteTitle,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: textTitleColor,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      tr.inviteColleagueSubtitle,
-                      style: TextStyle(fontSize: 12, color: textMutedColor),
-                    ),
-                  ],
+                child: Text(
+                  tr.inactiveShareInviteTitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textTitleColor,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
           Text(
             tr.inactiveShareInviteDescription,
-            style: TextStyle(fontSize: 13, height: 1.45, color: textMutedColor),
+            style: TextStyle(fontSize: 12, color: textMutedColor, height: 1.4),
           ),
-          const SizedBox(height: 16),
-          _BenefitRow(
-            icon: Icons.bolt_rounded,
-            iconColor: const Color(0xFFF59E0B),
-            text: tr.realtimeSyncFeature,
-            textColor: textTitleColor,
-          ),
-          const SizedBox(height: 10),
-          _BenefitRow(
-            icon: Icons.link_rounded,
-            iconColor: const Color(0xFF6366F1),
-            text: tr.collaboratorsFeature,
-            textColor: textTitleColor,
-          ),
-          const SizedBox(height: 20),
-          FilledButton.icon(
-            key: const Key('activate_and_share_button'),
-            icon: const Icon(Icons.share_rounded, size: 18),
-            label: Text(
-              tr.activateAndShare,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 46),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  key: const Key('activate_shared_button'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  onPressed: onEnableCollaboration,
+                  child: Text(
+                    tr.enableCollaboration,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            onPressed: onActivateAndShare,
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            key: const Key('enable_sharing_button'),
-            icon: const Icon(Icons.cloud_sync_rounded, size: 18),
-            label: Text(tr.enableCollaboration),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.primary,
-              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
-              minimumSize: const Size(double.infinity, 44),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  key: const Key('activate_and_share_button'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  icon: const Icon(Icons.share_rounded, size: 16),
+                  label: Text(
+                    tr.activateAndShare,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  onPressed: onActivateAndShare,
+                ),
               ),
-            ),
-            onPressed: onEnableCollaboration,
+            ],
           ),
         ],
       ),
-    );
-  }
-}
-
-class _BenefitRow extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String text;
-  final Color textColor;
-
-  const _BenefitRow({
-    required this.icon,
-    required this.iconColor,
-    required this.text,
-    required this.textColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: iconColor.withValues(alpha: 0.14),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Icon(icon, color: iconColor, size: 16),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w500,
-              color: textColor,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

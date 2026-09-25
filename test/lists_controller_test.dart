@@ -1,3 +1,4 @@
+import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
@@ -377,6 +378,26 @@ class FakeFailingListsRepository implements ListsRepository {
       );
     }
   }
+
+  @override
+  Future<void> saveRemoteList(ShoppingList list) async {
+    final idx = internalLists.indexWhere((l) => l.id == list.id);
+    if (idx != -1) {
+      internalLists[idx] = list;
+    } else {
+      internalLists.add(list);
+    }
+  }
+
+  @override
+  Future<List<PendingOperation>> getPendingOperations({String? listId}) async =>
+      [];
+
+  @override
+  Future<void> removePendingOperation(String id) async {}
+
+  @override
+  Future<void> clearPendingOperationsForList(String listId) async {}
 }
 
 class FakeBackendSyncService extends MockBackendSyncService {

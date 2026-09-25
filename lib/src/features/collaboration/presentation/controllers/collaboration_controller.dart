@@ -138,6 +138,13 @@ class CollaborationController extends Notifier<CollaborationState> {
     } catch (_) {}
   }
 
+  Future<void> broadcastEvent(String listId, CollaborationEvent event) async {
+    try {
+      final repo = ref.read(collaborationRepositoryProvider);
+      await repo.sendEvent(event);
+    } catch (_) {}
+  }
+
   void _onIncomingEvent(CollaborationEvent event) {
     state = state.copyWith(lastEvent: event);
 

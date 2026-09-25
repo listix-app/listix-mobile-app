@@ -497,6 +497,7 @@ void main() {
         final list = ShoppingList(
           id: 'share_list',
           name: 'Asado familiar',
+          isShared: true,
           items: [
             TodoItem(
               id: 'i1',
@@ -528,17 +529,18 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text('Compartir "Asado familiar"'), findsOneWidget);
-        expect(find.text('Compartir en el sistema'), findsOneWidget);
+        expect(
+          find.byKey(const Key('share_invite_link_button')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('share_system_tile')), findsNothing);
 
         // Verify removed options
         expect(find.byKey(const Key('share_whatsapp_tile')), findsNothing);
         expect(find.byKey(const Key('share_gmail_tile')), findsNothing);
         expect(find.byKey(const Key('copy_text_tile')), findsNothing);
 
-        await tester.tap(find.text('Compartir en el sistema'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.systemShared, isTrue);
-        expect(fakeController.syncedListIds, contains('share_list'));
+        expect(fakeController.syncedListIds, isEmpty);
       },
     );
 
@@ -586,14 +588,11 @@ void main() {
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
         expect(find.text('Compartir "Lista sola"'), findsOneWidget);
-        await tester.tap(find.text('Compartir en el sistema'));
-        await tester.pumpAndSettle();
-        expect(fakeShare.systemShared, isTrue);
-
-        // Verify WhatsApp, Gmail, and Copy raw text options are removed, keeping only system share
-        await tester.tap(find.text('Open Modal'));
-        await tester.pumpAndSettle();
-        expect(find.byKey(const Key('share_system_tile')), findsOneWidget);
+        expect(
+          find.byKey(const Key('activate_and_share_button')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('share_system_tile')), findsNothing);
         expect(find.byKey(const Key('share_whatsapp_tile')), findsNothing);
         expect(find.byKey(const Key('share_gmail_tile')), findsNothing);
         expect(find.byKey(const Key('copy_text_tile')), findsNothing);

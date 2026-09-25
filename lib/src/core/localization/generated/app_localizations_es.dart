@@ -182,7 +182,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Tus datos se guardan de forma local en tu dispositivo con SQLite. La lista se sincroniza únicamente al compartir.';
 
   @override
-  String get copyInviteLink => 'Copiar enlace de invitación';
+  String get copyInviteLink => 'Compartir enlace de invitación';
 
   @override
   String get linkCopied => 'Enlace copiado al portapapeles';

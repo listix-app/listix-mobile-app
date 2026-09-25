@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:uuid/uuid.dart';
 
 class AppDatabase {
   static final AppDatabase instance = AppDatabase._internal();
@@ -40,7 +42,7 @@ class AppDatabase {
 
     return await openDatabase(
       dbPath,
-      version: 6,
+      version: 9,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -65,7 +67,10 @@ class AppDatabase {
     }
     if (oldVersion < 3) {
       await db.execute('''
-        CREATE TABLE IF NOT EXISTS app_settings (\n          key TEXT PRIMARY KEY NOT NULL,\n          value TEXT NOT NULL\n        );
+        CREATE TABLE IF NOT EXISTS app_settings (
+          key TEXT PRIMARY KEY NOT NULL,
+          value TEXT NOT NULL
+        );
       ''');
     }
     if (oldVersion < 4) {
@@ -112,11 +117,52 @@ class AppDatabase {
         await db.execute('ALTER TABLE todo_items RENAME TO items;');
       }
     }
+    if (oldVersion < 7) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS pending_operations (
+          id TEXT PRIMARY KEY NOT NULL,
+          list_id TEXT NOT NULL,
+          entity_type TEXT NOT NULL,
+          entity_id TEXT NOT NULL,
+          op_type TEXT NOT NULL,
+          payload TEXT,
+          created_at INTEGER NOT NULL
+        );
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_pending_ops_list ON pending_operations(list_id);',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_pending_ops_created ON pending_operations(created_at);',
+      );
+    }
+    if (oldVersion < 8) {
+      await db.execute(
+        "UPDATE lists SET is_shared = 0 WHERE id IN ('list-1', 'list-3')",
+      );
+      await db.execute(
+        "DELETE FROM pending_operations WHERE list_id IN ('list-1', 'list-3')",
+      );
+    }
+    if (oldVersion < 9) {
+      await db.delete(
+        'pending_operations',
+        where: 'list_id IN (?, ?, ?)',
+        whereArgs: ['list-1', 'list-2', 'list-3'],
+      );
+      await db.delete(
+        'lists',
+        where: 'id IN (?, ?, ?)',
+        whereArgs: ['list-1', 'list-2', 'list-3'],
+      );
+      await _seedInitialData(db);
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE lists (\n        id TEXT PRIMARY KEY NOT NULL,
+      CREATE TABLE lists (
+        id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
         is_synced INTEGER NOT NULL DEFAULT 0,
         is_starred INTEGER NOT NULL DEFAULT 0,
@@ -154,12 +200,30 @@ class AppDatabase {
       );
     ''');
 
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS pending_operations (
+        id TEXT PRIMARY KEY NOT NULL,
+        list_id TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        op_type TEXT NOT NULL,
+        payload TEXT,
+        created_at INTEGER NOT NULL
+      );
+    ''');
+
     await db.execute('CREATE INDEX idx_items_list_id ON items(list_id);');
     await db.execute('CREATE INDEX idx_items_is_synced ON items(is_synced);');
     await db.execute('CREATE INDEX idx_lists_is_synced ON lists(is_synced);');
     await db.execute('CREATE INDEX idx_lists_is_shared ON lists(is_shared);');
     await db.execute(
       'CREATE INDEX idx_collaborators_list_id ON collaborators(list_id);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_pending_ops_list ON pending_operations(list_id);',
+    );
+    await db.execute(
+      'CREATE INDEX idx_pending_ops_created ON pending_operations(created_at);',
     );
 
     await db.execute('''
@@ -174,143 +238,71 @@ class AppDatabase {
 
   Future<void> _seedInitialData(Database db) async {
     final now = DateTime.now().millisecondsSinceEpoch;
+    final uuid = const Uuid();
+    final defaults = [('Mi lista', 1, 0), ('Otra lista', 0, 1)];
 
-    await db.insert('lists', {
-      'id': 'list-1',
-      'name': 'Supermercado semanal',
-      'is_synced': 1,
-      'is_starred': 1,
-      'is_shared': 1,
-      'position': 0,
-      'created_at': now - 86400000 * 2,
-      'updated_at': now - 86400000 * 2,
-    });
+    for (final (name, isStarred, position) in defaults) {
+      await db.insert('lists', {
+        'id': uuid.v4(),
+        'name': name,
+        'is_synced': 1,
+        'is_starred': isStarred,
+        'is_shared': 0,
+        'position': position,
+        'created_at': now,
+        'updated_at': now,
+      });
+    }
+  }
 
-    await db.insert('collaborators', {
-      'id': 'collab-1',
-      'list_id': 'list-1',
-      'name': 'Mariana Ruiz',
-      'email': 'mariana.ruiz@example.com',
-      'is_owner': 0,
-      'role': 'admin',
-    });
-    await db.insert('collaborators', {
-      'id': 'collab-2',
-      'list_id': 'list-1',
-      'name': 'Carlos Gómez',
-      'email': 'carlos.g@example.com',
-      'is_owner': 0,
-    });
+  Future<void> enqueuePendingOperation({
+    required String id,
+    required String listId,
+    required String entityType,
+    required String entityId,
+    required String opType,
+    Map<String, dynamic>? payload,
+    int? createdAt,
+  }) async {
+    final db = await database;
+    await db.insert('pending_operations', {
+      'id': id,
+      'list_id': listId,
+      'entity_type': entityType,
+      'entity_id': entityId,
+      'op_type': opType,
+      'payload': payload != null ? jsonEncode(payload) : null,
+      'created_at': createdAt ?? DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
 
-    await db.insert('items', {
-      'id': 'item-101',
-      'list_id': 'list-1',
-      'title': 'Leche deslactosada',
-      'is_completed': 0,
-      'is_synced': 1,
-      'position': 0,
-      'created_at': now - 14400000,
-      'updated_at': now - 14400000,
-    });
-    await db.insert('items', {
-      'id': 'item-102',
-      'list_id': 'list-1',
-      'title': 'Huevos de campo x30',
-      'is_completed': 0,
-      'is_synced': 1,
-      'position': 1,
-      'created_at': now - 10800000,
-      'updated_at': now - 10800000,
-    });
-    await db.insert('items', {
-      'id': 'item-103',
-      'list_id': 'list-1',
-      'title': 'Aguacates maduros',
-      'is_completed': 0,
-      'is_synced': 0,
-      'position': 2,
-      'created_at': now - 7200000,
-      'updated_at': now - 7200000,
-    });
-    await db.insert('items', {
-      'id': 'item-104',
-      'list_id': 'list-1',
-      'title': 'Café en grano tostado',
-      'is_completed': 1,
-      'is_synced': 1,
-      'position': 3,
-      'created_at': now - 86400000,
-      'updated_at': now - 86400000,
-    });
-    await db.insert('items', {
-      'id': 'item-105',
-      'list_id': 'list-1',
-      'title': 'Pan integral de masa madre',
-      'is_completed': 1,
-      'is_synced': 1,
-      'position': 4,
-      'created_at': now - 86400000,
-      'updated_at': now - 86400000,
-    });
+  Future<List<Map<String, dynamic>>> getPendingOperations({
+    String? listId,
+  }) async {
+    final db = await database;
+    if (listId != null) {
+      return await db.query(
+        'pending_operations',
+        where: 'list_id = ?',
+        whereArgs: [listId],
+        orderBy: 'created_at ASC',
+      );
+    }
+    return await db.query('pending_operations', orderBy: 'created_at ASC');
+  }
 
-    await db.insert('lists', {
-      'id': 'list-2',
-      'name': 'Ferretería y Hogar',
-      'is_synced': 1,
-      'is_starred': 0,
-      'is_shared': 0,
-      'position': 1,
-      'created_at': now - 86400000 * 4,
-      'updated_at': now - 86400000 * 4,
-    });
-    await db.insert('items', {
-      'id': 'item-201',
-      'list_id': 'list-2',
-      'title': 'Bombillos LED 12W x4',
-      'is_completed': 0,
-      'is_synced': 1,
-      'position': 0,
-      'created_at': now - 172800000,
-      'updated_at': now - 172800000,
-    });
-    await db.insert('items', {
-      'id': 'item-202',
-      'list_id': 'list-2',
-      'title': 'Cinta de enmascarar',
-      'is_completed': 1,
-      'is_synced': 1,
-      'position': 1,
-      'created_at': now - 172800000,
-      'updated_at': now - 172800000,
-    });
+  Future<void> removePendingOperation(String id) async {
+    final db = await database;
+    await db.delete('pending_operations', where: 'id = ?', whereArgs: [id]);
+  }
 
-    await db.insert('lists', {
-      'id': 'list-3',
-      'name': 'Ropa para vacaciones',
-      'is_synced': 0,
-      'is_starred': 0,
-      'is_shared': 1,
-      'position': 2,
-      'created_at': now - 3600000,
-      'updated_at': now - 3600000,
-    });
-    await db.insert('collaborators', {
-      'id': 'collab-3',
-      'list_id': 'list-3',
-      'name': 'Andrea Morales',
-      'email': 'andrea.m@example.com',
-      'is_owner': 0,
-    });
-    await db.insert('items', {
-      'id': 'item-301',
-      'list_id': 'list-3',
-      'title': 'Gafas de sol polarizadas',
-      'is_completed': 0,
-      'is_synced': 0,
-      'position': 0,
-      'created_at': now - 2400000,
-      'updated_at': now - 2400000,
-    });
+  Future<void> clearPendingOperationsForList(String listId) async {
+    final db = await database;
+    await db.delete(
+      'pending_operations',
+      where: 'list_id = ?',
+      whereArgs: [listId],
+    );
   }
 
   Future<void> setSetting(String key, String value) async {

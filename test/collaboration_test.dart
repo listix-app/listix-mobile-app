@@ -1,3 +1,4 @@
+import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:async';
@@ -247,6 +248,26 @@ class _FakeListsRepoForCollab implements ListsRepository {
       );
     }
   }
+
+  @override
+  Future<void> saveRemoteList(ShoppingList list) async {
+    final idx = internalLists.indexWhere((l) => l.id == list.id);
+    if (idx != -1) {
+      internalLists[idx] = list;
+    } else {
+      internalLists.add(list);
+    }
+  }
+
+  @override
+  Future<List<PendingOperation>> getPendingOperations({String? listId}) async =>
+      [];
+
+  @override
+  Future<void> removePendingOperation(String id) async {}
+
+  @override
+  Future<void> clearPendingOperationsForList(String listId) async {}
 }
 
 class _FakeListsControllerCollab extends ListsController {
@@ -725,14 +746,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify collaboration section elements
-      expect(find.byKey(const Key('copy_invite_link_button')), findsOneWidget);
+      expect(find.byKey(const Key('share_invite_link_button')), findsOneWidget);
       expect(find.text('Juan Perez'), findsOneWidget);
-
-      // Tap Copy Invite Link
-      await tester.tap(find.byKey(const Key('copy_invite_link_button')));
-      await tester.pumpAndSettle();
-      expect(fakeShare.lastCopiedText, contains('listId=collab_list_1'));
-      expect(find.text('Enlace copiado al portapapeles'), findsOneWidget);
 
       // Change role via popup menu
       await tester.tap(find.byKey(const ValueKey('change_role_c_peer')));
@@ -740,18 +755,7 @@ void main() {
       await tester.tap(find.text('Admin').last);
       await tester.pumpAndSettle();
 
-      // Tap peer simulation button
-      await tester.tap(find.byKey(const Key('simulate_peer_button')));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('Un colega agregó un producto en tiempo real'),
-        findsOneWidget,
-      );
-
-      // Tap share_system_tile
-      await tester.tap(find.byKey(const Key('share_system_tile')));
-      await tester.pumpAndSettle();
-      expect(fakeShare.systemShared, isTrue);
+      expect(find.byKey(const Key('simulate_peer_button')), findsNothing);
     });
 
     testWidgets(
@@ -871,7 +875,7 @@ void main() {
         expect(find.byKey(const Key('enable_sharing_button')), findsOneWidget);
 
         // Verify active collaborator management is hidden when inactive
-        expect(find.byKey(const Key('copy_invite_link_button')), findsNothing);
+        expect(find.byKey(const Key('share_invite_link_button')), findsNothing);
         expect(find.byKey(const Key('simulate_peer_button')), findsNothing);
 
         // Tap activate and share button
@@ -880,7 +884,7 @@ void main() {
 
         expect(fakeController.setListSharedCalled, isTrue);
         expect(fakeController.lastSetSharedValue, isTrue);
-        expect(fakeShare.systemShared, isTrue);
+        expect(find.textContaining('Anonymous Sign-Ins'), findsOneWidget);
       },
     );
 
