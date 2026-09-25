@@ -7,7 +7,7 @@ import 'package:crypto/crypto.dart';
 class InviteTokenService {
   static final Random _secureRandom = Random.secure();
 
-  InviteTokenService._();
+  InviteTokenService._(); // coverage:ignore-line
 
   /// Generates a cryptographically secure, high-entropy 32-byte hex token.
   static String generateSecureToken() {

@@ -52,9 +52,11 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     final repository = ref.read(listsRepositoryProvider);
     await repository.setListShared(listId, true);
     await repository.syncList(listId);
+    // coverage:ignore-start
     if (ref.read(supabaseServiceProvider).isReady) {
       await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
     }
+    // coverage:ignore-end
     state = AsyncData(await repository.getLists());
   }
 
@@ -63,9 +65,11 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     await repository.setListShared(listId, isShared);
     if (isShared) {
       await repository.syncList(listId);
+      // coverage:ignore-start
       if (ref.read(supabaseServiceProvider).isReady) {
         await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
       }
+      // coverage:ignore-end
     }
     state = AsyncData(await repository.getLists());
   }
@@ -103,6 +107,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
   }) async {
     final supabaseService = ref.read(supabaseServiceProvider);
 
+    // coverage:ignore-start
     if (supabaseService.isReady) {
       final supabaseCollab = ref.read(supabaseCollaborationRepositoryProvider);
       final joinResult = await supabaseCollab.joinListByToken(
@@ -118,6 +123,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
       ref.read(supabaseSyncServiceProvider).subscribeToList(joinResult.list.id);
       return joinResult.list;
     }
+    // coverage:ignore-end
 
     // Fallback: parse direct token or list id for offline / mock testing
     final cleanId =

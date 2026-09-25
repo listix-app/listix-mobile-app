@@ -80,6 +80,7 @@ void main() {
 
       expect(AppRoutes.listDetailPath('list-123'), '/list/list-123');
       expect(AppRoutes.editListPath('list-456'), '/list/list-456/edit');
+      expect(AppRoutes.joinListPath('token-789'), '/join/token-789');
     });
 
     test('AdConfig provides valid banner unit id', () {

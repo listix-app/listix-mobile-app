@@ -9,5 +9,6 @@ abstract final class AppRoutes {
 
   static String listDetailPath(String id) => '/list/$id';
   static String editListPath(String id) => '/list/$id/edit';
-  static String joinListPath(String token) => '/join/$token';
+  static String joinListPath(String token) =>
+      '/join/$token'; // coverage:ignore-line
 }

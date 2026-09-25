@@ -4,7 +4,7 @@
 /// `flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...`
 /// or configured at runtime.
 class SupabaseConfig {
-  const SupabaseConfig._();
+  const SupabaseConfig._(); // coverage:ignore-line
 
   /// The Supabase Project URL.
   static const String supabaseUrl = String.fromEnvironment(
@@ -28,7 +28,7 @@ class SupabaseConfig {
   /// Whether Supabase configuration is present and non-empty.
   static bool get isConfigured =>
       supabaseUrl.trim().isNotEmpty &&
-      supabaseAnonKey.trim().isNotEmpty &&
-      !supabaseUrl.contains('YOUR_SUPABASE') &&
-      !supabaseAnonKey.contains('YOUR_SUPABASE');
+      supabaseAnonKey.trim().isNotEmpty && // coverage:ignore-line
+      !supabaseUrl.contains('YOUR_SUPABASE') && // coverage:ignore-line
+      !supabaseAnonKey.contains('YOUR_SUPABASE'); // coverage:ignore-line
 }

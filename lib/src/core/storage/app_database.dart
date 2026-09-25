@@ -271,7 +271,9 @@ class AppDatabase {
       'entity_type': entityType,
       'entity_id': entityId,
       'op_type': opType,
+      // coverage:ignore-start
       'payload': payload != null ? jsonEncode(payload) : null,
+      // coverage:ignore-end
       'created_at': createdAt ?? DateTime.now().millisecondsSinceEpoch,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }

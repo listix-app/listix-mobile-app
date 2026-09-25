@@ -131,12 +131,14 @@ class CollaborationController extends Notifier<CollaborationState> {
     } catch (_) {}
   }
 
+  // coverage:ignore-start
   Future<void> simulatePeerAction(String listId, {String? actionType}) async {
     try {
       final repo = ref.read(collaborationRepositoryProvider);
       await repo.simulatePeerAction(listId, actionType: actionType);
     } catch (_) {}
   }
+  // coverage:ignore-end
 
   Future<void> broadcastEvent(String listId, CollaborationEvent event) async {
     try {

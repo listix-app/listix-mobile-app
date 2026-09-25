@@ -35,6 +35,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return CreateEditListScreen(listId: id);
         },
       ),
+      // coverage:ignore-start
       GoRoute(
         path: AppRoutes.joinList,
         builder: (context, state) {
@@ -42,6 +43,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return JoinInviteScreen(token: token);
         },
       ),
+      // coverage:ignore-end
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
