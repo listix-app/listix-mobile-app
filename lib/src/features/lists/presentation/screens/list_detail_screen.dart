@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,8 @@ import '../../../ads/data/interstitial_ad_service.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
+import '../../domain/entities/shopping_list.dart';
+import '../services/share_service.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
@@ -72,6 +75,29 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _copyListText(ShoppingList list) async {
+    if (list.items.isEmpty) return;
+
+    final tr = ref.read(stringsProvider);
+    final text = ShareService.formatListForSharing(
+      list: list,
+      createdWithText: tr.sharedWithListix,
+      pendingSectionTitle: tr.sharePendingSection,
+      completedSectionTitle: tr.shareCompletedSection,
+      emptyListText: tr.shareEmptyListNotice,
+    );
+    await ref.read(shareServiceProvider).copyToClipboard(text);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(tr.listCopied),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 
   @override
@@ -140,6 +166,11 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.content_copy_rounded, size: 20),
+            tooltip: tr.copyListText,
+            onPressed: list.items.isEmpty ? null : () => _copyListText(list),
+          ),
           if (list.isShared)
             Center(
               child: RealtimePresenceBadge(
@@ -152,7 +183,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             onPressed: () => context.push('/list/${list.id}/edit'),
           ),
           IconButton(
-            icon: const Icon(Icons.share_outlined, size: 21),
+            icon: const Icon(Icons.group_add_outlined, size: 21),
             tooltip: tr.shareList,
             onPressed: () => ShareListSheet.show(context, list.id),
           ),

@@ -1,6 +1,7 @@
 import '../entities/collaborator.dart';
 import '../entities/shopping_list.dart';
 import '../entities/todo_item.dart';
+import '../../../sync/domain/pending_operation.dart';
 
 abstract interface class ListsRepository {
   Future<List<ShoppingList>> getLists();
@@ -59,4 +60,16 @@ abstract interface class ListsRepository {
 
   Future<void> syncList(String listId);
   Future<void> setListShared(String listId, bool isShared);
+
+  /// Saves a full remote list and its items into SQLite (used by join and sync engine).
+  Future<void> saveRemoteList(ShoppingList list);
+
+  /// Retrieves pending offline operations queued for synchronization.
+  Future<List<PendingOperation>> getPendingOperations({String? listId});
+
+  /// Deletes a pending operation once successfully sent to Supabase.
+  Future<void> removePendingOperation(String id);
+
+  /// Clears pending operations for a specific list.
+  Future<void> clearPendingOperationsForList(String listId);
 }

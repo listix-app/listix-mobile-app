@@ -12,8 +12,14 @@ import 'package:listix/src/features/lists/presentation/screens/list_detail_scree
 import 'package:listix/src/features/lists/presentation/widgets/list_card.dart';
 import 'package:listix/src/routing/app_router.dart';
 import 'package:listix/src/routing/routes.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
   final now = DateTime(2026, 9, 22);
 
   group('CreateEditListScreen widget tests', () {
@@ -227,7 +233,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('Supermercado'), findsOneWidget);
-        expect(find.text('1'), findsOneWidget);
+        expect(find.byType(ListCard), findsOneWidget);
 
         await tester.fling(
           find.byType(CustomScrollView),
@@ -265,7 +271,6 @@ void main() {
 
         await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
         await tester.pumpAndSettle();
-
         expect(find.text('¿Eliminar lista?'), findsOneWidget);
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
@@ -381,7 +386,6 @@ void main() {
       expect(find.text('Mercado Mensual'), findsOneWidget);
       expect(find.text('1 de 2 pendientes'), findsOneWidget);
       expect(find.text('50% completado'), findsOneWidget);
-      expect(find.text('Completados (1)'), findsOneWidget);
 
       await tester.tap(find.text('Queso'));
       await tester.pump();

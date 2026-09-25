@@ -1,3 +1,4 @@
+import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:stream_channel/stream_channel.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:async';
@@ -6,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/features/collaboration/data/repositories/websocket_collaboration_repository.dart';
@@ -23,6 +25,49 @@ import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.
 import 'package:listix/src/features/lists/presentation/screens/home_screen.dart';
 import 'package:listix/src/features/lists/presentation/screens/list_detail_screen.dart';
 import 'package:listix/src/features/lists/presentation/services/share_service.dart';
+
+Future<void> _pumpJoinListDialog(
+  WidgetTester tester,
+  _FakeListsRepoForCollab fakeRepo,
+) async {
+  final router = GoRouter(
+    routes: [
+      GoRoute(
+        path: '/',
+        builder: (context, state) => Scaffold(
+          body: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (context) => const JoinListDialog(),
+              ),
+              child: const Text('Open invite dialog'),
+            ),
+          ),
+        ),
+      ),
+      GoRoute(
+        path: '/list/:id',
+        builder: (context, state) =>
+            const Scaffold(body: Center(child: Text('Joined list'))),
+      ),
+    ],
+  );
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [listsRepositoryProvider.overrideWithValue(fakeRepo)],
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Open invite dialog'));
+  await tester.pumpAndSettle();
+}
 
 class _FakeListsRepoForCollab implements ListsRepository {
   final List<ShoppingList> internalLists;
@@ -247,6 +292,26 @@ class _FakeListsRepoForCollab implements ListsRepository {
       );
     }
   }
+
+  @override
+  Future<void> saveRemoteList(ShoppingList list) async {
+    final idx = internalLists.indexWhere((l) => l.id == list.id);
+    if (idx != -1) {
+      internalLists[idx] = list;
+    } else {
+      internalLists.add(list);
+    }
+  }
+
+  @override
+  Future<List<PendingOperation>> getPendingOperations({String? listId}) async =>
+      [];
+
+  @override
+  Future<void> removePendingOperation(String id) async {}
+
+  @override
+  Future<void> clearPendingOperationsForList(String listId) async {}
 }
 
 class _FakeListsControllerCollab extends ListsController {
@@ -545,129 +610,49 @@ void main() {
   });
 
   group('JoinListDialog Widget Tests', () {
-    testWidgets('JoinListDialog parses http:// invite link', (tester) async {
+    testWidgets('validates empty invite input', (tester) async {
       final fakeRepo = _FakeListsRepoForCollab([]);
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [listsRepositoryProvider.overrideWithValue(fakeRepo)],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: JoinListDialog()),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byKey(const Key('invite_code_input')),
-        'http://example.com/share?listId=http_list_123&name=ListaHttp',
-      );
-      await tester.tap(find.text('Unirse'));
-      await tester.pumpAndSettle();
-
-      expect(fakeRepo.joinCalled, isTrue);
-      expect(fakeRepo.lastJoinedId, 'http_list_123');
-    });
-
-    testWidgets('validates input and parses invite link', (tester) async {
-      final fakeRepo = _FakeListsRepoForCollab([]);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [listsRepositoryProvider.overrideWithValue(fakeRepo)],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: JoinListDialog()),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-      expect(find.text('Unirse a una lista compartida'), findsOneWidget);
-
-      // Tap join with empty input -> validation error
-      await tester.tap(find.text('Unirse'));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('Código o enlace de invitación inválido'),
-        findsOneWidget,
-      );
-
-      // Enter valid listix invite link
-      await tester.enterText(
-        find.byKey(const Key('invite_code_input')),
-        'https://listix.app/join?listId=list_remote_99&name=Lista%20Compartida',
-      );
-      await tester.pumpAndSettle();
+      await _pumpJoinListDialog(tester, fakeRepo);
 
       await tester.tap(find.text('Unirse'));
-      await tester.pumpAndSettle();
-
-      expect(fakeRepo.joinCalled, isTrue);
-      expect(fakeRepo.lastJoinedId, 'list_remote_99');
-    });
-
-    testWidgets('parses raw listId input successfully', (tester) async {
-      final fakeRepo = _FakeListsRepoForCollab([]);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [listsRepositoryProvider.overrideWithValue(fakeRepo)],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: JoinListDialog()),
-          ),
-        ),
-      );
-
-      await tester.pumpAndSettle();
-
-      // Enter raw list ID
-      await tester.enterText(
-        find.byKey(const Key('invite_code_input')),
-        'custom_id_123',
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Unirse'));
-      await tester.pumpAndSettle();
-
-      expect(fakeRepo.joinCalled, isTrue);
-      expect(fakeRepo.lastJoinedId, 'custom_id_123');
-    });
-
-    testWidgets('handles parse error snackbar and onFieldSubmitted', (
-      tester,
-    ) async {
-      final fakeRepo = _FakeListsRepoForCollab([]);
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [listsRepositoryProvider.overrideWithValue(fakeRepo)],
-          child: const MaterialApp(
-            locale: Locale('es'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: JoinListDialog()),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Enter a URL with trailing slashes so path segments are empty
-      await tester.enterText(
-        find.byType(TextFormField),
-        'https://invalid.com///',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
       expect(
         find.text('Código o enlace de invitación inválido'),
         findsOneWidget,
       );
+      expect(fakeRepo.joinCalled, isFalse);
+    });
+
+    testWidgets('extracts invite token from a URL', (tester) async {
+      final fakeRepo = _FakeListsRepoForCollab([]);
+      await _pumpJoinListDialog(tester, fakeRepo);
+
+      await tester.enterText(
+        find.byKey(const Key('join_list_input')),
+        'https://preview.example/join/invite-token',
+      );
+      await tester.tap(find.text('Unirse'));
+      await tester.pumpAndSettle();
+
+      expect(fakeRepo.joinCalled, isTrue);
+      expect(fakeRepo.lastJoinedId, 'invite-token');
+      expect(find.text('Joined list'), findsOneWidget);
+    });
+
+    testWidgets('accepts a raw invite token', (tester) async {
+      final fakeRepo = _FakeListsRepoForCollab([]);
+      await _pumpJoinListDialog(tester, fakeRepo);
+
+      await tester.enterText(
+        find.byKey(const Key('join_list_input')),
+        'raw-invite-token',
+      );
+      await tester.tap(find.text('Unirse'));
+      await tester.pumpAndSettle();
+
+      expect(fakeRepo.joinCalled, isTrue);
+      expect(fakeRepo.lastJoinedId, 'raw-invite-token');
     });
   });
 
@@ -725,21 +710,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify collaboration section elements
-      expect(find.text('Invitar amigos o colegas'), findsOneWidget);
-      expect(find.byKey(const Key('copy_invite_link_button')), findsOneWidget);
+      expect(find.byKey(const Key('share_invite_link_button')), findsOneWidget);
       expect(find.text('Juan Perez'), findsOneWidget);
-
-      // Tap Copy Invite Link
-      await tester.tap(find.byKey(const Key('copy_invite_link_button')));
-      await tester.pumpAndSettle();
-      expect(fakeShare.lastCopiedText, contains('listId=collab_list_1'));
-      expect(find.text('Enlace copiado al portapapeles'), findsOneWidget);
-
-      // Tap choice chips for invite role
-      await tester.tap(find.byKey(const Key('invite_role_admin_chip')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('invite_role_member_chip')));
-      await tester.pumpAndSettle();
 
       // Change role via popup menu
       await tester.tap(find.byKey(const ValueKey('change_role_c_peer')));
@@ -747,33 +719,7 @@ void main() {
       await tester.tap(find.text('Admin').last);
       await tester.pumpAndSettle();
 
-      // Enter new email to invite
-      await tester.enterText(
-        find.byKey(const Key('collaborator_email_input')),
-        'maria@correo.com',
-      );
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Invitación enviada a maria@correo.com'),
-        findsOneWidget,
-      );
-
-      // Tap peer simulation button
-      await tester.tap(find.byKey(const Key('simulate_peer_button')));
-      await tester.pumpAndSettle();
-      expect(
-        find.text('Un colega agregó un producto en tiempo real'),
-        findsOneWidget,
-      );
-
-      // Tap share_system_tile
-      await tester.tap(find.byKey(const Key('share_system_tile')));
-      await tester.pumpAndSettle();
-      expect(fakeShare.systemShared, isTrue);
+      expect(find.byKey(const Key('simulate_peer_button')), findsNothing);
     });
 
     testWidgets(
@@ -881,24 +827,15 @@ void main() {
         await tester.pumpAndSettle();
 
         // Verify inactive invite component is present
-        expect(
-          find.byKey(const Key('inactive_share_invite_component')),
-          findsOneWidget,
-        );
         expect(find.text('Invita a colaborar en esta lista'), findsOneWidget);
         expect(
           find.byKey(const Key('activate_and_share_button')),
           findsOneWidget,
         );
-        expect(find.byKey(const Key('enable_sharing_button')), findsOneWidget);
+        expect(find.byKey(const Key('activate_shared_button')), findsOneWidget);
 
         // Verify active collaborator management is hidden when inactive
-        expect(find.byKey(const Key('collaborator_email_input')), findsNothing);
-        expect(
-          find.byKey(const Key('invite_collaborator_button')),
-          findsNothing,
-        );
-        expect(find.byKey(const Key('copy_invite_link_button')), findsNothing);
+        expect(find.byKey(const Key('share_invite_link_button')), findsNothing);
         expect(find.byKey(const Key('simulate_peer_button')), findsNothing);
 
         // Tap activate and share button
@@ -907,130 +844,12 @@ void main() {
 
         expect(fakeController.setListSharedCalled, isTrue);
         expect(fakeController.lastSetSharedValue, isTrue);
-        expect(fakeShare.systemShared, isTrue);
-      },
-    );
-
-    testWidgets(
-      'shows validation errors for empty and invalid email in share sheet',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 1200);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
-
-        final list = ShoppingList(
-          id: 'val_list_1',
-          name: 'Lista Validación',
-          isShared: true,
-          items: const [],
-          collaborators: const [],
-          createdAt: DateTime.now(),
-        );
-
-        final fakeRepo = _FakeListsRepoForCollab([list]);
-        final fakeController = _FakeListsControllerCollab([list]);
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              listsRepositoryProvider.overrideWithValue(fakeRepo),
-              listsControllerProvider.overrideWith(() => fakeController),
-              shoppingListProvider('val_list_1').overrideWithValue(list),
-              shareServiceProvider.overrideWithValue(
-                _FakeShareServiceForCollab(),
-              ),
-            ],
-            child: const MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Scaffold(body: ShareListSheet(listId: 'val_list_1')),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        // Tap invite button with empty field
-        await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-        await tester.pumpAndSettle();
-        expect(find.text('Ingresa un correo'), findsOneWidget);
-
-        // Enter invalid email
-        await tester.enterText(
-          find.byKey(const Key('collaborator_email_input')),
-          'not-an-email',
-        );
-        await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-        await tester.pumpAndSettle();
-        expect(find.text('Correo no válido'), findsOneWidget);
-
-        // Submit via onFieldSubmitted
-        await tester.enterText(
-          find.byKey(const Key('collaborator_email_input')),
-          'valid@listix.local',
-        );
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.pumpAndSettle();
         expect(
-          find.text('Invitación enviada a valid@listix.local'),
+          find.textContaining('No se pudo crear el enlace de invitación'),
           findsOneWidget,
         );
       },
     );
-
-    testWidgets('displays error snackbar when addCollaborator throws', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(800, 1200);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final list = ShoppingList(
-        id: 'err_list_1',
-        name: 'Lista Error',
-        isShared: true,
-        items: const [],
-        collaborators: const [],
-        createdAt: DateTime.now(),
-      );
-
-      final throwingController = _ThrowingListsControllerCollab([list]);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            listsRepositoryProvider.overrideWithValue(
-              _FakeListsRepoForCollab([list]),
-            ),
-            listsControllerProvider.overrideWith(() => throwingController),
-            shoppingListProvider('err_list_1').overrideWithValue(list),
-            shareServiceProvider.overrideWithValue(
-              _FakeShareServiceForCollab(),
-            ),
-          ],
-          child: const MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: ShareListSheet(listId: 'err_list_1')),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byKey(const Key('collaborator_email_input')),
-        'test@listix.local',
-      );
-      await tester.tap(find.byKey(const Key('invite_collaborator_button')));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('Error:'), findsOneWidget);
-    });
 
     testWidgets(
       'empty collaborators container in dark mode and remove collaborator',
@@ -1164,7 +983,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('enable_sharing_button')));
+      await tester.tap(find.byKey(const Key('activate_shared_button')));
       await tester.pumpAndSettle();
 
       expect(fakeController.setListSharedCalled, isTrue);
@@ -1206,22 +1025,10 @@ void main() {
       'JoinListDialog handles uri without query params and cleans path',
       (tester) async {
         final fakeRepo = _FakeListsRepoForCollab([]);
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [listsRepositoryProvider.overrideWithValue(fakeRepo)],
-            child: const MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
-              supportedLocales: AppLocalizations.supportedLocales,
-              home: Scaffold(body: JoinListDialog()),
-            ),
-          ),
-        );
-
-        await tester.pumpAndSettle();
+        await _pumpJoinListDialog(tester, fakeRepo);
         await tester.enterText(
-          find.byKey(const Key('invite_code_input')),
-          'https://listix.app/join/clean_list_id',
+          find.byKey(const Key('join_list_input')),
+          'https://example.invalid/join/clean_list_id',
         );
         await tester.tap(find.text('Unirse'));
         await tester.pumpAndSettle();
@@ -1822,23 +1629,6 @@ void main() {
       },
     );
   });
-}
-
-class _ThrowingListsControllerCollab extends ListsController {
-  final List<ShoppingList> _initial;
-  _ThrowingListsControllerCollab(this._initial);
-
-  @override
-  Future<List<ShoppingList>> build() async => _initial;
-
-  @override
-  Future<void> addCollaborator(
-    String listId,
-    String email, {
-    CollaboratorRole role = CollaboratorRole.member,
-  }) async {
-    throw Exception('Error simulado al invitar');
-  }
 }
 
 class _StaticCollabController extends CollaborationController {

@@ -95,7 +95,7 @@ void main() {
           createdAt: now,
         );
 
-        final inviteLink = ShareService.createInviteLink(list.id, list.name);
+        const inviteLink = 'https://example.invalid/join/test-token';
         final text = ShareService.formatListForSharing(
           list: list,
           createdWithText: tr.sharedWithListix,
@@ -115,7 +115,7 @@ void main() {
           text,
           contains('🔗 Únete a esta lista para colaborar en tiempo real:'),
         );
-        expect(text, contains('https://listix.app/join?listId=list_123'));
+        expect(text, contains(inviteLink));
         expect(text, contains('Creado con Listix'));
       },
     );

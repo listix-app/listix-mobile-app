@@ -96,7 +96,7 @@
   "sharedWithListix": "Created with Listix — Fast & 100% Offline Lists",
   "offlineNotice": "Offline Local Storage",
   "offlineNoticeDesc": "Your data is stored locally on your device with SQLite. The list is synchronized only when sharing.",
-  "copyInviteLink": "Copy invitation link",
+  "copyInviteLink": "Share invitation link",
   "linkCopied": "Invitation link copied to clipboard",
   "inviteByEmail": "Or invite by email",
   "emailHint": "example@email.com",

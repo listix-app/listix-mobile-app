@@ -1,3 +1,4 @@
+import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
@@ -377,6 +378,26 @@ class FakeFailingListsRepository implements ListsRepository {
       );
     }
   }
+
+  @override
+  Future<void> saveRemoteList(ShoppingList list) async {
+    final idx = internalLists.indexWhere((l) => l.id == list.id);
+    if (idx != -1) {
+      internalLists[idx] = list;
+    } else {
+      internalLists.add(list);
+    }
+  }
+
+  @override
+  Future<List<PendingOperation>> getPendingOperations({String? listId}) async =>
+      [];
+
+  @override
+  Future<void> removePendingOperation(String id) async {}
+
+  @override
+  Future<void> clearPendingOperationsForList(String listId) async {}
 }
 
 class FakeBackendSyncService extends MockBackendSyncService {
@@ -847,7 +868,7 @@ void main() {
             .read(listsControllerProvider.notifier)
             .addCollaborator(
               'list_1',
-              'maria@listix.app',
+              'maria@example.invalid',
               role: CollaboratorRole.admin,
             );
         var list = container.read(shoppingListProvider('list_1'))!;
@@ -858,7 +879,7 @@ void main() {
             .read(listsControllerProvider.notifier)
             .updateCollaboratorRole(
               'list_1',
-              'c_maria@listix.app',
+              'c_maria@example.invalid',
               CollaboratorRole.member,
             );
         list = container.read(shoppingListProvider('list_1'))!;
@@ -868,7 +889,7 @@ void main() {
             .read(listsControllerProvider.notifier)
             .applyRemoteCollaboratorRole(
               'list_1',
-              'c_maria@listix.app',
+              'c_maria@example.invalid',
               CollaboratorRole.admin,
             );
         list = container.read(shoppingListProvider('list_1'))!;
@@ -876,7 +897,7 @@ void main() {
 
         await container
             .read(listsControllerProvider.notifier)
-            .removeCollaborator('list_1', 'c_maria@listix.app');
+            .removeCollaborator('list_1', 'c_maria@example.invalid');
         list = container.read(shoppingListProvider('list_1'))!;
         expect(list.collaborators.isEmpty, isTrue);
       },

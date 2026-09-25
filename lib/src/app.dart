@@ -5,6 +5,7 @@ import 'core/localization/generated/app_localizations.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
+import 'features/sync/presentation/sync_controller.dart';
 import 'routing/app_router.dart';
 
 class ListixApp extends ConsumerWidget {
@@ -15,6 +16,7 @@ class ListixApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
     final locale = ref.watch(localeControllerProvider);
     final themeMode = ref.watch(themeModeControllerProvider);
+    ref.watch(syncControllerProvider);
 
     return MaterialApp.router(
       title: 'Listix',

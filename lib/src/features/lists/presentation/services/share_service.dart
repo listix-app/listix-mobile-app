@@ -21,11 +21,6 @@ class ShareService {
     : _urlLauncher = urlLauncher ?? launchUrl,
       _systemShare = systemShare;
 
-  static String createInviteLink(String listId, String listName) {
-    final encodedName = Uri.encodeComponent(listName);
-    return 'https://listix.app/join?listId=$listId&name=$encodedName';
-  }
-
   static String formatListForSharing({
     required ShoppingList list,
     required String createdWithText,

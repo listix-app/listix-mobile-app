@@ -37,11 +37,8 @@ class MockBackendSyncService {
 
     final db = await _appDatabase.database;
 
-    final unsyncedLists = await db.query(
-      'shopping_lists',
-      where: 'is_synced = 0',
-    );
-    final unsyncedItems = await db.query('todo_items', where: 'is_synced = 0');
+    final unsyncedLists = await db.query('lists', where: 'is_synced = 0');
+    final unsyncedItems = await db.query('items', where: 'is_synced = 0');
 
     if (unsyncedLists.isEmpty && unsyncedItems.isEmpty) {
       _updateStatus(SyncStatus.synced);
@@ -59,12 +56,12 @@ class MockBackendSyncService {
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    await db.update('shopping_lists', {
+    await db.update('lists', {
       'is_synced': 1,
       'updated_at': now,
     }, where: 'is_synced = 0');
 
-    await db.update('todo_items', {
+    await db.update('items', {
       'is_synced': 1,
       'updated_at': now,
     }, where: 'is_synced = 0');

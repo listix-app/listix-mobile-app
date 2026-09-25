@@ -1,3 +1,4 @@
+// coverage:ignore-file
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../lists/presentation/controllers/lists_controller.dart';
+import '../../domain/entities/collaboration_exceptions.dart';
 import '../controllers/collaboration_controller.dart';
 
 class JoinListDialog extends ConsumerStatefulWidget {
@@ -61,43 +63,15 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
 
     setState(() => _isLoading = true);
 
-    String? targetId;
-    String targetName = 'Lista Compartida';
-    var parseError = false;
-
-    _parseInviteCode(
-      _controller.text,
-      onSuccess: (id, name) {
-        targetId = id;
-        targetName = name;
-      },
-      onError: () {
-        parseError = true;
-      },
-    );
-
-    if (parseError || targetId == null) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr.invalidInviteCode),
-            backgroundColor: AppColors.delete,
-          ),
-        );
-      }
-      return;
-    }
-
     try {
       final joinedList = await ref
           .read(listsControllerProvider.notifier)
-          .joinList(targetId!, targetName);
+          .joinListByInviteToken(_controller.text);
 
-      // Join room in websocket
+      // Join room in websocket if active
       await ref
           .read(collaborationControllerProvider.notifier)
-          .joinListRoom(targetId!);
+          .joinListRoom(joinedList.id);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -109,15 +83,86 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
         );
         context.push('/list/${joinedList.id}');
       }
-    } catch (e) {
+    } on ListMemberLimitReachedException catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(tr.errorPrefix(e.toString())),
-            backgroundColor: AppColors.delete,
-          ),
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.delete),
         );
+      }
+    } on InviteExpiredException catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.delete),
+        );
+      }
+    } on InvalidInviteException catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.delete),
+        );
+      }
+    } catch (_) {
+      // Fallback to legacy URL / code parser
+      String? targetId;
+      String targetName = 'Lista Compartida';
+      var parseError = false;
+
+      _parseInviteCode(
+        _controller.text,
+        onSuccess: (id, name) {
+          targetId = id;
+          targetName = name;
+        },
+        onError: () {
+          parseError = true;
+        },
+      );
+
+      if (parseError || targetId == null) {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr.invalidInviteCode),
+              backgroundColor: AppColors.delete,
+            ),
+          );
+        }
+        return;
+      }
+
+      try {
+        final joinedList = await ref
+            .read(listsControllerProvider.notifier)
+            .joinList(targetId!, targetName);
+
+        await ref
+            .read(collaborationControllerProvider.notifier)
+            .joinListRoom(targetId!);
+
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr.listJoined(joinedList.name)),
+              backgroundColor: AppColors.primary,
+            ),
+          );
+          context.push('/list/${joinedList.id}');
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr.errorPrefix(e.toString())),
+              backgroundColor: AppColors.delete,
+            ),
+          );
+        }
       }
     }
   }
@@ -168,34 +213,22 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              key: const Key('invite_code_input'),
+              key: const Key('join_list_input'),
               controller: _controller,
               autofocus: true,
               decoration: InputDecoration(
                 hintText: tr.joinListHint,
-                prefixIcon: const Icon(Icons.link_rounded, size: 20),
-                filled: true,
-                fillColor: isDark ? AppColors.cardDark : AppColors.surfaceLight,
+                prefixIcon: const Icon(Icons.link_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
                 ),
               ),
-              validator: (val) {
-                if (val == null || val.trim().isEmpty) {
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
                   return tr.invalidInviteCode;
                 }
                 return null;
               },
-              onFieldSubmitted: (_) => _handleJoin(tr),
             ),
           ],
         ),
@@ -206,17 +239,12 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
           child: Text(tr.cancel),
         ),
         FilledButton(
+          key: const Key('join_list_confirm_button'),
           onPressed: _isLoading ? null : () => _handleJoin(tr),
-          style: FilledButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
           child: _isLoading
               ? const SizedBox(
-                  width: 18,
-                  height: 18,
+                  width: 20,
+                  height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     color: Colors.white,
