@@ -20,6 +20,11 @@ class SupabaseConfig {
     defaultValue: '',
   );
 
+  static const String inviteBaseUrl = String.fromEnvironment(
+    'INVITE_BASE_URL',
+    defaultValue: 'https://example.invalid/join',
+  );
+
   /// Whether Supabase configuration is present and non-empty.
   static bool get isConfigured =>
       supabaseUrl.trim().isNotEmpty &&

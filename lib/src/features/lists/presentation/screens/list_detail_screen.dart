@@ -77,6 +77,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   }
 
   Future<void> _copyListText(ShoppingList list) async {
+    if (list.items.isEmpty) return;
+
     final tr = ref.read(stringsProvider);
     final text = ShareService.formatListForSharing(
       list: list,
@@ -166,7 +168,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           IconButton(
             icon: const Icon(Icons.content_copy_rounded, size: 20),
             tooltip: tr.copyListText,
-            onPressed: () => _copyListText(list),
+            onPressed: list.items.isEmpty ? null : () => _copyListText(list),
           ),
           if (list.isShared)
             Center(

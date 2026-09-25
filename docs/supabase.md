@@ -25,16 +25,17 @@ Pasa los valores al compilar/ejecutar, sin guardarlos en el repositorio:
 ```sh
 flutter run \
   --dart-define=SUPABASE_URL=https://<project-ref>.supabase.co \
-  --dart-define=SUPABASE_ANON_KEY=<public-anon-or-publishable-key>
+  --dart-define=SUPABASE_ANON_KEY=<public-anon-or-publishable-key> \
+  --dart-define=INVITE_BASE_URL=https://example.invalid/join
 ```
 
-Usa los valores del proyecto de development en desarrollo, los del proyecto aislado de preview en builds de preview y los de production únicamente en el build de publicación. Configura las mismas dos variables como secretos/variables del pipeline de CI para cada entorno y pásalas como `--dart-define` al comando `flutter build`. Si no se pasan, Listix conserva el modo local y SQLite.
+`INVITE_BASE_URL` es la base que precede al token, por ejemplo `https://example.invalid/join`. En desarrollo, reemplázala por un host de pruebas configurable si necesitas que el link abra una app instalada. Configura valores independientes para development, preview y production en los argumentos `--dart-define` del pipeline. El dominio de production y su intent filter de Android se configurarán cuando se defina el dominio público. Si no se pasan las credenciales de Supabase, Listix conserva el modo local y SQLite.
 
 ## Compartir y unirse
 
-Al compartir una lista, el cliente genera un token aleatorio, envía únicamente su SHA-256 a `create_list_invite` y comparte `https://listix.app/join/<token>` mediante el selector nativo de Android. El RPC verifica rol y expiración. `join_list_by_token` valida el hash, agrega al usuario de Anonymous Auth y hace cumplir el máximo de cinco miembros en la transacción. La lista se descarga a SQLite; Realtime invalida/recarga esa copia local.
+Al compartir una lista, el cliente genera un token aleatorio, envía únicamente su SHA-256 a `create_list_invite` y añade el token a `INVITE_BASE_URL`. El token no contiene ni representa el ID de lista. El RPC verifica rol y expiración. `join_list_by_token` valida el hash, agrega al usuario de Anonymous Auth y hace cumplir el máximo de cinco miembros en la transacción. La lista se descarga a SQLite; Realtime invalida/recarga esa copia local.
 
-El intent filter está configurado para Android, pero los enlaces HTTPS verificados requieren publicar `https://listix.app/.well-known/assetlinks.json` con el application ID y la huella SHA-256 del certificado de firma de la app. Hasta que el dominio quede verificado, Android puede abrir el enlace en el navegador y se puede pegar el link en la opción “Unirse a una lista”.
+En desarrollo se puede pegar el link en “Unirse a una lista”. Cuando se defina el dominio público, configura el host HTTPS correspondiente en el intent filter de Android y publica su `/.well-known/assetlinks.json` con el application ID y la huella SHA-256 del certificado de firma.
 
 ## Prueba manual con dos dispositivos
 

@@ -619,7 +619,7 @@ void main() {
       // Enter valid listix invite link
       await tester.enterText(
         find.byKey(const Key('invite_code_input')),
-        'https://listix.app/join?listId=list_remote_99&name=Lista%20Compartida',
+        'https://example.invalid/join?listId=list_remote_99&name=Lista%20Compartida',
       );
       await tester.pumpAndSettle();
 
@@ -1077,7 +1077,7 @@ void main() {
         await tester.pumpAndSettle();
         await tester.enterText(
           find.byKey(const Key('invite_code_input')),
-          'https://listix.app/join/clean_list_id',
+          'https://example.invalid/join/clean_list_id',
         );
         await tester.tap(find.text('Unirse'));
         await tester.pumpAndSettle();

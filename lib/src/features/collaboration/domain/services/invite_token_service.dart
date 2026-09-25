@@ -23,17 +23,7 @@ class InviteTokenService {
     return sha256.convert(bytes).toString();
   }
 
-  /// Builds the deep link URL for an invite token.
-  static String buildInviteUrl(String token) {
-    return 'https://listix.app/join/${token.trim()}';
-  }
-
   /// Extracts the invite token from a full URL or direct token string.
-  ///
-  /// Supports:
-  /// - `https://listix.app/join/<token>`
-  /// - `listix://join/<token>`
-  /// - `<token>`
   static String? extractToken(String input) {
     final trimmed = input.trim();
     if (trimmed.isEmpty) return null;

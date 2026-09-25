@@ -35,15 +35,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
-            <!-- Deep linking for https://listix.app/join/<token> and listix://join/<token> -->
-            <intent-filter android:autoVerify="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="listix.app"
-                    android:pathPrefix="/join" />
                 <data
                     android:scheme="listix"
                     android:host="join" />

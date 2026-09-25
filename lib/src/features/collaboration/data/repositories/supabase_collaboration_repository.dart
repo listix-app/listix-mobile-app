@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/config/supabase_config.dart';
 import '../../../../core/services/supabase_service.dart';
 import '../../../lists/domain/entities/collaborator.dart';
 import '../../../lists/domain/entities/shopping_list.dart';
@@ -31,6 +32,7 @@ class SupabaseCollaborationRepository {
   }) async {
     final token = InviteTokenService.generateSecureToken();
     final tokenHash = InviteTokenService.hashToken(token);
+    final inviteUrl = _buildInviteUrl(token);
     final expiresAt = DateTime.now().toUtc().add(expiration);
 
     final client = _client;
@@ -48,7 +50,24 @@ class SupabaseCollaborationRepository {
       },
     );
 
-    return InviteTokenService.buildInviteUrl(token);
+    return inviteUrl;
+  }
+
+  String _buildInviteUrl(String token) {
+    final baseUri = Uri.parse(SupabaseConfig.inviteBaseUrl.trim());
+    if (!baseUri.hasAuthority ||
+        (baseUri.scheme != 'https' && baseUri.scheme != 'http')) {
+      throw const InvalidInviteException(
+        'INVITE_BASE_URL debe ser una URL HTTP o HTTPS válida.',
+      );
+    }
+
+    final pathSegments =
+        baseUri.pathSegments.where((segment) => segment.isNotEmpty).toList()
+          ..add(token.trim());
+    return baseUri
+        .replace(pathSegments: pathSegments, query: null, fragment: null)
+        .toString();
   }
 
   /// Validates the invitation token hash against Supabase, enforces the 5-member limit,

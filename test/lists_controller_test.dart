@@ -868,7 +868,7 @@ void main() {
             .read(listsControllerProvider.notifier)
             .addCollaborator(
               'list_1',
-              'maria@listix.app',
+              'maria@example.invalid',
               role: CollaboratorRole.admin,
             );
         var list = container.read(shoppingListProvider('list_1'))!;
@@ -879,7 +879,7 @@ void main() {
             .read(listsControllerProvider.notifier)
             .updateCollaboratorRole(
               'list_1',
-              'c_maria@listix.app',
+              'c_maria@example.invalid',
               CollaboratorRole.member,
             );
         list = container.read(shoppingListProvider('list_1'))!;
@@ -889,7 +889,7 @@ void main() {
             .read(listsControllerProvider.notifier)
             .applyRemoteCollaboratorRole(
               'list_1',
-              'c_maria@listix.app',
+              'c_maria@example.invalid',
               CollaboratorRole.admin,
             );
         list = container.read(shoppingListProvider('list_1'))!;
@@ -897,7 +897,7 @@ void main() {
 
         await container
             .read(listsControllerProvider.notifier)
-            .removeCollaborator('list_1', 'c_maria@listix.app');
+            .removeCollaborator('list_1', 'c_maria@example.invalid');
         list = container.read(shoppingListProvider('list_1'))!;
         expect(list.collaborators.isEmpty, isTrue);
       },
