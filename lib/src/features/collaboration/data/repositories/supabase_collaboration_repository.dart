@@ -25,8 +25,6 @@ class SupabaseCollaborationRepository {
 
   SupabaseClient? get _client => _supabaseService.client;
 
-  /// Creates a cryptographically secure invitation token, stores only its SHA-256
-  /// hash in Supabase with expiration, and returns the public share URL.
   Future<String> createInviteLink({
     required String listId,
     Duration expiration = const Duration(days: 7),
@@ -71,8 +69,6 @@ class SupabaseCollaborationRepository {
         .toString();
   }
 
-  /// Validates the invitation token hash against Supabase, enforces the 5-member limit,
-  /// adds the anonymous user to `list_members`, and returns the populated [ShoppingList].
   Future<JoinResult> joinListByToken({
     required String tokenOrUrl,
     String? displayName,

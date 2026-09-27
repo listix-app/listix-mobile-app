@@ -1,0 +1,22 @@
+{
+  "name": "listix-invite-worker",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Cloudflare Worker in TypeScript for Listix invite links and Android App Links",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260926.1",
+    "@types/node": "^26.6.3",
+    "typescript": "^5.8.2",
+    "wrangler": "^4.141.0"
+  }
+}

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// Un micro-indicador sutil que avisa si el item o la lista aún no está sincronizado.
-/// Diseñado para ocupar un espacio reservado mínimo sin distraer al usuario.
 class SyncIndicator extends StatelessWidget {
   final bool isSynced;
   final double size;
@@ -31,12 +29,10 @@ class SyncIndicator extends StatelessWidget {
       ),
     );
 
-    if (!showTooltip) return indicator;
+    if (!showTooltip) {
+      return indicator;
+    }
 
-    return Tooltip(
-      message: 'Pendiente de sincronizar (guardado local)',
-      waitDuration: const Duration(milliseconds: 300),
-      child: indicator,
-    );
+    return Tooltip(message: 'Pendiente de sincronizar', child: indicator);
   }
 }
