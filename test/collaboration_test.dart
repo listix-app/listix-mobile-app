@@ -1266,6 +1266,17 @@ void main() {
       await collabCtrl.joinListRoom('event_list');
       await collabCtrl.leaveListRoom('event_list');
 
+      final broadcastTestEvent = CollaborationEvent.join(
+        listId: 'event_list',
+        userEmail: 'sender@test.com',
+        userName: 'Sender',
+      );
+      await collabCtrl.broadcastEvent('event_list', broadcastTestEvent);
+      expect(fakeRepo.lastSentEvent?.listId, 'event_list');
+
+      fakeRepo.shouldThrowOnSend = true;
+      await collabCtrl.broadcastEvent('event_list', broadcastTestEvent);
+
       // Emit event when ref is unmounted (line 151)
       container.dispose();
       fakeRepo.emitEvent(
@@ -1709,8 +1720,17 @@ class _FakeCollaborationRepoStreams implements CollaborationRepository {
     if (_activeListId == listId) _activeListId = null;
   }
 
+  bool shouldThrowOnSend = false;
+  CollaborationEvent? lastSentEvent;
+
   @override
-  Future<void> sendEvent(CollaborationEvent event) async {}
+  Future<void> sendEvent(CollaborationEvent event) async {
+    if (shouldThrowOnSend) {
+      throw Exception('Send event failed');
+    }
+    lastSentEvent = event;
+  }
+
   @override
   Future<void> simulatePeerAction(String listId, {String? actionType}) async {}
 

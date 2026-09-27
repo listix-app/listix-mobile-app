@@ -187,6 +187,9 @@ class FakeFailingListsRepository implements ListsRepository {
     String email, {
     CollaboratorRole role = CollaboratorRole.member,
   }) async {
+    if (email.contains('FAIL')) {
+      throw Exception('Simulated add collaborator failure');
+    }
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
       final collab = Collaborator(
@@ -895,6 +898,39 @@ void main() {
 
         await container
             .read(listsControllerProvider.notifier)
+            .addCollaborator('list_1', 'maria@example.invalid');
+        expect(
+          container.read(shoppingListProvider('list_1'))!.collaborators.length,
+          1,
+        );
+
+        await expectLater(
+          container
+              .read(listsControllerProvider.notifier)
+              .addCollaborator('list_1', 'FAIL@example.com'),
+          throwsA(isA<Exception>()),
+        );
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .syncListOnShare('list_2');
+        await container
+            .read(listsControllerProvider.notifier)
+            .inviteCollaborator(
+              'list_2',
+              'invitee@example.com',
+              role: CollaboratorRole.member,
+            );
+        final list2Collabs = container
+            .read(shoppingListProvider('list_2'))!
+            .collaborators;
+        expect(
+          list2Collabs.any((c) => c.email == 'invitee@example.com'),
+          isTrue,
+        );
+
+        await container
+            .read(listsControllerProvider.notifier)
             .updateCollaboratorRole(
               'list_1',
               'c_maria@example.invalid',
@@ -970,6 +1006,14 @@ void main() {
         expect(list2.hasInvite, isTrue);
         expect(list2.canSyncAndShare, isTrue);
         expect(list2.isSynced, isTrue);
+
+        // Turn sharing on when hasInvite is already true (canSyncAndShare true) to trigger syncList
+        await fakeRepo.markListInviteCreated('list_2');
+        await container
+            .read(listsControllerProvider.notifier)
+            .setListShared('list_2', true);
+        list2 = container.read(shoppingListProvider('list_2'))!;
+        expect(list2.canSyncAndShare, isTrue);
 
         // Turn sharing OFF -> should reset sharing and invite
         await container

@@ -119,6 +119,8 @@ void main() {
       expect(directEn.unstarList, isNotEmpty);
       expect(directEs.reorder, isNotEmpty);
       expect(directEn.reorder, isNotEmpty);
+      expect(directEs.listSharedWaitingInvite, isNotEmpty);
+      expect(directEn.listSharedWaitingInvite, isNotEmpty);
 
       expect(
         () => lookupAppLocalizations(const Locale('fr')),
