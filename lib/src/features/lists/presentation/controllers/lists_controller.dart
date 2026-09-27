@@ -31,7 +31,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
   void _broadcastEvent(CollaborationEvent event) {
     try {
       final list = state.value?.where((l) => l.id == event.listId).firstOrNull;
-      if (list != null && !list.isShared) {
+      if (list != null && !list.canSyncAndShare) {
         return;
       }
       ref
@@ -50,7 +50,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
   Future<void> syncListOnShare(String listId) async {
     final repository = ref.read(listsRepositoryProvider);
-    await repository.setListShared(listId, true);
+    await repository.markListInviteCreated(listId);
     await repository.syncList(listId);
     // coverage:ignore-start
     if (ref.read(supabaseServiceProvider).isReady) {
@@ -64,12 +64,17 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     final repository = ref.read(listsRepositoryProvider);
     await repository.setListShared(listId, isShared);
     if (isShared) {
-      await repository.syncList(listId);
-      // coverage:ignore-start
-      if (ref.read(supabaseServiceProvider).isReady) {
-        await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
+      final currentList = (await repository.getLists())
+          .where((l) => l.id == listId)
+          .firstOrNull;
+      if (currentList != null && currentList.canSyncAndShare) {
+        await repository.syncList(listId);
+        // coverage:ignore-start
+        if (ref.read(supabaseServiceProvider).isReady) {
+          await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
+        }
+        // coverage:ignore-end
       }
-      // coverage:ignore-end
     }
     state = AsyncData(await repository.getLists());
   }
@@ -494,6 +499,51 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
   }
 
   Future<void> addCollaborator(
+    String listId,
+    String email, {
+    CollaboratorRole role = CollaboratorRole.member,
+  }) async {
+    final cleanEmail = email.trim();
+    final currentLists = state.value;
+    final targetList = currentLists?.where((l) => l.id == listId).firstOrNull;
+
+    if (targetList != null &&
+        targetList.collaborators.any(
+          (c) => c.email.toLowerCase() == cleanEmail.toLowerCase(),
+        )) {
+      return;
+    }
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.addCollaborator(listId, cleanEmail, role: role);
+      final freshLists = await repository.getLists();
+      state = AsyncData(freshLists);
+
+      final currentList = freshLists.where((l) => l.id == listId).firstOrNull;
+      final addedCollab = currentList?.collaborators
+          .where((c) => c.email.toLowerCase() == cleanEmail.toLowerCase())
+          .firstOrNull;
+      if (addedCollab != null) {
+        _broadcastEvent(
+          CollaborationEvent.collaboratorInvited(
+            listId: listId,
+            collaborator: addedCollab,
+            senderEmail: _getCurrentEmail(),
+            senderName: _getCurrentName(),
+          ),
+        );
+      }
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  /// High-level method to invite a collaborator: sets list shared, adds collaborator in SQLite,
+  /// marks sync, updates Riverpod state, and broadcasts realtime event.
+  Future<void> inviteCollaborator(
     String listId,
     String email, {
     CollaboratorRole role = CollaboratorRole.member,

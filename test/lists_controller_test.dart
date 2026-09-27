@@ -253,11 +253,29 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<void> setListShared(String listId, bool isShared) async {
+  Future<void> setListShared(
+    String listId,
+    bool isShared, {
+    bool? hasInvite,
+  }) async {
     final listIndex = internalLists.indexWhere((l) => l.id == listId);
     if (listIndex != -1) {
       internalLists[listIndex] = internalLists[listIndex].copyWith(
         isShared: isShared,
+        hasInvite: isShared
+            ? (hasInvite ?? internalLists[listIndex].hasInvite)
+            : false,
+      );
+    }
+  }
+
+  @override
+  Future<void> markListInviteCreated(String listId) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex != -1) {
+      internalLists[listIndex] = internalLists[listIndex].copyWith(
+        isShared: true,
+        hasInvite: true,
       );
     }
   }
@@ -924,27 +942,44 @@ void main() {
       },
     );
 
-    test('setListShared toggles list sharing status and syncs', () async {
-      await container.read(listsControllerProvider.future);
+    test(
+      'setListShared toggles list sharing status and only syncs when invite is created',
+      () async {
+        await container.read(listsControllerProvider.future);
 
-      // Initially list_2 is not shared
-      var list2 = container.read(shoppingListProvider('list_2'))!;
-      expect(list2.isShared, isFalse);
+        // Initially list_2 is not shared
+        var list2 = container.read(shoppingListProvider('list_2'))!;
+        expect(list2.isShared, isFalse);
 
-      // Turn sharing ON -> should be shared and synced
-      await container
-          .read(listsControllerProvider.notifier)
-          .setListShared('list_2', true);
-      list2 = container.read(shoppingListProvider('list_2'))!;
-      expect(list2.isShared, isTrue);
-      expect(list2.isSynced, isTrue);
+        // Turn sharing ON without invite -> should be shared, but not sync yet
+        await container
+            .read(listsControllerProvider.notifier)
+            .setListShared('list_2', true);
+        list2 = container.read(shoppingListProvider('list_2'))!;
+        expect(list2.isShared, isTrue);
+        expect(list2.hasInvite, isFalse);
+        expect(list2.canSyncAndShare, isFalse);
+        expect(list2.isSynced, isFalse);
 
-      // Turn sharing OFF -> should be marked not shared
-      await container
-          .read(listsControllerProvider.notifier)
-          .setListShared('list_2', false);
-      list2 = container.read(shoppingListProvider('list_2'))!;
-      expect(list2.isShared, isFalse);
-    });
+        // Generate/share invite -> now can sync and share
+        await container
+            .read(listsControllerProvider.notifier)
+            .syncListOnShare('list_2');
+        list2 = container.read(shoppingListProvider('list_2'))!;
+        expect(list2.isShared, isTrue);
+        expect(list2.hasInvite, isTrue);
+        expect(list2.canSyncAndShare, isTrue);
+        expect(list2.isSynced, isTrue);
+
+        // Turn sharing OFF -> should reset sharing and invite
+        await container
+            .read(listsControllerProvider.notifier)
+            .setListShared('list_2', false);
+        list2 = container.read(shoppingListProvider('list_2'))!;
+        expect(list2.isShared, isFalse);
+        expect(list2.hasInvite, isFalse);
+        expect(list2.canSyncAndShare, isFalse);
+      },
+    );
   });
 }

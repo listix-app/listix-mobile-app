@@ -21,13 +21,22 @@ class SqliteListsRepository implements ListsRepository {
   Future<bool> _isListShared(DatabaseExecutor executor, String listId) async {
     final res = await executor.query(
       'lists',
-      columns: ['is_shared'],
+      columns: ['is_shared', 'has_invite'],
       where: 'id = ?',
       whereArgs: [listId],
       limit: 1,
     );
     if (res.isEmpty) return false;
-    return (res.first['is_shared'] as int?) == 1;
+    final isShared = (res.first['is_shared'] as int?) == 1;
+    if (!isShared) return false;
+    final hasInvite = (res.first['has_invite'] as int? ?? 0) == 1;
+    if (hasInvite) return true;
+    final collabRes = await executor.rawQuery(
+      'SELECT COUNT(*) as count FROM collaborators WHERE list_id = ?',
+      [listId],
+    );
+    final collabCount = (collabRes.first['count'] as int?) ?? 0;
+    return collabCount > 0;
   }
 
   @override
@@ -108,6 +117,7 @@ class SqliteListsRepository implements ListsRepository {
         isSynced: (list['is_synced'] as int) == 1,
         isStarred: (list['is_starred'] as int) == 1,
         isShared: (list['is_shared'] as int) == 1,
+        hasInvite: (list['has_invite'] as int? ?? 0) == 1,
         position: (list['position'] as int?) ?? 0,
         items: itemsByList[id] ?? [],
         collaborators: collaboratorsByList[id] ?? [],
@@ -145,6 +155,7 @@ class SqliteListsRepository implements ListsRepository {
       'is_synced': 0,
       'is_starred': 0,
       'is_shared': 0,
+      'has_invite': 0,
       'position': nextPosition,
       'created_at': now,
       'updated_at': now,
@@ -156,6 +167,7 @@ class SqliteListsRepository implements ListsRepository {
       isSynced: false,
       isStarred: false,
       isShared: false,
+      hasInvite: false,
       position: nextPosition,
       createdAt: DateTime.fromMillisecondsSinceEpoch(now),
       items: const [],
@@ -305,6 +317,7 @@ class SqliteListsRepository implements ListsRepository {
         'is_synced': list.isSynced ? 1 : 0,
         'is_starred': list.isStarred ? 1 : 0,
         'is_shared': list.isShared ? 1 : 0,
+        'has_invite': list.hasInvite ? 1 : 0,
         'position': list.position,
         'created_at': list.createdAt.millisecondsSinceEpoch,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
@@ -615,7 +628,7 @@ class SqliteListsRepository implements ListsRepository {
 
       await txn.update(
         'lists',
-        {'is_shared': 1, 'is_synced': 0, 'updated_at': now},
+        {'is_shared': 1, 'has_invite': 1, 'is_synced': 0, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
@@ -690,6 +703,7 @@ class SqliteListsRepository implements ListsRepository {
         'is_synced': 1,
         'is_starred': 0,
         'is_shared': 1,
+        'has_invite': 1,
         'position': 0,
         'created_at': now,
         'updated_at': now,
@@ -730,6 +744,7 @@ class SqliteListsRepository implements ListsRepository {
         'is_synced': 1,
         'is_starred': list.isStarred ? 1 : 0,
         'is_shared': 1,
+        'has_invite': 1,
         'position': list.position,
         'created_at': list.createdAt.millisecondsSinceEpoch,
         'updated_at': now,
@@ -874,70 +889,112 @@ class SqliteListsRepository implements ListsRepository {
     });
   }
 
+  Future<void> _enqueueListAndItems(
+    DatabaseExecutor txn,
+    String listId,
+    int now,
+  ) async {
+    final listQuery = await txn.query(
+      'lists',
+      where: 'id = ?',
+      whereArgs: [listId],
+      limit: 1,
+    );
+    if (listQuery.isEmpty) return;
+    final l = listQuery.first;
+    await txn.insert('pending_operations', {
+      'id': _uuid.v4(),
+      'list_id': listId,
+      'entity_type': PendingEntityType.list.name,
+      'entity_id': listId,
+      'op_type': PendingOpType.upsert.name,
+      'payload': jsonEncode({
+        'id': listId,
+        'name': l['name'] as String,
+        'is_starred': l['is_starred'] as int,
+        'position': l['position'] as int,
+        'updated_at': now,
+      }),
+      'created_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+    final items = await txn.query(
+      'items',
+      where: 'list_id = ? AND deleted_at IS NULL',
+      whereArgs: [listId],
+    );
+    for (final item in items) {
+      await txn.insert('pending_operations', {
+        'id': _uuid.v4(),
+        'list_id': listId,
+        'entity_type': PendingEntityType.item.name,
+        'entity_id': item['id'] as String,
+        'op_type': PendingOpType.upsert.name,
+        'payload': jsonEncode({
+          'id': item['id'] as String,
+          'list_id': listId,
+          'title': item['title'] as String,
+          'is_completed': item['is_completed'] as int,
+          'position': item['position'] as int? ?? 0,
+          'updated_at': item['updated_at'] as int? ?? now,
+        }),
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+
   @override
-  Future<void> setListShared(String listId, bool isShared) async {
+  Future<void> setListShared(
+    String listId,
+    bool isShared, {
+    bool? hasInvite,
+  }) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      final updateData = <String, dynamic>{
+        'is_shared': isShared ? 1 : 0,
+        'updated_at': now,
+      };
+      if (!isShared) {
+        updateData['has_invite'] = 0;
+      } else if (hasInvite != null) {
+        updateData['has_invite'] = hasInvite ? 1 : 0;
+      }
+
+      await txn.update(
+        'lists',
+        updateData,
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+
+      final canSync = await _isListShared(txn, listId);
+      if (canSync) {
+        await _enqueueListAndItems(txn, listId, now);
+      } else if (!isShared) {
+        await txn.delete(
+          'pending_operations',
+          where: 'list_id = ?',
+          whereArgs: [listId],
+        );
+      }
+    });
+  }
+
+  @override
+  Future<void> markListInviteCreated(String listId) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     await db.transaction((txn) async {
       await txn.update(
         'lists',
-        {'is_shared': isShared ? 1 : 0, 'updated_at': now},
+        {'is_shared': 1, 'has_invite': 1, 'updated_at': now},
         where: 'id = ?',
         whereArgs: [listId],
       );
 
-      if (isShared) {
-        // Enqueue list upsert
-        final listQuery = await txn.query(
-          'lists',
-          where: 'id = ?',
-          whereArgs: [listId],
-          limit: 1,
-        );
-        if (listQuery.isNotEmpty) {
-          final l = listQuery.first;
-          await txn.insert('pending_operations', {
-            'id': _uuid.v4(),
-            'list_id': listId,
-            'entity_type': PendingEntityType.list.name,
-            'entity_id': listId,
-            'op_type': PendingOpType.upsert.name,
-            'payload': jsonEncode({
-              'id': listId,
-              'name': l['name'] as String,
-              'is_starred': l['is_starred'] as int,
-              'position': l['position'] as int,
-              'updated_at': now,
-            }),
-            'created_at': now,
-          }, conflictAlgorithm: ConflictAlgorithm.replace);
-
-          // Also enqueue existing items
-          final items = await txn.query(
-            'items',
-            where: 'list_id = ? AND deleted_at IS NULL',
-            whereArgs: [listId],
-          );
-          for (final item in items) {
-            await txn.insert('pending_operations', {
-              'id': _uuid.v4(),
-              'list_id': listId,
-              'entity_type': PendingEntityType.item.name,
-              'entity_id': item['id'] as String,
-              'op_type': PendingOpType.upsert.name,
-              'payload': jsonEncode({
-                'id': item['id'] as String,
-                'list_id': listId,
-                'title': item['title'] as String,
-                'is_completed': item['is_completed'] as int,
-                'position': item['position'] as int? ?? 0,
-                'updated_at': item['updated_at'] as int? ?? now,
-              }),
-              'created_at': now,
-            }, conflictAlgorithm: ConflictAlgorithm.replace);
-          }
-        }
-      }
+      await _enqueueListAndItems(txn, listId, now);
     });
   }
 
@@ -958,11 +1015,14 @@ class SqliteListsRepository implements ListsRepository {
         orderBy: 'created_at ASC, rowid ASC',
       );
     }
-    final sharedListRows = await db.query(
-      'lists',
-      columns: ['id'],
-      where: 'is_shared = 1',
-    );
+    final sharedListRows = await db.rawQuery('''
+      SELECT l.id FROM lists l
+      WHERE l.is_shared = 1 AND (
+        l.has_invite = 1 OR EXISTS (
+          SELECT 1 FROM collaborators c WHERE c.list_id = l.id
+        )
+      )
+    ''');
     final sharedListIds = sharedListRows
         .map((row) => row['id'] as String)
         .toSet();

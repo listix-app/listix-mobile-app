@@ -35,7 +35,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final current = ref.read(shoppingListProvider(widget.listId));
-        if (current != null && current.isShared) {
+        if (current != null && current.canSyncAndShare) {
           ref
               .read(collaborationControllerProvider.notifier)
               .joinListRoom(widget.listId);
@@ -102,6 +102,23 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<ShoppingList?>(shoppingListProvider(widget.listId), (
+      prev,
+      next,
+    ) {
+      final prevCan = prev?.canSyncAndShare ?? false;
+      final nextCan = next?.canSyncAndShare ?? false;
+      if (!prevCan && nextCan) {
+        ref
+            .read(collaborationControllerProvider.notifier)
+            .joinListRoom(widget.listId);
+      } else if (prevCan && !nextCan) {
+        ref
+            .read(collaborationControllerProvider.notifier)
+            .leaveListRoom(widget.listId);
+      }
+    });
+
     final list = ref.watch(shoppingListProvider(widget.listId));
     final tr = ref.watch(stringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -171,7 +188,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             tooltip: tr.copyListText,
             onPressed: list.items.isEmpty ? null : () => _copyListText(list),
           ),
-          if (list.isShared)
+          if (list.canSyncAndShare)
             Center(
               child: RealtimePresenceBadge(
                 onTap: () => ShareListSheet.show(context, list.id),

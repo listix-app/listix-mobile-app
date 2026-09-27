@@ -422,7 +422,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rateAppSubtitle => 'Leave a review on Google Play';
 
   @override
-  String get layoutTitle => 'List layout';
+  String get layoutTitle => 'List Layout';
 
   @override
   String get layoutList => 'List';
@@ -462,7 +462,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareEmptyListNotice => '• (No items in the list yet)';
 
   @override
-  String get realtimeLive => 'Live';
+  String get realtimeLive => 'Sharing';
 
   @override
   String get realtimeConnecting => 'Connecting...';
@@ -533,6 +533,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get listSharedSyncEnabled => 'Real-time sync enabled with cloud';
+
+  @override
+  String get listSharedWaitingInvite =>
+      'Share an invitation link to activate sync';
 
   @override
   String get listLocalOnlyDescription =>

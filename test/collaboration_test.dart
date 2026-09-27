@@ -222,10 +222,30 @@ class _FakeListsRepoForCollab implements ListsRepository {
   Future<void> syncList(String listId) async {}
 
   @override
-  Future<void> setListShared(String listId, bool isShared) async {
+  Future<void> setListShared(
+    String listId,
+    bool isShared, {
+    bool? hasInvite,
+  }) async {
     final idx = internalLists.indexWhere((l) => l.id == listId);
     if (idx != -1) {
-      internalLists[idx] = internalLists[idx].copyWith(isShared: isShared);
+      internalLists[idx] = internalLists[idx].copyWith(
+        isShared: isShared,
+        hasInvite: isShared
+            ? (hasInvite ?? internalLists[idx].hasInvite)
+            : false,
+      );
+    }
+  }
+
+  @override
+  Future<void> markListInviteCreated(String listId) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(
+        isShared: true,
+        hasInvite: true,
+      );
     }
   }
 
@@ -1448,6 +1468,7 @@ void main() {
         id: 'detail_shared_list',
         name: 'Lista Detalle Compartida',
         isShared: true,
+        hasInvite: true,
         items: const [],
         collaborators: const [],
         createdAt: DateTime.now(),
@@ -1703,7 +1724,11 @@ class _FakeCollaborationRepoStreams implements CollaborationRepository {
 class _ThrowingSetSharedRepo extends _FakeListsRepoForCollab {
   _ThrowingSetSharedRepo(super.initial);
   @override
-  Future<void> setListShared(String listId, bool isShared) async {
+  Future<void> setListShared(
+    String listId,
+    bool isShared, {
+    bool? hasInvite,
+  }) async {
     throw Exception('Error simulado al compartir');
   }
 }

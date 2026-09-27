@@ -9,6 +9,7 @@ class ShoppingList {
   final bool isSynced;
   final bool isStarred;
   final bool isShared;
+  final bool hasInvite;
   final int position;
   final List<TodoItem> items;
   final List<Collaborator> collaborators;
@@ -20,6 +21,7 @@ class ShoppingList {
     this.isSynced = false,
     this.isStarred = false,
     this.isShared = false,
+    this.hasInvite = false,
     this.position = 0,
     this.items = const [],
     this.collaborators = const [],
@@ -34,12 +36,16 @@ class ShoppingList {
   double get completionProgress =>
       totalCount == 0 ? 0.0 : completedCount / totalCount;
 
+  bool get canSyncAndShare =>
+      isShared && (hasInvite || collaborators.isNotEmpty);
+
   ShoppingList copyWith({
     String? id,
     String? name,
     bool? isSynced,
     bool? isStarred,
     bool? isShared,
+    bool? hasInvite,
     int? position,
     List<TodoItem>? items,
     List<Collaborator>? collaborators,
@@ -51,6 +57,7 @@ class ShoppingList {
       isSynced: isSynced ?? this.isSynced,
       isStarred: isStarred ?? this.isStarred,
       isShared: isShared ?? this.isShared,
+      hasInvite: hasInvite ?? this.hasInvite,
       position: position ?? this.position,
       items: items ?? this.items,
       collaborators: collaborators ?? this.collaborators,
@@ -64,6 +71,7 @@ class ShoppingList {
     'isSynced': isSynced,
     'isStarred': isStarred,
     'isShared': isShared,
+    'hasInvite': hasInvite,
     'position': position,
     'items': items.map((i) => i.toJson()).toList(),
     'collaborators': collaborators.map((c) => c.toJson()).toList(),
@@ -77,6 +85,7 @@ class ShoppingList {
       isSynced: json['isSynced'] as bool? ?? false,
       isStarred: json['isStarred'] as bool? ?? false,
       isShared: json['isShared'] as bool? ?? false,
+      hasInvite: json['hasInvite'] as bool? ?? false,
       position: json['position'] as int? ?? 0,
       items:
           (json['items'] as List<dynamic>?)
@@ -102,6 +111,7 @@ class ShoppingList {
           isSynced == other.isSynced &&
           isStarred == other.isStarred &&
           isShared == other.isShared &&
+          hasInvite == other.hasInvite &&
           position == other.position &&
           listEquals(items, other.items) &&
           listEquals(collaborators, other.collaborators) &&
@@ -114,6 +124,7 @@ class ShoppingList {
     isSynced,
     isStarred,
     isShared,
+    hasInvite,
     position,
     Object.hashAll(items),
     Object.hashAll(collaborators),

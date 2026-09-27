@@ -393,163 +393,105 @@ void main() {
     });
 
     test(
-      'AppDatabase migration from version 1 to 2 executes _onUpgrade',
+      'AppDatabase initializes schema with version 1 and all required tables and columns',
       () async {
         await AppDatabase.instance.close();
-        const migrationDbPath = 'test_migration_v1_v2.db';
-        await databaseFactory.deleteDatabase(migrationDbPath);
-        final v1Db = await databaseFactory.openDatabase(
-          migrationDbPath,
-          options: OpenDatabaseOptions(
-            version: 1,
-            onCreate: (db, version) async {
-              await db.execute('''
-              CREATE TABLE shopping_lists (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                is_synced INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL
-              );
-            ''');
-              await db.execute('''
-              CREATE TABLE todo_items (
-                id TEXT PRIMARY KEY NOT NULL,
-                list_id TEXT NOT NULL,
-                title TEXT NOT NULL,
-                is_completed INTEGER NOT NULL DEFAULT 0,
-                is_synced INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL
-              );
-            ''');
-            },
-          ),
-        );
-        await v1Db.close();
-
-        AppDatabase.overrideDbPath = migrationDbPath;
-        final upgradedDb = await AppDatabase.instance.database;
-        final columnsLists = await upgradedDb.rawQuery(
-          'PRAGMA table_info(lists);',
-        );
-        expect(columnsLists.any((c) => c['name'] == 'is_starred'), isTrue);
-        expect(columnsLists.any((c) => c['name'] == 'position'), isTrue);
-
-        final columnsItems = await upgradedDb.rawQuery(
-          'PRAGMA table_info(items);',
-        );
-        expect(columnsItems.any((c) => c['name'] == 'position'), isTrue);
-
-        await AppDatabase.instance.close();
-        await databaseFactory.deleteDatabase(migrationDbPath);
         AppDatabase.overrideDbPath = inMemoryDatabasePath;
-        await AppDatabase.instance.database;
-      },
-    );
+        final db = await AppDatabase.instance.database;
 
-    test(
-      'AppDatabase migration from version 4 to 5 adds role column to collaborators',
-      () async {
-        await AppDatabase.instance.close();
-        const migrationDbPath = 'test_migration_v4_v5.db';
-        await databaseFactory.deleteDatabase(migrationDbPath);
-        final v4Db = await databaseFactory.openDatabase(
-          migrationDbPath,
-          options: OpenDatabaseOptions(
-            version: 4,
-            onCreate: (db, version) async {
-              await db.execute('''
-              CREATE TABLE shopping_lists (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                is_synced INTEGER NOT NULL DEFAULT 0,
-                is_starred INTEGER NOT NULL DEFAULT 0,
-                is_shared INTEGER NOT NULL DEFAULT 0,
-                position INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL
-              );
-            ''');
-              await db.execute('''
-              CREATE TABLE collaborators (
-                id TEXT PRIMARY KEY NOT NULL,
-                list_id TEXT NOT NULL,
-                name TEXT NOT NULL,
-                email TEXT NOT NULL,
-                is_owner INTEGER NOT NULL DEFAULT 0
-              );
-            ''');
-            },
-          ),
-        );
-        await v4Db.close();
+        final version = await db.getVersion();
+        expect(version, 1);
 
-        AppDatabase.overrideDbPath = migrationDbPath;
-        final upgradedDb = await AppDatabase.instance.database;
-        final columnsCollabs = await upgradedDb.rawQuery(
-          'PRAGMA table_info(collaborators);',
-        );
-        expect(columnsCollabs.any((c) => c['name'] == 'role'), isTrue);
-
-        await AppDatabase.instance.close();
-        await databaseFactory.deleteDatabase(migrationDbPath);
-        AppDatabase.overrideDbPath = inMemoryDatabasePath;
-        await AppDatabase.instance.database;
-      },
-    );
-
-    test(
-      'AppDatabase migration from version 5 to 6 renames tables to lists and items',
-      () async {
-        await AppDatabase.instance.close();
-        const migrationDbPath = 'test_migration_v5_v6.db';
-        final v5Db = await databaseFactory.openDatabase(
-          migrationDbPath,
-          options: OpenDatabaseOptions(
-            version: 5,
-            onCreate: (db, version) async {
-              await db.execute('''
-              CREATE TABLE shopping_lists (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                is_synced INTEGER NOT NULL DEFAULT 0,
-                is_starred INTEGER NOT NULL DEFAULT 0,
-                is_shared INTEGER NOT NULL DEFAULT 0,
-                position INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL
-              );
-            ''');
-              await db.execute('''
-              CREATE TABLE todo_items (
-                id TEXT PRIMARY KEY NOT NULL,
-                list_id TEXT NOT NULL,
-                title TEXT NOT NULL,
-                is_completed INTEGER NOT NULL DEFAULT 0,
-                is_synced INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL
-              );
-            ''');
-            },
-          ),
-        );
-        await v5Db.close();
-
-        AppDatabase.overrideDbPath = migrationDbPath;
-        final upgradedDb = await AppDatabase.instance.database;
-        final tables = await upgradedDb.rawQuery(
+        final tables = await db.rawQuery(
           "SELECT name FROM sqlite_master WHERE type='table';",
         );
         final tableNames = tables.map((t) => t['name'] as String).toSet();
         expect(tableNames.contains('lists'), isTrue);
         expect(tableNames.contains('items'), isTrue);
-        expect(tableNames.contains('shopping_lists'), isFalse);
-        expect(tableNames.contains('todo_items'), isFalse);
+        expect(tableNames.contains('collaborators'), isTrue);
+        expect(tableNames.contains('pending_operations'), isTrue);
+        expect(tableNames.contains('app_settings'), isTrue);
+
+        final columnsLists = await db.rawQuery('PRAGMA table_info(lists);');
+        expect(columnsLists.any((c) => c['name'] == 'has_invite'), isTrue);
+        expect(columnsLists.any((c) => c['name'] == 'is_shared'), isTrue);
+        expect(columnsLists.any((c) => c['name'] == 'is_starred'), isTrue);
+        expect(columnsLists.any((c) => c['name'] == 'position'), isTrue);
+
+        final columnsCollaborators = await db.rawQuery(
+          'PRAGMA table_info(collaborators);',
+        );
+        expect(columnsCollaborators.any((c) => c['name'] == 'role'), isTrue);
+      },
+    );
+
+    test(
+      'AppDatabase _onOpen dynamically adds missing columns to older databases',
+      () async {
+        await AppDatabase.instance.close();
+        const testLegacyDbPath = 'test_legacy_db.db';
+        final factory = databaseFactory;
+        await factory.deleteDatabase(testLegacyDbPath);
+
+        final legacyDb = await factory.openDatabase(
+          testLegacyDbPath,
+          options: OpenDatabaseOptions(
+            version: 1,
+            onCreate: (db, version) async {
+              await db.execute("""
+                CREATE TABLE lists (
+                  id TEXT PRIMARY KEY NOT NULL,
+                  name TEXT NOT NULL,
+                  created_at INTEGER NOT NULL,
+                  updated_at INTEGER NOT NULL
+                );
+              """);
+              await db.execute("""
+                CREATE TABLE items (
+                  id TEXT PRIMARY KEY NOT NULL,
+                  list_id TEXT NOT NULL,
+                  title TEXT NOT NULL,
+                  created_at INTEGER NOT NULL,
+                  updated_at INTEGER NOT NULL
+                );
+              """);
+              await db.execute("""
+                CREATE TABLE collaborators (
+                  id TEXT PRIMARY KEY NOT NULL,
+                  list_id TEXT NOT NULL,
+                  name TEXT NOT NULL,
+                  email TEXT NOT NULL
+                );
+              """);
+            },
+          ),
+        );
+        await legacyDb.close();
+
+        AppDatabase.overrideDbPath = testLegacyDbPath;
+        final db = await AppDatabase.instance.database;
+
+        final listsColumns = await db.rawQuery('PRAGMA table_info(lists);');
+        expect(listsColumns.any((c) => c['name'] == 'has_invite'), isTrue);
+        expect(listsColumns.any((c) => c['name'] == 'is_shared'), isTrue);
+
+        await db.update(
+          'lists',
+          {'is_shared': 0, 'updated_at': 12345, 'has_invite': 0},
+          where: 'id = ?',
+          whereArgs: ['dummy_id'],
+        );
+
+        final itemsColumns = await db.rawQuery('PRAGMA table_info(items);');
+        expect(itemsColumns.any((c) => c['name'] == 'position'), isTrue);
+
+        final collabColumns = await db.rawQuery(
+          'PRAGMA table_info(collaborators);',
+        );
+        expect(collabColumns.any((c) => c['name'] == 'role'), isTrue);
 
         await AppDatabase.instance.close();
-        await databaseFactory.deleteDatabase(migrationDbPath);
+        await factory.deleteDatabase(testLegacyDbPath);
         AppDatabase.overrideDbPath = inMemoryDatabasePath;
         await AppDatabase.instance.database;
       },

@@ -917,7 +917,7 @@ abstract class AppLocalizations {
   /// No description provided for @realtimeLive.
   ///
   /// In es, this message translates to:
-  /// **'En vivo'**
+  /// **'Compartiendo'**
   String get realtimeLive;
 
   /// No description provided for @realtimeConnecting.
@@ -1045,6 +1045,12 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Sincronización en tiempo real habilitada con la nube'**
   String get listSharedSyncEnabled;
+
+  /// No description provided for @listSharedWaitingInvite.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparte el enlace de invitación para activar la sincronización'**
+  String get listSharedWaitingInvite;
 
   /// No description provided for @listLocalOnlyDescription.
   ///
