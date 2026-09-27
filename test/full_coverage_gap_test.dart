@@ -183,6 +183,7 @@ void main() {
         expect(tr.listIsShared, isNotEmpty);
         expect(tr.listIsLocalOnly, isNotEmpty);
         expect(tr.listSharedSyncEnabled, isNotEmpty);
+        expect(tr.listSharedWaitingInvite, isNotEmpty);
         expect(tr.listLocalOnlyDescription, isNotEmpty);
         expect(tr.enableSharingAction, isNotEmpty);
         expect(

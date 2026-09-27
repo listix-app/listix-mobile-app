@@ -4,6 +4,9 @@
 
 This document outlines the mandatory engineering standards, architectural patterns, and project conventions for all AI agents and contributors working in this codebase.
 
+> [!IMPORTANT]
+> **Mandatory Context Loading**: Before starting any analysis, design, development, or refactoring task, agents MUST read the relevant domain skills in [`.agents/skills/`](.agents/skills/) and consult the architecture documentation in [`docs/`](docs/) (specifically [`docs/architecture.md`](docs/architecture.md), [`docs/database.md`](docs/database.md), and [`docs/supabase.md`](docs/supabase.md)).
+
 ---
 
 ## 1. Architectural Philosophy
@@ -364,21 +367,35 @@ class ItemsScreen extends ConsumerWidget {
    - Keep pull requests small and focused (< 500 lines of reviewed changes) to facilitate rapid, effective code reviews.
 11. **Pull Request Protocol**:
    - When the user asks for a **"pull request"** (or writes "pull request"), immediately produce a comprehensive Pull Request description formatted in Markdown following the template in Section 6.
+12. **Mandatory Context Loading — Read `.agents/skills/` and Architecture Docs**:
+   - **Read `.agents/skills/`**: Before executing any task, AI agents MUST inspect and read the relevant `SKILL.md` instructions within [`.agents/skills/`](.agents/skills/) (e.g., `flutter`, `mobile-expert`, `frontend-design`, `impeccable`, `aso`, `find-skills`).
+   - **Read Architecture Documentation**: AI agents MUST read and strictly adhere to the technical and architectural blueprints located in [`docs/`](docs/) (specifically [`docs/architecture.md`](docs/architecture.md), [`docs/database.md`](docs/database.md), and [`docs/supabase.md`](docs/supabase.md)) before designing or implementing features.
 
 ---
 
-## 5. Agent Skills Directory (`.agents/skills/`)
+## 5. Agent Skills & Architecture Documentation Directory
 
-Specialized domain skills are installed under `.agents/skills/`. Agents must consult and follow the respective `SKILL.md` when performing relevant tasks:
+### A. Skills (`.agents/skills/`)
+Specialized domain skills are installed under `.agents/skills/`. Agents must consult and follow the respective `SKILL.md` before performing relevant tasks:
 
 | Skill | Path | Description & Responsibilities |
 | :--- | :--- | :--- |
-| **`flutter`** | [`.agents/skills/flutter/SKILL.md`](file:///.agents/skills/flutter/SKILL.md) | Dart 3, Riverpod 2.x, clean architecture, responsive widgets, declarative routing (GoRouter), profiling, and CLI tooling. |
-| **`mobile-expert`** | [`.agents/skills/mobile-expert/SKILL.md`](file:///.agents/skills/mobile-expert/SKILL.md) | Native platform integration (Android & iOS manifests, queries, intent filters), offline-first synchronization, SQLite persistence, memory & battery efficiency, security, and app release configs. |
-| **`frontend-design`** | [`.agents/skills/frontend-design/SKILL.md`](file:///.agents/skills/frontend-design/SKILL.md) | Intentional visual design, typography, layout rhythm, distinctive themes, and micro-interactions avoiding cookie-cutter UI defaults. |
-| **`impeccable`** | [`.agents/skills/impeccable/SKILL.md`](file:///.agents/skills/impeccable/SKILL.md) | Frontend craft, interface audits, responsive adaptation, light/dark theming, accessibility, error states, and UX copy clarity. |
-| **`aso`** | [`.agents/skills/aso/SKILL.md`](file:///.agents/skills/aso/SKILL.md) | App Store Optimization for Google Play and App Store listings: keyword research, conversion copy, localized metadata, and competitive audits. |
-| **`find-skills`** | [`.agents/skills/find-skills/SKILL.md`](file:///.agents/skills/find-skills/SKILL.md) | Discovering and installing new agent skills for extending capabilities. |
+| **`flutter`** | [`.agents/skills/flutter/SKILL.md`](.agents/skills/flutter/SKILL.md) | Dart 3, Riverpod 2.x, clean architecture, responsive widgets, declarative routing (GoRouter), profiling, and CLI tooling. |
+| **`mobile-expert`** | [`.agents/skills/mobile-expert/SKILL.md`](.agents/skills/mobile-expert/SKILL.md) | Native platform integration (Android & iOS manifests, queries, intent filters), offline-first synchronization, SQLite persistence, memory & battery efficiency, security, and app release configs. |
+| **`frontend-design`** | [`.agents/skills/frontend-design/SKILL.md`](.agents/skills/frontend-design/SKILL.md) | Intentional visual design, typography, layout rhythm, distinctive themes, and micro-interactions avoiding cookie-cutter UI defaults. |
+| **`impeccable`** | [`.agents/skills/impeccable/SKILL.md`](.agents/skills/impeccable/SKILL.md) | Frontend craft, interface audits, responsive adaptation, light/dark theming, accessibility, error states, and UX copy clarity. |
+| **`aso`** | [`.agents/skills/aso/SKILL.md`](.agents/skills/aso/SKILL.md) | App Store Optimization for Google Play and App Store listings: keyword research, conversion copy, localized metadata, and competitive audits. |
+| **`find-skills`** | [`.agents/skills/find-skills/SKILL.md`](.agents/skills/find-skills/SKILL.md) | Discovering and installing new agent skills for extending capabilities. |
+
+### B. Architecture Documentation (`docs/`)
+Agents must read and follow the architectural designs and schemas in `docs/` before implementing or modifying systems:
+
+| Document | Path | Scope & System Responsibilities |
+| :--- | :--- | :--- |
+| **`architecture.md`** | [`docs/architecture.md`](docs/architecture.md) | Complete application architecture, layer contracts, state management patterns, and screen/widget specifications. |
+| **`database.md`** | [`docs/database.md`](docs/database.md) | SQLite schema, table structures, indices, version migrations, and offline persistence guarantees. |
+| **`supabase.md`** | [`docs/supabase.md`](docs/supabase.md) | Supabase schema, realtime channels, broadcast events, RLS policies, and conflict resolution rules. |
+| **`ASO_COPY_OPTIMIZATION.md`** | [`docs/ASO_COPY_OPTIMIZATION.md`](docs/ASO_COPY_OPTIMIZATION.md) | App Store and Google Play metadata, localized keywords, value propositions, and conversion copy. |
 
 ---
 

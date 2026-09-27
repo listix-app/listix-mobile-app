@@ -222,10 +222,30 @@ class _FakeListsRepoForCollab implements ListsRepository {
   Future<void> syncList(String listId) async {}
 
   @override
-  Future<void> setListShared(String listId, bool isShared) async {
+  Future<void> setListShared(
+    String listId,
+    bool isShared, {
+    bool? hasInvite,
+  }) async {
     final idx = internalLists.indexWhere((l) => l.id == listId);
     if (idx != -1) {
-      internalLists[idx] = internalLists[idx].copyWith(isShared: isShared);
+      internalLists[idx] = internalLists[idx].copyWith(
+        isShared: isShared,
+        hasInvite: isShared
+            ? (hasInvite ?? internalLists[idx].hasInvite)
+            : false,
+      );
+    }
+  }
+
+  @override
+  Future<void> markListInviteCreated(String listId) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(
+        isShared: true,
+        hasInvite: true,
+      );
     }
   }
 
@@ -1246,6 +1266,17 @@ void main() {
       await collabCtrl.joinListRoom('event_list');
       await collabCtrl.leaveListRoom('event_list');
 
+      final broadcastTestEvent = CollaborationEvent.join(
+        listId: 'event_list',
+        userEmail: 'sender@test.com',
+        userName: 'Sender',
+      );
+      await collabCtrl.broadcastEvent('event_list', broadcastTestEvent);
+      expect(fakeRepo.lastSentEvent?.listId, 'event_list');
+
+      fakeRepo.shouldThrowOnSend = true;
+      await collabCtrl.broadcastEvent('event_list', broadcastTestEvent);
+
       // Emit event when ref is unmounted (line 151)
       container.dispose();
       fakeRepo.emitEvent(
@@ -1448,6 +1479,7 @@ void main() {
         id: 'detail_shared_list',
         name: 'Lista Detalle Compartida',
         isShared: true,
+        hasInvite: true,
         items: const [],
         collaborators: const [],
         createdAt: DateTime.now(),
@@ -1688,8 +1720,17 @@ class _FakeCollaborationRepoStreams implements CollaborationRepository {
     if (_activeListId == listId) _activeListId = null;
   }
 
+  bool shouldThrowOnSend = false;
+  CollaborationEvent? lastSentEvent;
+
   @override
-  Future<void> sendEvent(CollaborationEvent event) async {}
+  Future<void> sendEvent(CollaborationEvent event) async {
+    if (shouldThrowOnSend) {
+      throw Exception('Send event failed');
+    }
+    lastSentEvent = event;
+  }
+
   @override
   Future<void> simulatePeerAction(String listId, {String? actionType}) async {}
 
@@ -1703,7 +1744,11 @@ class _FakeCollaborationRepoStreams implements CollaborationRepository {
 class _ThrowingSetSharedRepo extends _FakeListsRepoForCollab {
   _ThrowingSetSharedRepo(super.initial);
   @override
-  Future<void> setListShared(String listId, bool isShared) async {
+  Future<void> setListShared(
+    String listId,
+    bool isShared, {
+    bool? hasInvite,
+  }) async {
     throw Exception('Error simulado al compartir');
   }
 }

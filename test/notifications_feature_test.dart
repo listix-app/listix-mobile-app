@@ -132,15 +132,26 @@ void main() {
     test(
       'calculateNextScheduledDate returns future date matching target weekday',
       () {
+        final now = tz.TZDateTime.now(tz.local);
+        final nextWeekday = (now.weekday % 7) + 1;
         final scheduled = service.calculateNextScheduledDate(
-          DateTime.sunday,
+          nextWeekday,
           10,
           0,
         );
-        expect(scheduled.weekday, DateTime.sunday);
+        expect(scheduled.weekday, nextWeekday);
         expect(scheduled.hour, 10);
         expect(scheduled.minute, 0);
-        expect(scheduled.isAfter(tz.TZDateTime.now(tz.local)), isTrue);
+        expect(scheduled.isAfter(now), isTrue);
+
+        final pastHour = now.hour > 0 ? now.hour - 1 : 0;
+        final scheduledPast = service.calculateNextScheduledDate(
+          now.weekday,
+          pastHour,
+          0,
+        );
+        expect(scheduledPast.weekday, now.weekday);
+        expect(scheduledPast.isAfter(now), isTrue);
       },
     );
 

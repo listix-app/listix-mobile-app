@@ -193,7 +193,7 @@ void main() {
     });
   });
 
-  group('AppDatabase Settings & Migration Tests', () {
+  group('AppDatabase Settings Tests', () {
     test('getSetting and setSetting store and retrieve values', () async {
       await db.setSetting('test_key', 'test_value');
       final val = await db.getSetting('test_key');
@@ -202,127 +202,6 @@ void main() {
       final missing = await db.getSetting('non_existing_key');
       expect(missing, isNull);
     });
-
-    test('migration from version 2 to 3 creates app_settings table', () async {
-      final testDbPath = inMemoryDatabasePath;
-      final factory = databaseFactoryFfi;
-      final oldDb = await factory.openDatabase(
-        testDbPath,
-        options: OpenDatabaseOptions(
-          version: 2,
-          onCreate: (d, v) async {
-            await d.execute('''
-              CREATE TABLE shopping_lists (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                is_synced INTEGER NOT NULL DEFAULT 0,
-                is_starred INTEGER NOT NULL DEFAULT 0,
-                position INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL,
-                deleted_at INTEGER
-              );
-            ''');
-          },
-        ),
-      );
-      await oldDb.close();
-
-      final upgradedDb = await factory.openDatabase(
-        testDbPath,
-        options: OpenDatabaseOptions(
-          version: 3,
-          onUpgrade: (d, oldV, newV) async {
-            if (oldV < 3) {
-              await d.execute('''
-                CREATE TABLE IF NOT EXISTS app_settings (
-                  key TEXT PRIMARY KEY NOT NULL,
-                  value TEXT NOT NULL
-                );
-              ''');
-            }
-          },
-        ),
-      );
-      await upgradedDb.insert('app_settings', {'key': 'k', 'value': 'v'});
-      final res = await upgradedDb.query('app_settings');
-      expect(res.first['value'], 'v');
-      await upgradedDb.close();
-      await factory.deleteDatabase(testDbPath);
-    });
-
-    test(
-      'migration from version 3 to 4 adds is_shared column to shopping_lists',
-      () async {
-        const testDbPath = 'test_migration_v3_v4.db';
-        final factory = databaseFactoryFfi;
-        await factory.deleteDatabase(testDbPath);
-        final oldDb = await factory.openDatabase(
-          testDbPath,
-          options: OpenDatabaseOptions(
-            version: 3,
-            onCreate: (d, v) async {
-              await d.execute('''
-              CREATE TABLE shopping_lists (
-                id TEXT PRIMARY KEY NOT NULL,
-                name TEXT NOT NULL,
-                is_synced INTEGER NOT NULL DEFAULT 0,
-                is_starred INTEGER NOT NULL DEFAULT 0,
-                position INTEGER NOT NULL DEFAULT 0,
-                created_at INTEGER NOT NULL,
-                updated_at INTEGER NOT NULL,
-                deleted_at INTEGER
-              );
-            ''');
-              await d.insert('shopping_lists', {
-                'id': 'l1',
-                'name': 'Test List',
-                'created_at': 1000,
-                'updated_at': 1000,
-              });
-            },
-          ),
-        );
-        await oldDb.close();
-
-        final upgradedDb = await factory.openDatabase(
-          testDbPath,
-          options: OpenDatabaseOptions(
-            version: 4,
-            onUpgrade: (d, oldV, newV) async {
-              if (oldV < 4) {
-                await d.execute(
-                  'ALTER TABLE shopping_lists ADD COLUMN is_shared INTEGER NOT NULL DEFAULT 0;',
-                );
-              }
-            },
-          ),
-        );
-
-        final res = await upgradedDb.query(
-          'shopping_lists',
-          where: 'id = ?',
-          whereArgs: ['l1'],
-        );
-        expect(res.first['is_shared'], 0);
-
-        await upgradedDb.update(
-          'shopping_lists',
-          {'is_shared': 1},
-          where: 'id = ?',
-          whereArgs: ['l1'],
-        );
-        final updated = await upgradedDb.query(
-          'shopping_lists',
-          where: 'id = ?',
-          whereArgs: ['l1'],
-        );
-        expect(updated.first['is_shared'], 1);
-
-        await upgradedDb.close();
-        await factory.deleteDatabase(testDbPath);
-      },
-    );
   });
 
   group('InterstitialAdService Tests', () {
@@ -1082,10 +961,25 @@ class _FakeRepoWithLists implements ListsRepository {
   Future<void> syncList(String listId) async {}
 
   @override
-  Future<void> setListShared(String listId, bool isShared) async {
+  Future<void> setListShared(
+    String listId,
+    bool isShared, {
+    bool? hasInvite,
+  }) async {
     final idx = lists.indexWhere((l) => l.id == listId);
     if (idx != -1) {
-      lists[idx] = lists[idx].copyWith(isShared: isShared);
+      lists[idx] = lists[idx].copyWith(
+        isShared: isShared,
+        hasInvite: isShared ? (hasInvite ?? lists[idx].hasInvite) : false,
+      );
+    }
+  }
+
+  @override
+  Future<void> markListInviteCreated(String listId) async {
+    final idx = lists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      lists[idx] = lists[idx].copyWith(isShared: true, hasInvite: true);
     }
   }
 

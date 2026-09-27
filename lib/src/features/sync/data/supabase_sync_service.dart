@@ -79,7 +79,7 @@ class SupabaseSyncService {
       }
 
       final sharedLists = (await _listsRepository.getLists())
-          .where((list) => list.isShared && _isUuid(list.id))
+          .where((list) => list.canSyncAndShare && _isUuid(list.id))
           .toList();
       for (final list in sharedLists) {
         await pullRemoteList(list.id);
@@ -210,6 +210,7 @@ class SupabaseSyncService {
         id: listId,
         name: listData['name'] as String,
         isShared: true,
+        hasInvite: true,
         isStarred: listData['is_starred'] as bool? ?? false,
         position: (listData['position'] as num?)?.toInt() ?? 0,
         createdAt:

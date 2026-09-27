@@ -100,1004 +100,1010 @@ abstract class AppLocalizations {
 
   /// No description provided for @appName.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Listix'**
   String get appName;
 
   /// No description provided for @appTagline.
   ///
-  /// In es, this message translates to:
-  /// **'Listas de compras y tareas rápidas, privadas y 100% offline.'**
+  /// In en, this message translates to:
+  /// **'Fast, private, offline-first shopping and todo lists.'**
   String get appTagline;
 
   /// No description provided for @myLists.
   ///
-  /// In es, this message translates to:
-  /// **'Mis Listas'**
+  /// In en, this message translates to:
+  /// **'My Lists'**
   String get myLists;
 
   /// No description provided for @emptyListsTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Tus listas, siempre contigo'**
+  /// In en, this message translates to:
+  /// **'Your lists, always with you'**
   String get emptyListsTitle;
 
   /// No description provided for @emptyListsMessage.
   ///
-  /// In es, this message translates to:
-  /// **'Crea tu lista de supermercado o pendientes en segundos. Funciona completamente offline.'**
+  /// In en, this message translates to:
+  /// **'Create your grocery or task list in seconds. It works completely offline.'**
   String get emptyListsMessage;
 
   /// No description provided for @createFirstList.
   ///
-  /// In es, this message translates to:
-  /// **'Crear mi primera lista'**
+  /// In en, this message translates to:
+  /// **'Create your first list'**
   String get createFirstList;
 
   /// No description provided for @newList.
   ///
-  /// In es, this message translates to:
-  /// **'Nueva lista'**
+  /// In en, this message translates to:
+  /// **'New list'**
   String get newList;
 
   /// No description provided for @deleteListTitle.
   ///
-  /// In es, this message translates to:
-  /// **'¿Eliminar lista?'**
+  /// In en, this message translates to:
+  /// **'Delete list?'**
   String get deleteListTitle;
 
   /// No description provided for @deleteListMessage.
   ///
-  /// In es, this message translates to:
-  /// **'Se eliminará \"{name}\" y todos sus items de forma permanente.'**
+  /// In en, this message translates to:
+  /// **'This will permanently delete \"{name}\" and all of its items.'**
   String deleteListMessage(String name);
 
   /// No description provided for @cancel.
   ///
-  /// In es, this message translates to:
-  /// **'Cancelar'**
+  /// In en, this message translates to:
+  /// **'Cancel'**
   String get cancel;
 
   /// No description provided for @delete.
   ///
-  /// In es, this message translates to:
-  /// **'Eliminar'**
+  /// In en, this message translates to:
+  /// **'Delete'**
   String get delete;
 
   /// No description provided for @listCountSuffix.
   ///
-  /// In es, this message translates to:
-  /// **'listas'**
+  /// In en, this message translates to:
+  /// **'lists'**
   String get listCountSuffix;
 
   /// No description provided for @noItemsBadge.
   ///
-  /// In es, this message translates to:
-  /// **'Sin items'**
+  /// In en, this message translates to:
+  /// **'No items'**
   String get noItemsBadge;
 
   /// No description provided for @allDoneBadge.
   ///
-  /// In es, this message translates to:
-  /// **'Todo listo ✓'**
+  /// In en, this message translates to:
+  /// **'All done ✓'**
   String get allDoneBadge;
 
   /// No description provided for @pendingBadge.
   ///
-  /// In es, this message translates to:
-  /// **'{progress} pendientes'**
+  /// In en, this message translates to:
+  /// **'{progress} pending'**
   String pendingBadge(String progress);
 
   /// No description provided for @rename.
   ///
-  /// In es, this message translates to:
-  /// **'Renombrar'**
+  /// In en, this message translates to:
+  /// **'Rename'**
   String get rename;
 
   /// No description provided for @shareList.
   ///
-  /// In es, this message translates to:
-  /// **'Compartir lista'**
+  /// In en, this message translates to:
+  /// **'Share list'**
   String get shareList;
 
   /// No description provided for @noItemsYet.
   ///
-  /// In es, this message translates to:
-  /// **'Sin items aún'**
+  /// In en, this message translates to:
+  /// **'No items yet'**
   String get noItemsYet;
 
   /// No description provided for @pendingCountText.
   ///
-  /// In es, this message translates to:
-  /// **'{pending} de {total} pendientes'**
+  /// In en, this message translates to:
+  /// **'{pending} of {total} pending'**
   String pendingCountText(int pending, int total);
 
   /// No description provided for @percentCompleted.
   ///
-  /// In es, this message translates to:
-  /// **'{percent}% completado'**
+  /// In en, this message translates to:
+  /// **'{percent}% completed'**
   String percentCompleted(int percent);
 
   /// No description provided for @completedGroup.
   ///
-  /// In es, this message translates to:
-  /// **'Completados ({count})'**
+  /// In en, this message translates to:
+  /// **'Completed ({count})'**
   String completedGroup(int count);
 
   /// No description provided for @emptyItemsTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Lista sin items aún'**
+  /// In en, this message translates to:
+  /// **'Empty list'**
   String get emptyItemsTitle;
 
   /// No description provided for @emptyItemsMessage.
   ///
-  /// In es, this message translates to:
-  /// **'Escribe tu primer item abajo para agregarlo al instante.'**
+  /// In en, this message translates to:
+  /// **'Type your first item below to add it instantly.'**
   String get emptyItemsMessage;
 
   /// No description provided for @quickAddHint.
   ///
-  /// In es, this message translates to:
-  /// **'Agregar item'**
+  /// In en, this message translates to:
+  /// **'Add item'**
   String get quickAddHint;
 
   /// No description provided for @quickAddTooltip.
   ///
-  /// In es, this message translates to:
-  /// **'Agregar item'**
+  /// In en, this message translates to:
+  /// **'Add item'**
   String get quickAddTooltip;
 
   /// No description provided for @back.
   ///
-  /// In es, this message translates to:
-  /// **'Volver'**
+  /// In en, this message translates to:
+  /// **'Back'**
   String get back;
 
   /// No description provided for @listNotFound.
   ///
-  /// In es, this message translates to:
-  /// **'Lista no encontrada'**
+  /// In en, this message translates to:
+  /// **'List not found'**
   String get listNotFound;
 
   /// No description provided for @renameListTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Renombrar lista'**
+  /// In en, this message translates to:
+  /// **'Rename list'**
   String get renameListTitle;
 
   /// No description provided for @newListTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Nueva lista'**
+  /// In en, this message translates to:
+  /// **'New list'**
   String get newListTitle;
 
   /// No description provided for @editListHeading.
   ///
-  /// In es, this message translates to:
-  /// **'Edita el nombre de tu lista'**
+  /// In en, this message translates to:
+  /// **'Edit your list name'**
   String get editListHeading;
 
   /// No description provided for @createListHeading.
   ///
-  /// In es, this message translates to:
-  /// **'¿Qué vas a comprar o preparar hoy?'**
+  /// In en, this message translates to:
+  /// **'What are you shopping or planning today?'**
   String get createListHeading;
 
   /// No description provided for @editListSubheading.
   ///
-  /// In es, this message translates to:
-  /// **'El nuevo nombre se guardará al instante y de forma segura en tu dispositivo.'**
+  /// In en, this message translates to:
+  /// **'The updated name is saved instantly and securely on your device.'**
   String get editListSubheading;
 
   /// No description provided for @createListSubheading.
   ///
-  /// In es, this message translates to:
-  /// **'Escribe un nombre claro (ej. Supermercado semanal, Ferretería, Farmacia).'**
+  /// In en, this message translates to:
+  /// **'Type a clear name (e.g. Weekly Groceries, Hardware, Pharmacy).'**
   String get createListSubheading;
 
   /// No description provided for @listNameLabel.
   ///
-  /// In es, this message translates to:
-  /// **'Nombre de la lista'**
+  /// In en, this message translates to:
+  /// **'List name'**
   String get listNameLabel;
 
   /// No description provided for @listNameHint.
   ///
-  /// In es, this message translates to:
-  /// **'Ej. Despensa semanal'**
+  /// In en, this message translates to:
+  /// **'e.g. Weekly Groceries'**
   String get listNameHint;
 
   /// No description provided for @listNameValidation.
   ///
-  /// In es, this message translates to:
-  /// **'Por favor ingresa un nombre'**
+  /// In en, this message translates to:
+  /// **'Please enter a name'**
   String get listNameValidation;
 
   /// No description provided for @saveChanges.
   ///
-  /// In es, this message translates to:
-  /// **'Guardar cambios'**
+  /// In en, this message translates to:
+  /// **'Save changes'**
   String get saveChanges;
 
   /// No description provided for @createListAction.
   ///
-  /// In es, this message translates to:
-  /// **'Crear lista'**
+  /// In en, this message translates to:
+  /// **'Create list'**
   String get createListAction;
 
   /// No description provided for @shareHeading.
   ///
-  /// In es, this message translates to:
-  /// **'Compartir'**
+  /// In en, this message translates to:
+  /// **'Share'**
   String get shareHeading;
 
   /// No description provided for @shareListSubheading.
   ///
-  /// In es, this message translates to:
-  /// **'Envía esta lista al instante por WhatsApp o Gmail.'**
+  /// In en, this message translates to:
+  /// **'Send this list instantly via WhatsApp or Gmail.'**
   String get shareListSubheading;
 
   /// No description provided for @shareWhatsApp.
   ///
-  /// In es, this message translates to:
-  /// **'Compartir por WhatsApp'**
+  /// In en, this message translates to:
+  /// **'Share via WhatsApp'**
   String get shareWhatsApp;
 
   /// No description provided for @shareWhatsAppDesc.
   ///
-  /// In es, this message translates to:
-  /// **'Enviar lista formateada por chat'**
+  /// In en, this message translates to:
+  /// **'Send formatted list directly in chat'**
   String get shareWhatsAppDesc;
 
   /// No description provided for @shareGmail.
   ///
-  /// In es, this message translates to:
-  /// **'Compartir por Gmail'**
+  /// In en, this message translates to:
+  /// **'Share via Gmail'**
   String get shareGmail;
 
   /// No description provided for @shareGmailDesc.
   ///
-  /// In es, this message translates to:
-  /// **'Enviar lista completa por correo'**
+  /// In en, this message translates to:
+  /// **'Send complete list via email'**
   String get shareGmailDesc;
 
   /// No description provided for @copyListText.
   ///
-  /// In es, this message translates to:
-  /// **'Copiar texto de la lista'**
+  /// In en, this message translates to:
+  /// **'Copy list text'**
   String get copyListText;
 
   /// No description provided for @copyListTextDesc.
   ///
-  /// In es, this message translates to:
-  /// **'Copiar contenido al portapapeles'**
+  /// In en, this message translates to:
+  /// **'Copy list content to clipboard'**
   String get copyListTextDesc;
 
   /// No description provided for @listCopied.
   ///
-  /// In es, this message translates to:
-  /// **'¡Lista copiada al portapapeles!'**
+  /// In en, this message translates to:
+  /// **'List copied to clipboard!'**
   String get listCopied;
 
   /// No description provided for @shareSubject.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Listix: {name}'**
   String shareSubject(String name);
 
   /// No description provided for @sharedWithListix.
   ///
-  /// In es, this message translates to:
-  /// **'Creado con Listix — Listas rápidas y 100% offline'**
+  /// In en, this message translates to:
+  /// **'Created with Listix — Fast & 100% Offline Lists'**
   String get sharedWithListix;
 
   /// No description provided for @offlineNotice.
   ///
-  /// In es, this message translates to:
-  /// **'Almacenamiento Local Offline'**
+  /// In en, this message translates to:
+  /// **'Offline Local Storage'**
   String get offlineNotice;
 
   /// No description provided for @offlineNoticeDesc.
   ///
-  /// In es, this message translates to:
-  /// **'Tus datos se guardan de forma local en tu dispositivo con SQLite. La lista se sincroniza únicamente al compartir.'**
+  /// In en, this message translates to:
+  /// **'Your data is stored locally on your device with SQLite. The list is synchronized only when sharing.'**
   String get offlineNoticeDesc;
 
   /// No description provided for @copyInviteLink.
   ///
-  /// In es, this message translates to:
-  /// **'Compartir enlace de invitación'**
+  /// In en, this message translates to:
+  /// **'Share invitation link'**
   String get copyInviteLink;
 
   /// No description provided for @linkCopied.
   ///
-  /// In es, this message translates to:
-  /// **'Enlace copiado al portapapeles'**
+  /// In en, this message translates to:
+  /// **'Invitation link copied to clipboard'**
   String get linkCopied;
 
   /// No description provided for @inviteByEmail.
   ///
-  /// In es, this message translates to:
-  /// **'O invitar por correo'**
+  /// In en, this message translates to:
+  /// **'Or invite by email'**
   String get inviteByEmail;
 
   /// No description provided for @emailHint.
   ///
-  /// In es, this message translates to:
-  /// **'ejemplo@correo.com'**
+  /// In en, this message translates to:
+  /// **'example@email.com'**
   String get emailHint;
 
   /// No description provided for @inviteAction.
   ///
-  /// In es, this message translates to:
-  /// **'Invitar'**
+  /// In en, this message translates to:
+  /// **'Invite'**
   String get inviteAction;
 
   /// No description provided for @enterEmailError.
   ///
-  /// In es, this message translates to:
-  /// **'Ingresa un correo'**
+  /// In en, this message translates to:
+  /// **'Please enter an email'**
   String get enterEmailError;
 
   /// No description provided for @invalidEmailError.
   ///
-  /// In es, this message translates to:
-  /// **'Correo no válido'**
+  /// In en, this message translates to:
+  /// **'Invalid email'**
   String get invalidEmailError;
 
   /// No description provided for @collaboratorsHeading.
   ///
-  /// In es, this message translates to:
-  /// **'Colaboradores'**
+  /// In en, this message translates to:
+  /// **'Collaborators'**
   String get collaboratorsHeading;
 
   /// No description provided for @noCollaboratorsYet.
   ///
-  /// In es, this message translates to:
-  /// **'Aún no hay colaboradores en esta lista.'**
+  /// In en, this message translates to:
+  /// **'No collaborators on this list yet.'**
   String get noCollaboratorsYet;
 
   /// No description provided for @removeCollaborator.
   ///
-  /// In es, this message translates to:
-  /// **'Quitar colaborador'**
+  /// In en, this message translates to:
+  /// **'Remove collaborator'**
   String get removeCollaborator;
 
   /// No description provided for @ownerBadge.
   ///
-  /// In es, this message translates to:
-  /// **'Dueño'**
+  /// In en, this message translates to:
+  /// **'Owner'**
   String get ownerBadge;
 
   /// No description provided for @adminBadge.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Admin'**
   String get adminBadge;
 
   /// No description provided for @memberBadge.
   ///
-  /// In es, this message translates to:
-  /// **'Colaborador'**
+  /// In en, this message translates to:
+  /// **'Member'**
   String get memberBadge;
 
   /// No description provided for @roleOwner.
   ///
-  /// In es, this message translates to:
-  /// **'Dueño'**
+  /// In en, this message translates to:
+  /// **'Owner'**
   String get roleOwner;
 
   /// No description provided for @roleAdmin.
   ///
-  /// In es, this message translates to:
-  /// **'Administrador'**
+  /// In en, this message translates to:
+  /// **'Admin'**
   String get roleAdmin;
 
   /// No description provided for @roleMember.
   ///
-  /// In es, this message translates to:
-  /// **'Colaborador'**
+  /// In en, this message translates to:
+  /// **'Member'**
   String get roleMember;
 
   /// No description provided for @makeAdmin.
   ///
-  /// In es, this message translates to:
-  /// **'Hacer Administrador'**
+  /// In en, this message translates to:
+  /// **'Make Admin'**
   String get makeAdmin;
 
   /// No description provided for @makeMember.
   ///
-  /// In es, this message translates to:
-  /// **'Hacer Colaborador'**
+  /// In en, this message translates to:
+  /// **'Make Member'**
   String get makeMember;
 
   /// No description provided for @inviteAsRole.
   ///
-  /// In es, this message translates to:
-  /// **'Rol'**
+  /// In en, this message translates to:
+  /// **'Role'**
   String get inviteAsRole;
 
   /// No description provided for @inviteSent.
   ///
-  /// In es, this message translates to:
-  /// **'Invitación enviada a {email}'**
+  /// In en, this message translates to:
+  /// **'Invitation sent to {email}'**
   String inviteSent(String email);
 
   /// No description provided for @syncStatusTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Estado de Sincronización'**
+  /// In en, this message translates to:
+  /// **'Synchronization Status'**
   String get syncStatusTitle;
 
   /// No description provided for @syncStatusDescription.
   ///
-  /// In es, this message translates to:
-  /// **'Listix opera bajo arquitectura Offline-First con persistencia local en SQLite.'**
+  /// In en, this message translates to:
+  /// **'Listix operates under an Offline-First architecture with local SQLite storage.'**
   String get syncStatusDescription;
 
   /// No description provided for @simulateOffline.
   ///
-  /// In es, this message translates to:
-  /// **'Simular Modo Offline'**
+  /// In en, this message translates to:
+  /// **'Simulate Offline Mode'**
   String get simulateOffline;
 
   /// No description provided for @simulateOfflineSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Comprueba cómo la app guarda localmente sin conexión'**
+  /// In en, this message translates to:
+  /// **'Test how the app saves data locally with zero connection'**
   String get simulateOfflineSubtitle;
 
   /// No description provided for @close.
   ///
-  /// In es, this message translates to:
-  /// **'Cerrar'**
+  /// In en, this message translates to:
+  /// **'Close'**
   String get close;
 
   /// No description provided for @syncNow.
   ///
-  /// In es, this message translates to:
-  /// **'Sincronizar ahora'**
+  /// In en, this message translates to:
+  /// **'Sync now'**
   String get syncNow;
 
   /// No description provided for @statusSyncing.
   ///
-  /// In es, this message translates to:
-  /// **'Sincronizando...'**
+  /// In en, this message translates to:
+  /// **'Syncing...'**
   String get statusSyncing;
 
   /// No description provided for @statusOffline.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Offline'**
   String get statusOffline;
 
   /// No description provided for @statusPending.
   ///
-  /// In es, this message translates to:
-  /// **'Pendiente'**
+  /// In en, this message translates to:
+  /// **'Pending'**
   String get statusPending;
 
   /// No description provided for @statusSynced.
   ///
-  /// In es, this message translates to:
-  /// **'Sincronizado'**
+  /// In en, this message translates to:
+  /// **'Synced'**
   String get statusSynced;
 
   /// No description provided for @aboutApp.
   ///
-  /// In es, this message translates to:
-  /// **'Acerca de Listix'**
+  /// In en, this message translates to:
+  /// **'About Listix'**
   String get aboutApp;
 
   /// No description provided for @settings.
   ///
-  /// In es, this message translates to:
-  /// **'Configuración'**
+  /// In en, this message translates to:
+  /// **'Settings'**
   String get settings;
 
   /// No description provided for @themeTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Tema'**
+  /// In en, this message translates to:
+  /// **'Appearance'**
   String get themeTitle;
 
   /// No description provided for @themeSystem.
   ///
-  /// In es, this message translates to:
-  /// **'Sistema'**
+  /// In en, this message translates to:
+  /// **'System'**
   String get themeSystem;
 
   /// No description provided for @themeLight.
   ///
-  /// In es, this message translates to:
-  /// **'Claro'**
+  /// In en, this message translates to:
+  /// **'Light'**
   String get themeLight;
 
   /// No description provided for @themeDark.
   ///
-  /// In es, this message translates to:
-  /// **'Oscuro'**
+  /// In en, this message translates to:
+  /// **'Dark'**
   String get themeDark;
 
   /// No description provided for @version.
   ///
-  /// In es, this message translates to:
-  /// **'Versión'**
+  /// In en, this message translates to:
+  /// **'Version'**
   String get version;
 
   /// No description provided for @versionLabel.
   ///
-  /// In es, this message translates to:
-  /// **'Versión {version} (compilación {build})'**
+  /// In en, this message translates to:
+  /// **'Version {version} (build {build})'**
   String versionLabel(String version, String build);
 
   /// No description provided for @languageTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Idioma'**
+  /// In en, this message translates to:
+  /// **'Language'**
   String get languageTitle;
 
   /// No description provided for @spanish.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Español'**
   String get spanish;
 
   /// No description provided for @english.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'English'**
   String get english;
 
   /// No description provided for @offlineFirstTitle.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Offline-First'**
   String get offlineFirstTitle;
 
   /// No description provided for @privacyPolicy.
   ///
-  /// In es, this message translates to:
-  /// **'Política de Privacidad'**
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
   String get privacyPolicy;
 
   /// No description provided for @termsOfService.
   ///
-  /// In es, this message translates to:
-  /// **'Términos del Servicio'**
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
   String get termsOfService;
 
   /// No description provided for @privacyStatement.
   ///
-  /// In es, this message translates to:
-  /// **'Todas tus listas de compras y productos se guardan localmente en tu dispositivo. Listix muestra anuncios mediante Google AdMob para apoyar el desarrollo continuo. Google AdMob puede recopilar y procesar identificadores del dispositivo, ID de publicidad y datos de uso para mostrar anuncios personalizados y no personalizados de acuerdo con la Política de Privacidad de Google. Nunca vendemos tus datos personales ni el contenido de tus listas.'**
+  /// In en, this message translates to:
+  /// **'All shopping lists and items are stored locally on your device. Listix displays advertisements via Google AdMob to support continuous development. Google AdMob may collect and process device identifiers, advertising IDs, and usage analytics to serve non-personalized and personalized ads in accordance with Google\'s Privacy Policy. We never sell your personal data or list contents.'**
   String get privacyStatement;
 
   /// No description provided for @offlineFirstStatement.
   ///
-  /// In es, this message translates to:
-  /// **'Arquitectura Offline-First: Cada creación, tachado y edición se realiza a velocidad nativa con latencia cero en disco local, sincronizándose únicamente al compartir.'**
+  /// In en, this message translates to:
+  /// **'Offline-First Architecture: Every creation, check-off, and edit occurs at native speed with zero latency on local storage, syncing only when sharing.'**
   String get offlineFirstStatement;
 
   /// No description provided for @termsStatement.
   ///
-  /// In es, this message translates to:
-  /// **'Listix es una herramienta creada para la productividad personal y colaborativa. El usuario es el único propietario de sus listas y contenido.'**
+  /// In en, this message translates to:
+  /// **'Listix is a tool built for personal and collaborative productivity. You retain full ownership of your lists and content.'**
   String get termsStatement;
 
   /// No description provided for @copyrightFooter.
   ///
-  /// In es, this message translates to:
-  /// **'© {year} Nicolas Mena. Todos los derechos reservados.'**
+  /// In en, this message translates to:
+  /// **'© {year} Nicolas Mena. All rights reserved.'**
   String copyrightFooter(int year);
 
   /// No description provided for @errorPrefix.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Error: {error}'**
   String errorPrefix(String error);
 
   /// No description provided for @notificationsTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Notificaciones'**
+  /// In en, this message translates to:
+  /// **'Notifications'**
   String get notificationsTitle;
 
   /// No description provided for @weeklyReminderTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Recordatorio semanal'**
+  /// In en, this message translates to:
+  /// **'Weekly reminder'**
   String get weeklyReminderTitle;
 
   /// No description provided for @weeklyReminderSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Recibe un recordatorio semanal para planificar tus compras'**
+  /// In en, this message translates to:
+  /// **'Receive a weekly reminder to plan your shopping'**
   String get weeklyReminderSubtitle;
 
   /// No description provided for @notificationTimeTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Hora del recordatorio'**
+  /// In en, this message translates to:
+  /// **'Reminder time'**
   String get notificationTimeTitle;
 
   /// No description provided for @notificationTimeSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Programada para las {time}'**
+  /// In en, this message translates to:
+  /// **'Scheduled for {time}'**
   String notificationTimeSubtitle(String time);
 
   /// No description provided for @weeklyReminderNotificationTitle.
   ///
-  /// In es, this message translates to:
-  /// **'¡Momento de organizar tus compras!'**
+  /// In en, this message translates to:
+  /// **'Time to plan your shopping!'**
   String get weeklyReminderNotificationTitle;
 
   /// No description provided for @weeklyReminderNotificationBody.
   ///
-  /// In es, this message translates to:
-  /// **'Revisa tus listas o crea una nueva para esta semana.'**
+  /// In en, this message translates to:
+  /// **'Review your lists or create a new one for the week.'**
   String get weeklyReminderNotificationBody;
 
   /// No description provided for @undo.
   ///
-  /// In es, this message translates to:
-  /// **'Deshacer'**
+  /// In en, this message translates to:
+  /// **'Undo'**
   String get undo;
 
   /// No description provided for @listDeleted.
   ///
-  /// In es, this message translates to:
-  /// **'\"{name}\" eliminada'**
+  /// In en, this message translates to:
+  /// **'\"{name}\" deleted'**
   String listDeleted(String name);
 
   /// No description provided for @itemDeleted.
   ///
-  /// In es, this message translates to:
-  /// **'\"{title}\" eliminado'**
+  /// In en, this message translates to:
+  /// **'\"{title}\" deleted'**
   String itemDeleted(String title);
 
   /// No description provided for @starred.
   ///
-  /// In es, this message translates to:
-  /// **'Favoritas'**
+  /// In en, this message translates to:
+  /// **'Starred'**
   String get starred;
 
   /// No description provided for @starList.
   ///
-  /// In es, this message translates to:
-  /// **'Destacar lista'**
+  /// In en, this message translates to:
+  /// **'Star list'**
   String get starList;
 
   /// No description provided for @unstarList.
   ///
-  /// In es, this message translates to:
-  /// **'Quitar de destacadas'**
+  /// In en, this message translates to:
+  /// **'Unstar list'**
   String get unstarList;
 
   /// No description provided for @reorder.
   ///
-  /// In es, this message translates to:
-  /// **'Reordenar'**
+  /// In en, this message translates to:
+  /// **'Reorder'**
   String get reorder;
 
   /// No description provided for @developer.
   ///
-  /// In es, this message translates to:
-  /// **'Desarrollador'**
+  /// In en, this message translates to:
+  /// **'Developer'**
   String get developer;
 
   /// No description provided for @developerName.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'Nicolas Mena'**
   String get developerName;
 
   /// No description provided for @developerEmail.
   ///
-  /// In es, this message translates to:
+  /// In en, this message translates to:
   /// **'nmena.garzon@gmail.com'**
   String get developerEmail;
 
   /// No description provided for @contactDeveloper.
   ///
-  /// In es, this message translates to:
-  /// **'Contactar al desarrollador'**
+  /// In en, this message translates to:
+  /// **'Contact developer'**
   String get contactDeveloper;
 
   /// No description provided for @buyMeACoffee.
   ///
-  /// In es, this message translates to:
-  /// **'Invítame un café'**
+  /// In en, this message translates to:
+  /// **'Buy me a coffee'**
   String get buyMeACoffee;
 
   /// No description provided for @buyMeACoffeeSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Apoya el desarrollo de Listix'**
+  /// In en, this message translates to:
+  /// **'Support the development of Listix'**
   String get buyMeACoffeeSubtitle;
 
   /// No description provided for @sendFeedback.
   ///
-  /// In es, this message translates to:
-  /// **'Enviar comentarios'**
+  /// In en, this message translates to:
+  /// **'Send feedback'**
   String get sendFeedback;
 
   /// No description provided for @sendFeedbackSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Sugerencias, errores o consultas'**
+  /// In en, this message translates to:
+  /// **'Suggestions, bugs or questions'**
   String get sendFeedbackSubtitle;
 
   /// No description provided for @rateApp.
   ///
-  /// In es, this message translates to:
-  /// **'Calificar app'**
+  /// In en, this message translates to:
+  /// **'Rate app'**
   String get rateApp;
 
   /// No description provided for @rateAppSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Deja una reseña en Google Play'**
+  /// In en, this message translates to:
+  /// **'Leave a review on Google Play'**
   String get rateAppSubtitle;
 
   /// No description provided for @layoutTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Diseño de listas'**
+  /// In en, this message translates to:
+  /// **'List Layout'**
   String get layoutTitle;
 
   /// No description provided for @layoutList.
   ///
-  /// In es, this message translates to:
-  /// **'Lista'**
+  /// In en, this message translates to:
+  /// **'List'**
   String get layoutList;
 
   /// No description provided for @layoutGrid.
   ///
-  /// In es, this message translates to:
-  /// **'Bloques'**
+  /// In en, this message translates to:
+  /// **'Blocks'**
   String get layoutGrid;
 
   /// No description provided for @switchLayout.
   ///
-  /// In es, this message translates to:
-  /// **'Cambiar diseño'**
+  /// In en, this message translates to:
+  /// **'Switch layout'**
   String get switchLayout;
 
   /// No description provided for @adPolicyTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Política de Anuncios y Privacidad'**
+  /// In en, this message translates to:
+  /// **'Ad Policy & Privacy'**
   String get adPolicyTitle;
 
   /// No description provided for @adPolicyStatement.
   ///
-  /// In es, this message translates to:
-  /// **'Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.'**
+  /// In en, this message translates to:
+  /// **'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.'**
   String get adPolicyStatement;
 
   /// No description provided for @shareSystem.
   ///
-  /// In es, this message translates to:
-  /// **'Compartir en el sistema'**
+  /// In en, this message translates to:
+  /// **'Share via system'**
   String get shareSystem;
 
   /// No description provided for @shareSystemDesc.
   ///
-  /// In es, this message translates to:
-  /// **'Enviar lista y enlace a WhatsApp, Telegram, Correo y más'**
+  /// In en, this message translates to:
+  /// **'Send list and link to WhatsApp, Telegram, Email, and more'**
   String get shareSystemDesc;
 
   /// No description provided for @shareInviteLinkPrompt.
   ///
-  /// In es, this message translates to:
-  /// **'🔗 Únete a esta lista para colaborar en tiempo real:\n{url}'**
+  /// In en, this message translates to:
+  /// **'🔗 Join this list to collaborate in real-time:\n{url}'**
   String shareInviteLinkPrompt(String url);
 
   /// No description provided for @sharePendingSection.
   ///
-  /// In es, this message translates to:
-  /// **'📝 Por comprar'**
+  /// In en, this message translates to:
+  /// **'📝 To buy'**
   String get sharePendingSection;
 
   /// No description provided for @shareCompletedSection.
   ///
-  /// In es, this message translates to:
-  /// **'✅ Comprados'**
+  /// In en, this message translates to:
+  /// **'✅ Completed'**
   String get shareCompletedSection;
 
   /// No description provided for @shareEmptyListNotice.
   ///
-  /// In es, this message translates to:
-  /// **'• (Sin productos en la lista todavía)'**
+  /// In en, this message translates to:
+  /// **'• (No items in the list yet)'**
   String get shareEmptyListNotice;
 
   /// No description provided for @realtimeLive.
   ///
-  /// In es, this message translates to:
-  /// **'En vivo'**
+  /// In en, this message translates to:
+  /// **'Sharing'**
   String get realtimeLive;
 
   /// No description provided for @realtimeConnecting.
   ///
-  /// In es, this message translates to:
-  /// **'Conectando...'**
+  /// In en, this message translates to:
+  /// **'Connecting...'**
   String get realtimeConnecting;
 
   /// No description provided for @realtimeDisconnected.
   ///
-  /// In es, this message translates to:
-  /// **'Desconectado'**
+  /// In en, this message translates to:
+  /// **'Disconnected'**
   String get realtimeDisconnected;
 
   /// No description provided for @realtimeCollaborating.
   ///
-  /// In es, this message translates to:
-  /// **'Colaboración en tiempo real activa'**
+  /// In en, this message translates to:
+  /// **'Real-time collaboration active'**
   String get realtimeCollaborating;
 
   /// No description provided for @realtimeOnlineUsers.
   ///
-  /// In es, this message translates to:
-  /// **'{count} en línea'**
+  /// In en, this message translates to:
+  /// **'{count} online'**
   String realtimeOnlineUsers(int count);
 
   /// No description provided for @joinList.
   ///
-  /// In es, this message translates to:
-  /// **'Unirse a lista'**
+  /// In en, this message translates to:
+  /// **'Join list'**
   String get joinList;
 
   /// No description provided for @joinListTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Unirse a una lista compartida'**
+  /// In en, this message translates to:
+  /// **'Join a shared list'**
   String get joinListTitle;
 
   /// No description provided for @joinListPrompt.
   ///
-  /// In es, this message translates to:
-  /// **'Ingresa el código o enlace de invitación para colaborar en tiempo real.'**
+  /// In en, this message translates to:
+  /// **'Enter the invite code or link to collaborate in real time.'**
   String get joinListPrompt;
 
   /// No description provided for @joinListHint.
   ///
-  /// In es, this message translates to:
-  /// **'Código o enlace de la lista'**
+  /// In en, this message translates to:
+  /// **'List code or invite link'**
   String get joinListHint;
 
   /// No description provided for @joinAction.
   ///
-  /// In es, this message translates to:
-  /// **'Unirse'**
+  /// In en, this message translates to:
+  /// **'Join'**
   String get joinAction;
 
   /// No description provided for @listJoined.
   ///
-  /// In es, this message translates to:
-  /// **'Te has unido a \"{name}\"'**
+  /// In en, this message translates to:
+  /// **'You joined \"{name}\"'**
   String listJoined(String name);
 
   /// No description provided for @invalidInviteCode.
   ///
-  /// In es, this message translates to:
-  /// **'Código o enlace de invitación inválido'**
+  /// In en, this message translates to:
+  /// **'Invalid invitation code or link'**
   String get invalidInviteCode;
 
   /// No description provided for @alreadyJoined.
   ///
-  /// In es, this message translates to:
-  /// **'Ya tienes acceso a esta lista'**
+  /// In en, this message translates to:
+  /// **'You already have access to this list'**
   String get alreadyJoined;
 
   /// No description provided for @collaborators.
   ///
-  /// In es, this message translates to:
-  /// **'Colaboradores'**
+  /// In en, this message translates to:
+  /// **'Collaborators'**
   String get collaborators;
 
   /// No description provided for @inviteColleague.
   ///
-  /// In es, this message translates to:
-  /// **'Invitar amigos o colegas'**
+  /// In en, this message translates to:
+  /// **'Invite friends or colleagues'**
   String get inviteColleague;
 
   /// No description provided for @inviteColleagueSubtitle.
   ///
-  /// In es, this message translates to:
-  /// **'Colabora en tiempo real agregando y tachando productos'**
+  /// In en, this message translates to:
+  /// **'Collaborate in real time adding and completing items'**
   String get inviteColleagueSubtitle;
 
   /// No description provided for @simulateColleagueAction.
   ///
-  /// In es, this message translates to:
-  /// **'Simular acción de colega'**
+  /// In en, this message translates to:
+  /// **'Simulate colleague action'**
   String get simulateColleagueAction;
 
   /// No description provided for @simulateColleagueTooltip.
   ///
-  /// In es, this message translates to:
-  /// **'Simula que un colega agrega o tacha un producto en tiempo real'**
+  /// In en, this message translates to:
+  /// **'Simulates a colleague adding or completing an item in real time'**
   String get simulateColleagueTooltip;
 
   /// No description provided for @simulatedItemAdded.
   ///
-  /// In es, this message translates to:
-  /// **'Un colega agregó un producto en tiempo real'**
+  /// In en, this message translates to:
+  /// **'A colleague added an item in real time'**
   String get simulatedItemAdded;
 
   /// No description provided for @listIsShared.
   ///
-  /// In es, this message translates to:
-  /// **'Lista compartida'**
+  /// In en, this message translates to:
+  /// **'Shared list'**
   String get listIsShared;
 
   /// No description provided for @listIsLocalOnly.
   ///
-  /// In es, this message translates to:
-  /// **'Lista privada (solo local)'**
+  /// In en, this message translates to:
+  /// **'Private list (local only)'**
   String get listIsLocalOnly;
 
   /// No description provided for @listSharedSyncEnabled.
   ///
-  /// In es, this message translates to:
-  /// **'Sincronización en tiempo real habilitada con la nube'**
+  /// In en, this message translates to:
+  /// **'Real-time sync enabled with cloud'**
   String get listSharedSyncEnabled;
+
+  /// No description provided for @listSharedWaitingInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Share an invitation link to activate sync'**
+  String get listSharedWaitingInvite;
 
   /// No description provided for @listLocalOnlyDescription.
   ///
-  /// In es, this message translates to:
-  /// **'Los datos se guardan únicamente en tu dispositivo'**
+  /// In en, this message translates to:
+  /// **'Data is stored strictly on this device'**
   String get listLocalOnlyDescription;
 
   /// No description provided for @enableSharingAction.
   ///
-  /// In es, this message translates to:
-  /// **'Habilitar sincronización'**
+  /// In en, this message translates to:
+  /// **'Enable sync'**
   String get enableSharingAction;
 
   /// No description provided for @supportAndFeedback.
   ///
-  /// In es, this message translates to:
-  /// **'Soporte y Comentarios'**
+  /// In en, this message translates to:
+  /// **'Support & Feedback'**
   String get supportAndFeedback;
 
   /// No description provided for @inactiveShareInviteTitle.
   ///
-  /// In es, this message translates to:
-  /// **'Invita a colaborar en esta lista'**
+  /// In en, this message translates to:
+  /// **'Invite others to collaborate'**
   String get inactiveShareInviteTitle;
 
   /// No description provided for @inactiveShareInviteDescription.
   ///
-  /// In es, this message translates to:
-  /// **'Esta lista es privada y está guardada únicamente en tu dispositivo. Activa el modo compartido para invitar amigos o colegas y editar juntos en tiempo real.'**
+  /// In en, this message translates to:
+  /// **'This list is private and saved only on your device. Turn on sharing to invite friends or colleagues and edit together in real time.'**
   String get inactiveShareInviteDescription;
 
   /// No description provided for @activateAndShare.
   ///
-  /// In es, this message translates to:
-  /// **'Activar y compartir lista'**
+  /// In en, this message translates to:
+  /// **'Activate & Share List'**
   String get activateAndShare;
 
   /// No description provided for @enableCollaboration.
   ///
-  /// In es, this message translates to:
-  /// **'Activar colaboración'**
+  /// In en, this message translates to:
+  /// **'Enable Collaboration'**
   String get enableCollaboration;
 
   /// No description provided for @realtimeSyncFeature.
   ///
-  /// In es, this message translates to:
-  /// **'Sincronización en tiempo real al agregar o tachar productos'**
+  /// In en, this message translates to:
+  /// **'Real-time sync when adding or checking off items'**
   String get realtimeSyncFeature;
 
   /// No description provided for @collaboratorsFeature.
   ///
-  /// In es, this message translates to:
-  /// **'Invita fácilmente mediante un enlace o correo electrónico'**
+  /// In en, this message translates to:
+  /// **'Easily invite via link or email'**
   String get collaboratorsFeature;
 }
 

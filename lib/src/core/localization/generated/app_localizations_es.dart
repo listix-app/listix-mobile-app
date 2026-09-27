@@ -463,7 +463,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get shareEmptyListNotice => '• (Sin productos en la lista todavía)';
 
   @override
-  String get realtimeLive => 'En vivo';
+  String get realtimeLive => 'Compartiendo';
 
   @override
   String get realtimeConnecting => 'Conectando...';
@@ -536,6 +536,10 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get listSharedSyncEnabled =>
       'Sincronización en tiempo real habilitada con la nube';
+
+  @override
+  String get listSharedWaitingInvite =>
+      'Comparte el enlace de invitación para activar la sincronización';
 
   @override
   String get listLocalOnlyDescription =>

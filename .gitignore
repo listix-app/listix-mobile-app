@@ -48,3 +48,7 @@ app.*.map.json
 .widget_preview/
 android/build/reports/problems/problems-report.html
 /node_modules/
+node_modules/
+.dev.vars
+.dev.vars.*
+worker/.dev.vars

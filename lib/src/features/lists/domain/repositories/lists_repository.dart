@@ -59,7 +59,8 @@ abstract interface class ListsRepository {
   );
 
   Future<void> syncList(String listId);
-  Future<void> setListShared(String listId, bool isShared);
+  Future<void> setListShared(String listId, bool isShared, {bool? hasInvite});
+  Future<void> markListInviteCreated(String listId);
 
   /// Saves a full remote list and its items into SQLite (used by join and sync engine).
   Future<void> saveRemoteList(ShoppingList list);

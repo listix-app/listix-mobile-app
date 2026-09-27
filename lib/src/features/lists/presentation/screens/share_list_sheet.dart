@@ -169,7 +169,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (list.isShared) ...[
+                if (list.canSyncAndShare) ...[
                   const SizedBox(width: 8),
                   const RealtimePresenceBadge(),
                 ],
@@ -259,7 +259,9 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                   ),
                   subtitle: Text(
                     list.isShared
-                        ? tr.listSharedSyncEnabled
+                        ? (list.canSyncAndShare
+                              ? tr.listSharedSyncEnabled
+                              : tr.listSharedWaitingInvite)
                         : tr.listLocalOnlyDescription,
                     style: TextStyle(fontSize: 12, color: textMutedColor),
                   ),
