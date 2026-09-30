@@ -39,7 +39,7 @@ void main() {
       expect(find.text('Listix', findRichText: true), findsOneWidget);
       expect(find.text('Mis Listas'), findsOneWidget);
       expect(find.text('Mi lista'), findsOneWidget);
-      expect(find.text('Otra lista'), findsOneWidget);
+      expect(find.text('Otra lista'), findsNothing);
       expect(find.text('Nueva lista'), findsOneWidget);
     },
   );

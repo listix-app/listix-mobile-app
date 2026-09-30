@@ -17,8 +17,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final uri = state.uri;
       final host = uri.host.toLowerCase();
       final scheme = uri.scheme.toLowerCase();
-      if ((host == 'join' && (scheme.isEmpty || scheme == 'listix')) ||
-          (scheme == 'listix' && uri.pathSegments.contains('join'))) {
+      final isJoinLink =
+          (host == 'join' && (scheme.isEmpty || scheme == 'listix')) ||
+          (scheme == 'listix' && uri.pathSegments.contains('join')) ||
+          ((scheme == 'http' || scheme == 'https') &&
+              uri.pathSegments.contains('join'));
+
+      if (isJoinLink) {
         final token = uri.pathSegments.firstWhere(
           (segment) => segment.isNotEmpty && segment.toLowerCase() != 'join',
           // coverage:ignore-start
@@ -63,12 +68,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: AppRoutes.settings,
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.about,
         builder: (context, state) => const AboutScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.settings,
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );

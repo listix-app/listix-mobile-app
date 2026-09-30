@@ -1,17 +1,25 @@
 import type { InviteValidationResult } from './types.ts';
-import { sanitizePlayStoreUrl } from './security.ts';
 
-interface RenderOptions {
+export interface LandingPageOptions {
   token: string;
   result: InviteValidationResult;
-  playStoreUrl: string;
+  playStoreUrl?: string;
   appScheme?: string;
   packageName?: string;
 }
 
-export function renderLandingPage(options: RenderOptions): string {
-  const { token, result, appScheme = 'listix', packageName = 'com.nmenag.listix' } = options;
-  const playStore = sanitizePlayStoreUrl(options.playStoreUrl);
+export function renderLandingPage(options: LandingPageOptions): string {
+  const {
+    token,
+    result,
+    playStoreUrl,
+    appScheme = 'listix',
+  } = options;
+
+  const playStore =
+    playStoreUrl ??
+    'https://play.google.com/store/apps/details?id=com.nmenag.listix';
+
   const isValid = result.valid;
 
   const title = isValid
@@ -23,7 +31,7 @@ export function renderLandingPage(options: RenderOptions): string {
     : (result.message ?? 'Enlace de invitación de Listix.');
 
   const deepLink = `${appScheme}://join/${encodeURIComponent(token)}`;
-  const androidIntent = `intent://join/${encodeURIComponent(token)}#Intent;scheme=${appScheme};package=${packageName};end`;
+  const androidIntent = `intent://join/${encodeURIComponent(token)}#Intent;scheme=${appScheme};end`;
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -53,8 +61,10 @@ export function renderLandingPage(options: RenderOptions): string {
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f172a;
-        --card-bg: #1e293b;
+        --primary: #10b981;
+        --primary-hover: #059669;
+        --bg: #090d16;
+        --card-bg: #111827;
         --text: #f8fafc;
         --text-muted: #94a3b8;
         --border: #334155;

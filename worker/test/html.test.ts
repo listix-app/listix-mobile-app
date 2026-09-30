@@ -25,7 +25,7 @@ describe('HTML Landing Page Renderer', () => {
     assert.ok(html.includes('Mercado Semanal'));
     assert.ok(html.includes('Invitación activa'));
     assert.ok(html.includes('listix://join/INVITE123'));
-    assert.ok(html.includes('intent://join/INVITE123#Intent;scheme=listix;package=com.nmenag.listix;end'));
+    assert.ok(html.includes('intent://join/INVITE123#Intent;scheme=listix;end'));
     assert.ok(html.includes('https://play.google.com/store/apps/details?id=com.nmenag.listix'));
     assert.ok(html.includes('INVITE123'));
     assert.ok(html.includes('Colaboradores: 2 de 5'));

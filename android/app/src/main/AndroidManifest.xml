@@ -5,11 +5,6 @@
         android:label="${appName}"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
-        <!--
-          Google AdMob App ID (required by google_mobile_ads).
-          Value below is Google's official TEST App ID — safe for development.
-          PRODUCTION: replace with your real App ID from your AdMob console.
-        -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713"/>
@@ -43,6 +38,26 @@
                     android:scheme="listix"
                     android:host="join" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="listix-invite-worker.old-dream-f458.workers.dev"
+                    android:pathPrefix="/join" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="listix.app"
+                    android:pathPrefix="/join" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
@@ -50,24 +65,23 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
-    <!-- Required to query activities that can process text, see:
-         https://developer.android.com/training/package-visibility and
-         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
-
-         In particular, this is used by the Flutter engine in code
-         like e.g. `UriLauncher` to query if an app can launch a URL. -->
+    <!-- Required to query activities that can process text and external app intents -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
         <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="https" />
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="whatsapp"/>
         </intent>
         <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="mailto" />
+            <action android:name="android.intent.action.SENDTO"/>
+            <data android:scheme="mailto"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

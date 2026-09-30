@@ -189,7 +189,7 @@ class AppDatabase {
   Future<void> _seedInitialData(Database db) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final uuid = const Uuid();
-    final defaults = [('Mi lista', 1, 0), ('Otra lista', 0, 1)];
+    final defaults = [('Mi lista', 0, 0)];
 
     for (final (name, isStarred, position) in defaults) {
       await db.insert('lists', {

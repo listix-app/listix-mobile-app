@@ -635,6 +635,24 @@ void main() {
         );
         expect(pushedScreen.token, 'K7M4XP2Q');
 
+        // Deep link via HTTPS invite URL
+        container
+            .read(appRouterProvider)
+            .routeInformationProvider
+            .didPushRouteInformation(
+              RouteInformation(
+                uri: Uri.parse(
+                  'https://listix-invite-worker.old-dream-f458.workers.dev/join/K7M4XP2Q',
+                ),
+              ),
+            );
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinInviteScreen), findsOneWidget);
+        final httpsScreen = tester.widget<JoinInviteScreen>(
+          find.byType(JoinInviteScreen),
+        );
+        expect(httpsScreen.token, 'K7M4XP2Q');
+
         await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 100)),
         );
