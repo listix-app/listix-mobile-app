@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   isValidTokenFormat,
+  isInviteCode,
   hashToken,
   maskToken,
   sanitizePlayStoreUrl,
@@ -12,6 +13,7 @@ describe('Security & Validation Utilities', () => {
   describe('isValidTokenFormat', () => {
     it('accepts valid alphanumeric, hex, and hyphenated tokens', () => {
       assert.equal(isValidTokenFormat('ABC123'), true);
+      assert.equal(isValidTokenFormat('K7M4XP2Q'), true);
       assert.equal(isValidTokenFormat('a1b2c3d4e5f6'), true);
       assert.equal(
         isValidTokenFormat(
@@ -33,6 +35,27 @@ describe('Security & Validation Utilities', () => {
       assert.equal(isValidTokenFormat('a'.repeat(129)), false); // too long (> 128)
       assert.equal(isValidTokenFormat(null as unknown as string), false);
       assert.equal(isValidTokenFormat(undefined as unknown as string), false);
+    });
+  });
+
+  describe('isInviteCode', () => {
+    it('accepts valid 8-character alphanumeric invite codes', () => {
+      assert.equal(isInviteCode('K7M4XP2Q'), true);
+      assert.equal(isInviteCode('k7m4xp2q'), true);
+      assert.equal(isInviteCode('12345678'), true);
+      assert.equal(isInviteCode('ABCDEFGH'), true);
+      assert.equal(isInviteCode('  K7M4XP2Q  '), true);
+    });
+
+    it('rejects codes of incorrect length or containing non-alphanumeric characters', () => {
+      assert.equal(isInviteCode(''), false);
+      assert.equal(isInviteCode('K7M4XP2'), false); // 7 chars
+      assert.equal(isInviteCode('K7M4XP2Q9'), false); // 9 chars
+      assert.equal(isInviteCode('K7M4-P2Q'), false); // hyphen
+      assert.equal(isInviteCode('K7M4_P2Q'), false); // underscore
+      assert.equal(isInviteCode('K7M4 P2Q'), false); // space
+      assert.equal(isInviteCode(null as unknown as string), false);
+      assert.equal(isInviteCode(undefined as unknown as string), false);
     });
   });
 
@@ -89,7 +112,7 @@ describe('Security & Validation Utilities', () => {
   });
 
   describe('applySecurityHeaders', () => {
-    it('applies essential hardening headers', () => {
+    it('sets standard security and CSP headers', () => {
       const headers = applySecurityHeaders(new Headers());
       assert.equal(headers.get('X-Content-Type-Options'), 'nosniff');
       assert.equal(headers.get('X-Frame-Options'), 'DENY');

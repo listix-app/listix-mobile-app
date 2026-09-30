@@ -1,8 +1,14 @@
 const TOKEN_REGEX = /^[a-zA-Z0-9_-]{6,128}$/;
+const INVITE_CODE_REGEX = /^[a-zA-Z0-9]{8}$/;
 
 export function isValidTokenFormat(token: string): boolean {
   if (!token || typeof token !== 'string') return false;
   return TOKEN_REGEX.test(token.trim());
+}
+
+export function isInviteCode(token: string): boolean {
+  if (!token || typeof token !== 'string') return false;
+  return INVITE_CODE_REGEX.test(token.trim());
 }
 
 export async function hashToken(token: string): Promise<string> {

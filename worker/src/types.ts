@@ -111,6 +111,7 @@ export interface Database {
           id: string;
           list_id: string;
           token_hash: string;
+          invite_code: string | null;
           created_by: string | null;
           expires_at: string;
           is_active: boolean;
@@ -120,6 +121,7 @@ export interface Database {
           id?: string;
           list_id: string;
           token_hash: string;
+          invite_code?: string | null;
           created_by?: string | null;
           expires_at: string;
           is_active?: boolean;
@@ -129,6 +131,7 @@ export interface Database {
           id?: string;
           list_id?: string;
           token_hash?: string;
+          invite_code?: string | null;
           created_by?: string | null;
           expires_at?: string;
           is_active?: boolean;
@@ -143,7 +146,8 @@ export interface Database {
     Functions: {
       validate_list_invite: {
         Args: {
-          p_token_hash: string;
+          p_token_hash?: string | null;
+          p_invite_code?: string | null;
         };
         Returns: Record<string, unknown>;
       };
