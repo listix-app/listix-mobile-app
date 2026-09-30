@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:listix/src/features/collaboration/presentation/screens/join_invite_screen.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
@@ -91,7 +92,7 @@ void main() {
           GoRoute(
             path: '/list/:id/edit',
             builder: (context, state) =>
-                CreateEditListScreen(listId: state.pathParameters['id']),
+                CreateEditListScreen(listId: state.pathParameters['id']!),
           ),
         ],
       );
@@ -271,6 +272,7 @@ void main() {
 
         await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
         await tester.pumpAndSettle();
+
         expect(find.text('¿Eliminar lista?'), findsOneWidget);
         await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
@@ -513,10 +515,169 @@ void main() {
       container.read(appRouterProvider).go(AppRoutes.settings);
       await tester.pumpAndSettle();
       expect(find.text('Configuración'), findsWidgets);
+
+      container.read(appRouterProvider).go(AppRoutes.joinListPath('token-123'));
+      await tester.pumpAndSettle();
+      expect(find.byType(JoinInviteScreen), findsOneWidget);
+
       await tester.runAsync(
         () => Future<void>.delayed(const Duration(milliseconds: 100)),
       );
     });
+
+    testWidgets(
+      'handles listix://join/<token> deep link and routes to JoinInviteScreen',
+      (tester) async {
+        final emptyController = _ScreensTestListsController([]);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => emptyController),
+            ],
+            child: Consumer(
+              builder: (context, ref, _) {
+                final router = ref.watch(appRouterProvider);
+                return MaterialApp.router(routerConfig: router);
+              },
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        expect(find.byType(HomeScreen), findsOneWidget);
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(HomeScreen)),
+        );
+
+        // Deep link via router.go
+        container
+            .read(appRouterProvider)
+            .go('listix://join/sample-invite-token');
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinInviteScreen), findsOneWidget);
+        final inviteScreen = tester.widget<JoinInviteScreen>(
+          find.byType(JoinInviteScreen),
+        );
+        expect(inviteScreen.token, 'sample-invite-token');
+
+        // Deep link with query parameters via routeInformationProvider
+        container
+            .read(appRouterProvider)
+            .routeInformationProvider
+            .didPushRouteInformation(
+              RouteInformation(
+                uri: Uri.parse('listix://join/pushed-token-456?source=invite'),
+              ),
+            );
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinInviteScreen), findsOneWidget);
+        final pushedScreen = tester.widget<JoinInviteScreen>(
+          find.byType(JoinInviteScreen),
+        );
+        expect(pushedScreen.token, 'pushed-token-456');
+
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+      },
+    );
+
+    testWidgets(
+      'handles listix://join/<invite_code> deep link with short code e.g. K7M4XP2Q',
+      (tester) async {
+        final emptyController = _ScreensTestListsController([]);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => emptyController),
+            ],
+            child: Consumer(
+              builder: (context, ref, _) {
+                final router = ref.watch(appRouterProvider);
+                return MaterialApp.router(routerConfig: router);
+              },
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        expect(find.byType(HomeScreen), findsOneWidget);
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(HomeScreen)),
+        );
+
+        // Deep link via router.go with short code
+        container.read(appRouterProvider).go('listix://join/K7M4XP2Q');
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinInviteScreen), findsOneWidget);
+        final inviteScreen = tester.widget<JoinInviteScreen>(
+          find.byType(JoinInviteScreen),
+        );
+        expect(inviteScreen.token, 'K7M4XP2Q');
+
+        // Deep link with lowercase short code and query params
+        container
+            .read(appRouterProvider)
+            .routeInformationProvider
+            .didPushRouteInformation(
+              RouteInformation(
+                uri: Uri.parse('listix://join/k7m4xp2q?source=share'),
+              ),
+            );
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinInviteScreen), findsOneWidget);
+        final pushedScreen = tester.widget<JoinInviteScreen>(
+          find.byType(JoinInviteScreen),
+        );
+        expect(pushedScreen.token, 'K7M4XP2Q');
+
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+      },
+    );
+
+    testWidgets(
+      'handles cold start with listix://join/<token> defaultRouteName',
+      (tester) async {
+        tester.platformDispatcher.defaultRouteNameTestValue =
+            'listix://join/cold-start-token';
+        addTearDown(() {
+          tester.platformDispatcher.clearDefaultRouteNameTestValue();
+        });
+
+        final emptyController = _ScreensTestListsController([]);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => emptyController),
+            ],
+            child: Consumer(
+              builder: (context, ref, _) {
+                final router = ref.watch(appRouterProvider);
+                return MaterialApp.router(routerConfig: router);
+              },
+            ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinInviteScreen), findsOneWidget);
+        final inviteScreen = tester.widget<JoinInviteScreen>(
+          find.byType(JoinInviteScreen),
+        );
+        expect(inviteScreen.token, 'cold-start-token');
+
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+      },
+    );
   });
 }
 
@@ -546,6 +707,19 @@ class _ScreensTestListsController extends ListsController {
     return ShoppingList(
       id: 'created_new',
       name: name,
+      createdAt: DateTime(2026, 9, 22),
+    );
+  }
+
+  @override
+  Future<ShoppingList> joinListByInviteToken(
+    String tokenOrUrl, {
+    String? displayName,
+    String? email,
+  }) async {
+    return ShoppingList(
+      id: 'token_list',
+      name: 'Lista Compartida',
       createdAt: DateTime(2026, 9, 22),
     );
   }

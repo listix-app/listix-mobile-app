@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/theme/app_colors.dart';
 import 'package:listix/src/core/theme/app_theme.dart';
 import 'package:listix/src/features/ads/data/ad_config.dart';
+import 'package:listix/src/features/collaboration/domain/services/invite_token_service.dart';
 import 'package:listix/src/routing/routes.dart';
 
 void main() {
@@ -77,11 +78,72 @@ void main() {
       expect(AppRoutes.editList, '/list/:id/edit');
       expect(AppRoutes.settings, '/settings');
       expect(AppRoutes.about, '/about');
+      expect(AppRoutes.joinList, '/join/:token');
 
       expect(AppRoutes.listDetailPath('list-123'), '/list/list-123');
       expect(AppRoutes.editListPath('list-456'), '/list/list-456/edit');
       expect(AppRoutes.joinListPath('token-789'), '/join/token-789');
+      expect(AppRoutes.joinListPath('K7M4XP2Q'), '/join/K7M4XP2Q');
     });
+
+    test('parses host and token correctly from listix://join/<token> URI', () {
+      final uri = Uri.parse('listix://join/secure-token-123');
+      expect(uri.scheme, 'listix');
+      expect(uri.host, 'join');
+      expect(uri.path, '/secure-token-123');
+      final token = uri.pathSegments.firstWhere((s) => s.isNotEmpty);
+      expect(token, 'secure-token-123');
+      expect(AppRoutes.joinListPath(token), '/join/secure-token-123');
+    });
+
+    test('parses host and short invite code from listix://join/K7M4XP2Q', () {
+      final uri = Uri.parse('listix://join/K7M4XP2Q');
+      expect(uri.scheme, 'listix');
+      expect(uri.host, 'join');
+      expect(uri.path, '/K7M4XP2Q');
+      final code = uri.pathSegments.firstWhere((s) => s.isNotEmpty);
+      expect(code, 'K7M4XP2Q');
+      expect(InviteTokenService.isInviteCode(code), isTrue);
+      expect(AppRoutes.joinListPath(code), '/join/K7M4XP2Q');
+    });
+
+    test(
+      'InviteTokenService generates valid 8-char alphanumeric invite codes',
+      () {
+        final code = InviteTokenService.generateInviteCode();
+        expect(code.length, 8);
+        expect(InviteTokenService.isInviteCode(code), isTrue);
+        expect(RegExp(r'^[A-Z0-9]{8}$').hasMatch(code), isTrue);
+      },
+    );
+
+    test(
+      'InviteTokenService extracts and normalizes short invite codes from various inputs',
+      () {
+        expect(
+          InviteTokenService.extractToken('https://listix.app/join/K7M4XP2Q'),
+          'K7M4XP2Q',
+        );
+        expect(
+          InviteTokenService.extractToken(
+            'https://listix.app/join/k7m4xp2q?source=share',
+          ),
+          'K7M4XP2Q',
+        );
+        expect(
+          InviteTokenService.extractToken('listix://join/k7m4xp2q'),
+          'K7M4XP2Q',
+        );
+        expect(InviteTokenService.extractToken('k7m4xp2q'), 'K7M4XP2Q');
+        expect(InviteTokenService.extractToken('  K7M4XP2Q  '), 'K7M4XP2Q');
+        expect(InviteTokenService.isInviteCode('K7M4XP2Q'), isTrue);
+        expect(
+          InviteTokenService.isInviteCode('too-long-invite-code'),
+          isFalse,
+        );
+        expect(InviteTokenService.isInviteCode('short'), isFalse);
+      },
+    );
 
     test('AdConfig provides valid banner unit id', () {
       expect(AdConfig.bannerId, isNotEmpty);

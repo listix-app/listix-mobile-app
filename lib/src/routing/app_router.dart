@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/about/presentation/screens/about_screen.dart';
+import '../features/collaboration/domain/services/invite_token_service.dart';
 import '../features/collaboration/presentation/screens/join_invite_screen.dart';
 import '../features/lists/presentation/screens/create_edit_list_screen.dart';
 import '../features/lists/presentation/screens/home_screen.dart';
@@ -12,6 +13,25 @@ import 'routes.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.home,
+    redirect: (context, state) {
+      final uri = state.uri;
+      final host = uri.host.toLowerCase();
+      final scheme = uri.scheme.toLowerCase();
+      if ((host == 'join' && (scheme.isEmpty || scheme == 'listix')) ||
+          (scheme == 'listix' && uri.pathSegments.contains('join'))) {
+        final token = uri.pathSegments.firstWhere(
+          (segment) => segment.isNotEmpty && segment.toLowerCase() != 'join',
+          // coverage:ignore-start
+          orElse: () => uri.path.replaceAll(RegExp(r'^/+'), '').trim(),
+          // coverage:ignore-end
+        );
+        if (token.isNotEmpty) {
+          final cleanCode = InviteTokenService.extractToken(token) ?? token;
+          return AppRoutes.joinListPath(cleanCode);
+        }
+      }
+      return null;
+    },
     routes: [
       GoRoute(
         path: AppRoutes.home,
@@ -35,7 +55,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return CreateEditListScreen(listId: id);
         },
       ),
-      // coverage:ignore-start
       GoRoute(
         path: AppRoutes.joinList,
         builder: (context, state) {
@@ -43,7 +62,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return JoinInviteScreen(token: token);
         },
       ),
-      // coverage:ignore-end
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),

@@ -1,6 +1,6 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Env, InviteValidationResult } from './types.ts';
-import { hashToken, maskToken } from './security.ts';
+import { hashToken, isInviteCode, maskToken } from './security.ts';
 
 export async function validateInviteToken(
   token: string,
@@ -18,6 +18,8 @@ export async function validateInviteToken(
     };
   }
 
+  const isCode = isInviteCode(token);
+  const cleanCode = token.trim().toUpperCase();
   const tokenHash = await hashToken(token);
 
   try {
@@ -27,7 +29,10 @@ export async function validateInviteToken(
 
     const { data: rpcData, error: rpcError } = await supabase.rpc(
       'validate_list_invite',
-      { p_token_hash: tokenHash },
+      {
+        p_token_hash: isCode ? cleanCode : tokenHash,
+        p_invite_code: isCode ? cleanCode : null,
+      },
     );
 
     if (!rpcError && rpcData) {
@@ -50,7 +55,7 @@ export async function validateInviteToken(
       );
     }
 
-    return await fallbackValidateInvite(supabase, tokenHash);
+    return await fallbackValidateInvite(supabase, token, tokenHash);
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error(`Error validating token ${maskToken(token)}: ${errorMsg}`);
@@ -64,12 +69,21 @@ export async function validateInviteToken(
 
 async function fallbackValidateInvite(
   supabase: SupabaseClient<Database>,
+  token: string,
   tokenHash: string,
 ): Promise<InviteValidationResult> {
-  const { data: invite, error: inviteError } = await supabase
+  const isCode = isInviteCode(token);
+  let query = supabase
     .from('list_invites')
-    .select('id, list_id, expires_at, is_active')
-    .eq('token_hash', tokenHash)
+    .select('id, list_id, expires_at, is_active, invite_code, token_hash');
+
+  if (isCode) {
+    query = query.eq('invite_code', token.trim().toUpperCase());
+  } else {
+    query = query.eq('token_hash', tokenHash);
+  }
+
+  const { data: invite, error: inviteError } = await query
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();

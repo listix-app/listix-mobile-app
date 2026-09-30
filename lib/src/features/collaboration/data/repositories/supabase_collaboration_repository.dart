@@ -31,7 +31,8 @@ class SupabaseCollaborationRepository {
   }) async {
     final token = InviteTokenService.generateSecureToken();
     final tokenHash = InviteTokenService.hashToken(token);
-    final inviteUrl = _buildInviteUrl(token);
+    final inviteCode = InviteTokenService.generateInviteCode();
+    final inviteUrl = _buildInviteUrl(inviteCode);
     final expiresAt = DateTime.now().toUtc().add(expiration);
 
     final client = _client;
@@ -46,13 +47,14 @@ class SupabaseCollaborationRepository {
         'p_list_id': listId,
         'p_token_hash': tokenHash,
         'p_expires_at': expiresAt.toIso8601String(),
+        'p_invite_code': inviteCode,
       },
     );
 
     return inviteUrl;
   }
 
-  String _buildInviteUrl(String token) {
+  String _buildInviteUrl(String tokenOrCode) {
     final baseUri = Uri.parse(SupabaseConfig.inviteBaseUrl.trim());
     if (!baseUri.hasAuthority ||
         (baseUri.scheme != 'https' && baseUri.scheme != 'http')) {
@@ -63,7 +65,7 @@ class SupabaseCollaborationRepository {
 
     final pathSegments =
         baseUri.pathSegments.where((segment) => segment.isNotEmpty).toList()
-          ..add(token.trim());
+          ..add(tokenOrCode.trim());
     return baseUri
         .replace(pathSegments: pathSegments, query: null, fragment: null)
         .toString();
@@ -80,7 +82,10 @@ class SupabaseCollaborationRepository {
       throw const InvalidInviteException('El código de invitación está vacío');
     }
 
-    final tokenHash = InviteTokenService.hashToken(cleanToken);
+    final isCode = InviteTokenService.isInviteCode(cleanToken);
+    final tokenHash = isCode
+        ? cleanToken.toUpperCase()
+        : InviteTokenService.hashToken(cleanToken);
     final client = _client;
 
     if (client == null || !_supabaseService.isReady) {
@@ -98,6 +103,7 @@ class SupabaseCollaborationRepository {
           'p_token_hash': tokenHash,
           'p_display_name': displayName ?? 'Colaborador',
           'p_email': email,
+          if (isCode) 'p_invite_code': cleanToken.toUpperCase(),
         },
       );
 
