@@ -3,8 +3,13 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val basePackageName: String = System.getenv("PACKAGE_NAME")
+    ?.takeIf { it.isNotBlank() }
+    ?: (project.findProperty("PACKAGE_NAME") as? String)?.takeIf { it.isNotBlank() }
+    ?: "com.nmenag.listix"
+
 android {
-    namespace = "com.example.listix"
+    namespace = "com.nmenag.listix"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,16 +20,41 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.listix"
+        applicationId = basePackageName
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    flavorDimensions += "default"
+
+    productFlavors {
+        create("dev") {
+            dimension = "default"
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appName"] = "Listix Dev"
+        }
+        create("preview") {
+            dimension = "default"
+            applicationIdSuffix = ".preview"
+            manifestPlaceholders["appName"] = "Listix Preview"
+        }
+        create("prod") {
+            dimension = "default"
+            manifestPlaceholders["appName"] = "Listix"
+        }
+    }
+
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

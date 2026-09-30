@@ -90,7 +90,7 @@ describe('Security & Validation Utilities', () => {
 
   describe('sanitizePlayStoreUrl', () => {
     const defaultPlayStore =
-      'https://play.google.com/store/apps/details?id=com.example.listix';
+      'https://play.google.com/store/apps/details?id=com.nmenag.listix';
 
     it('returns default URL when input is missing or empty', () => {
       assert.equal(sanitizePlayStoreUrl(), defaultPlayStore);
@@ -100,7 +100,7 @@ describe('Security & Validation Utilities', () => {
 
     it('accepts valid play.google.com URLs', () => {
       const customUrl =
-        'https://play.google.com/store/apps/details?id=com.example.listix&referrer=utm_source%3Dinvite';
+        'https://play.google.com/store/apps/details?id=com.nmenag.listix&referrer=utm_source%3Dinvite';
       assert.equal(sanitizePlayStoreUrl(customUrl), customUrl);
     });
 

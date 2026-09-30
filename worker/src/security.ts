@@ -28,7 +28,7 @@ export function maskToken(token: string): string {
 
 export function sanitizePlayStoreUrl(url?: string): string {
   const defaultUrl =
-    'https://play.google.com/store/apps/details?id=com.example.listix';
+    'https://play.google.com/store/apps/details?id=com.nmenag.listix';
   if (!url || typeof url !== 'string') return defaultUrl;
   const trimmed = url.trim();
   try {

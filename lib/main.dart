@@ -7,7 +7,15 @@ import 'src/core/services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
-  await SupabaseService.instance.initialize();
+  try {
+    await MobileAds.instance.initialize();
+  } catch (e) {
+    debugPrint('[MobileAds] Initialization failed: $e');
+  }
+  try {
+    await SupabaseService.instance.initialize();
+  } catch (e) {
+    debugPrint('[SupabaseService] Initialization failed: $e');
+  }
   runApp(const ProviderScope(child: ListixApp()));
 }

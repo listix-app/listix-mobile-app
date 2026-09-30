@@ -10,7 +10,7 @@ interface RenderOptions {
 }
 
 export function renderLandingPage(options: RenderOptions): string {
-  const { token, result, appScheme = 'listix', packageName = 'com.example.listix' } = options;
+  const { token, result, appScheme = 'listix', packageName = 'com.nmenag.listix' } = options;
   const playStore = sanitizePlayStoreUrl(options.playStoreUrl);
   const isValid = result.valid;
 

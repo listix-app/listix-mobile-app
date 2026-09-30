@@ -4,8 +4,8 @@ import worker from '../src/index.ts';
 import type { Env } from '../src/types.ts';
 
 const mockEnv: Env = {
-  PLAY_STORE_URL: 'https://play.google.com/store/apps/details?id=com.example.listix',
-  ANDROID_PACKAGE_NAME: 'com.example.listix',
+  PLAY_STORE_URL: 'https://play.google.com/store/apps/details?id=com.nmenag.listix',
+  ANDROID_PACKAGE_NAME: 'com.nmenag.listix',
   ANDROID_SHA256_FINGERPRINT: 'AA:BB:CC:DD',
 };
 
@@ -38,7 +38,7 @@ describe('Cloudflare Worker Endpoint Router', () => {
       target: { namespace: string; package_name: string; sha256_cert_fingerprints: string[] };
     }>;
     assert.equal(assetLinks.length, 1);
-    assert.equal(assetLinks[0].target.package_name, 'com.example.listix');
+    assert.equal(assetLinks[0].target.package_name, 'com.nmenag.listix');
     assert.deepEqual(assetLinks[0].target.sha256_cert_fingerprints, ['AA:BB:CC:DD']);
   });
 

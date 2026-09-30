@@ -1,4 +1,4 @@
-package com.example.listix
+package com.nmenag.listix
 
 import io.flutter.embedding.android.FlutterActivity
 

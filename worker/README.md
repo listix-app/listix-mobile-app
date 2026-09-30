@@ -65,7 +65,7 @@ Edit `.dev.vars` with your Supabase credentials:
 ```env
 SUPABASE_URL="https://your-project-ref.supabase.co"
 SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOi..."
-PLAY_STORE_URL="https://play.google.com/store/apps/details?id=com.example.listix"
+PLAY_STORE_URL="https://play.google.com/store/apps/details?id=com.nmenag.listix"
 ```
 
 3. Start the local development server:

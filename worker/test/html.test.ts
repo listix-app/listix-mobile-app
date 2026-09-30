@@ -17,16 +17,16 @@ describe('HTML Landing Page Renderer', () => {
     const html = renderLandingPage({
       token: 'INVITE123',
       result: validResult,
-      playStoreUrl: 'https://play.google.com/store/apps/details?id=com.example.listix',
+      playStoreUrl: 'https://play.google.com/store/apps/details?id=com.nmenag.listix',
       appScheme: 'listix',
-      packageName: 'com.example.listix',
+      packageName: 'com.nmenag.listix',
     });
 
     assert.ok(html.includes('Mercado Semanal'));
     assert.ok(html.includes('Invitación activa'));
     assert.ok(html.includes('listix://join/INVITE123'));
-    assert.ok(html.includes('intent://join/INVITE123#Intent;scheme=listix;package=com.example.listix;end'));
-    assert.ok(html.includes('https://play.google.com/store/apps/details?id=com.example.listix'));
+    assert.ok(html.includes('intent://join/INVITE123#Intent;scheme=listix;package=com.nmenag.listix;end'));
+    assert.ok(html.includes('https://play.google.com/store/apps/details?id=com.nmenag.listix'));
     assert.ok(html.includes('INVITE123'));
     assert.ok(html.includes('Colaboradores: 2 de 5'));
   });
@@ -40,7 +40,7 @@ describe('HTML Landing Page Renderer', () => {
     const html = renderLandingPage({
       token: 'XSS"&<>',
       result: maliciousResult,
-      playStoreUrl: 'https://play.google.com/store/apps/details?id=com.example.listix',
+      playStoreUrl: 'https://play.google.com/store/apps/details?id=com.nmenag.listix',
     });
 
     assert.ok(!html.includes('<script>alert("xss")</script>'));
@@ -57,7 +57,7 @@ describe('HTML Landing Page Renderer', () => {
     const html = renderLandingPage({
       token: 'EXPIRED123',
       result: errorResult,
-      playStoreUrl: 'https://play.google.com/store/apps/details?id=com.example.listix',
+      playStoreUrl: 'https://play.google.com/store/apps/details?id=com.nmenag.listix',
     });
 
     assert.ok(html.includes('No disponible'));
