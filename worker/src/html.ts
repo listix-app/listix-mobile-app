@@ -6,6 +6,7 @@ export interface LandingPageOptions {
   playStoreUrl?: string;
   appScheme?: string;
   packageName?: string;
+  lang?: string;
 }
 
 export function renderLandingPage(options: LandingPageOptions): string {
@@ -14,7 +15,11 @@ export function renderLandingPage(options: LandingPageOptions): string {
     result,
     playStoreUrl,
     appScheme = 'listix',
+    lang = 'es',
   } = options;
+
+  const isEn = lang === 'en';
+  const htmlLang = isEn ? 'en' : 'es';
 
   const playStore =
     playStoreUrl ??
@@ -23,18 +28,24 @@ export function renderLandingPage(options: LandingPageOptions): string {
   const isValid = result.valid;
 
   const title = isValid
-    ? `Únete a "${escapeHtml(result.listName ?? 'Lista')}" en Listix`
-    : 'Invitación a Listix';
+    ? isEn
+      ? `Join "${escapeHtml(result.listName ?? 'List')}" on Listix`
+      : `Únete a "${escapeHtml(result.listName ?? 'Lista')}" en Listix`
+    : isEn
+      ? 'Listix Invitation'
+      : 'Invitación a Listix';
 
   const description = isValid
-    ? `Colabora en tiempo real en la lista "${escapeHtml(result.listName ?? '')}" con Listix.`
-    : (result.message ?? 'Enlace de invitación de Listix.');
+    ? isEn
+      ? `Collaborate in real time on "${escapeHtml(result.listName ?? '')}" with Listix.`
+      : `Colabora en tiempo real en la lista "${escapeHtml(result.listName ?? '')}" con Listix.`
+    : (result.message ?? (isEn ? 'Listix invite link.' : 'Enlace de invitación de Listix.'));
 
   const deepLink = `${appScheme}://join/${encodeURIComponent(token)}`;
   const androidIntent = `intent://join/${encodeURIComponent(token)}#Intent;scheme=${appScheme};end`;
 
   return `<!DOCTYPE html>
-<html lang="es">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -286,48 +297,48 @@ export function renderLandingPage(options: LandingPageOptions): string {
           ? `
         <div class="status-badge success">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-          Invitación activa
+          ${isEn ? 'Active invite' : 'Invitación activa'}
         </div>
-        <h1>Únete a la lista</h1>
-        <p class="subtitle">Te han invitado a colaborar y sincronizar en tiempo real.</p>
+        <h1>${isEn ? 'Join the list' : 'Únete a la lista'}</h1>
+        <p class="subtitle">${isEn ? 'You have been invited to collaborate and sync in real time.' : 'Te han invitado a colaborar y sincronizar en tiempo real.'}</p>
 
         <div class="list-preview">
-          <span class="list-preview-label">Lista compartida</span>
-          <span class="list-preview-name">${escapeHtml(result.listName ?? 'Lista')}</span>
-          <span class="list-preview-meta">Colaboradores: ${result.memberCount ?? 1} de ${result.maxMembers ?? 5}</span>
+          <span class="list-preview-label">${isEn ? 'Shared list' : 'Lista compartida'}</span>
+          <span class="list-preview-name">${escapeHtml(result.listName ?? (isEn ? 'List' : 'Lista'))}</span>
+          <span class="list-preview-meta">${isEn ? 'Collaborators' : 'Colaboradores'}: ${result.memberCount ?? 1} ${isEn ? 'of' : 'de'} ${result.maxMembers ?? 5}</span>
         </div>
 
         <div class="actions">
           <a id="open-app-btn" href="${deepLink}" class="btn btn-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            Abrir en Listix
+            ${isEn ? 'Open in Listix' : 'Abrir en Listix'}
           </a>
           <a href="${playStore}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3.609 1.814L13.793 12 3.61 22.186c-.198-.184-.31-.448-.31-.734V2.548c0-.286.112-.55.31-.734zm11.242 11.244l2.42 2.42-12.022 6.94 9.602-9.36zm2.42-2.42l-2.42-2.42 9.602-9.36-9.602 9.36 2.42 2.42zm1.058-1.058l3.195 1.844c.638.368.638.97 0 1.338l-3.195 1.844-2.127-2.513 2.127-2.513z"/></svg>
-            Instalar desde Google Play
+            ${isEn ? 'Install from Google Play' : 'Instalar desde Google Play'}
           </a>
         </div>
 
         <div class="token-box">
-          <span class="list-preview-label">Código de invitación</span>
+          <span class="list-preview-label">${isEn ? 'Invite code' : 'Código de invitación'}</span>
           <div class="token-code">${escapeHtml(token)}</div>
           <button id="copy-btn" class="copy-btn" type="button">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-            <span id="copy-text">Copiar código</span>
+            <span id="copy-text">${isEn ? 'Copy code' : 'Copiar código'}</span>
           </button>
         </div>
       `
           : `
         <div class="status-badge error">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          No disponible
+          ${isEn ? 'Unavailable' : 'No disponible'}
         </div>
-        <h1>Invitación no válida</h1>
-        <p class="subtitle">${escapeHtml(result.message ?? 'No se pudo procesar la invitación.')}</p>
+        <h1>${isEn ? 'Invalid invitation' : 'Invitación no válida'}</h1>
+        <p class="subtitle">${escapeHtml(result.message ?? (isEn ? 'The invitation could not be processed.' : 'No se pudo procesar la invitación.'))}</p>
 
         <div class="actions">
           <a href="${playStore}" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-            Conoce Listix en Google Play
+            ${isEn ? 'Explore Listix on Google Play' : 'Conoce Listix en Google Play'}
           </a>
         </div>
       `
@@ -335,7 +346,7 @@ export function renderLandingPage(options: LandingPageOptions): string {
     </div>
 
     <div class="footer">
-      Listix &bull; Listas compartidas sincronizadas
+      ${isEn ? 'Listix • Real-time shared shopping lists' : 'Listix • Listas compartidas sincronizadas'}
     </div>
   </div>
 
@@ -347,16 +358,17 @@ export function renderLandingPage(options: LandingPageOptions): string {
       var token = ${JSON.stringify(token)};
       var deepLink = ${JSON.stringify(deepLink)};
       var androidIntent = ${JSON.stringify(androidIntent)};
+      var isEn = ${JSON.stringify(isEn)};
 
       var copyBtn = document.getElementById('copy-btn');
       var copyText = document.getElementById('copy-text');
       if (copyBtn) {
         copyBtn.addEventListener('click', function() {
           navigator.clipboard.writeText(token).then(function() {
-            copyText.textContent = '¡Copiado!';
-            setTimeout(function() { copyText.textContent = 'Copiar código'; }, 2000);
+            copyText.textContent = isEn ? 'Copied!' : '¡Copiado!';
+            setTimeout(function() { copyText.textContent = isEn ? 'Copy code' : 'Copiar código'; }, 2000);
           }).catch(function() {
-            copyText.textContent = 'Error al copiar';
+            copyText.textContent = isEn ? 'Copy error' : 'Error al copiar';
           });
         });
       }

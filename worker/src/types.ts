@@ -6,6 +6,7 @@ export interface Env {
   ANDROID_PACKAGE_NAME?: string;
   ANDROID_SHA256_FINGERPRINT?: string;
   APP_SCHEME?: string;
+  SUPPORT_EMAIL?: string;
 }
 
 export type InviteErrorCode =

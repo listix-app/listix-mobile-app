@@ -6,7 +6,10 @@ import {
   sanitizePlayStoreUrl,
 } from './security.ts';
 import { validateInviteToken } from './supabase.ts';
-import { renderLandingPage } from './html.ts';
+import { renderLandingPage as renderInviteLandingPage } from './html.ts';
+import { renderLandingPage } from './landing.ts';
+import { renderPrivacyPage } from './privacy.ts';
+import { renderTermsPage } from './terms.ts';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -26,7 +29,7 @@ export default {
       return new Response('Method Not Allowed', { status: 405, headers });
     }
 
-    if (path === '/' || path === '/health') {
+    if (path === '/health') {
       const headers = applySecurityHeaders(
         new Headers({ 'Content-Type': 'application/json; charset=utf-8' }),
       );
@@ -38,6 +41,136 @@ export default {
         }),
         { status: 200, headers },
       );
+    }
+
+    if (path === '/en') {
+      const html = renderLandingPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        lang: 'en',
+        pure: true,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (path === '/es') {
+      const html = renderLandingPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        lang: 'es',
+        pure: true,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (path === '/en/privacy') {
+      const html = renderPrivacyPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        supportEmail: env.SUPPORT_EMAIL,
+        lang: 'en',
+        pure: true,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (path === '/es/privacy') {
+      const html = renderPrivacyPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        supportEmail: env.SUPPORT_EMAIL,
+        lang: 'es',
+        pure: true,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (path === '/en/terms') {
+      const html = renderTermsPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        supportEmail: env.SUPPORT_EMAIL,
+        lang: 'en',
+        pure: true,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (path === '/es/terms') {
+      const html = renderTermsPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        supportEmail: env.SUPPORT_EMAIL,
+        lang: 'es',
+        pure: true,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (path === '/') {
+      const acceptHeader = request.headers.get('Accept') || '';
+      const wantsJson =
+        acceptHeader.includes('application/json') || url.searchParams.get('format') === 'json';
+
+      if (wantsJson) {
+        const headers = applySecurityHeaders(
+          new Headers({ 'Content-Type': 'application/json; charset=utf-8' }),
+        );
+        return new Response(
+          JSON.stringify({
+            status: 'ok',
+            service: 'listix-invite-worker',
+            timestamp: new Date().toISOString(),
+          }),
+          { status: 200, headers },
+        );
+      }
+
+      const langParam = url.searchParams.get('lang');
+      const lang =
+        langParam === 'es' || langParam === 'en'
+          ? langParam
+          : request.headers.get('Accept-Language')?.includes('es')
+            ? 'es'
+            : 'en';
+
+      const html = renderLandingPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        lang,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (path === '/privacy' || path === '/privacy-policy') {
+      const langParam = url.searchParams.get('lang');
+      const lang =
+        langParam === 'es' || langParam === 'en'
+          ? langParam
+          : request.headers.get('Accept-Language')?.includes('es')
+            ? 'es'
+            : 'en';
+
+      const html = renderPrivacyPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        supportEmail: env.SUPPORT_EMAIL,
+        lang,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
+    }
+
+    if (
+      path === '/terms' ||
+      path === '/terms-of-service' ||
+      path === '/terms-and-conditions'
+    ) {
+      const langParam = url.searchParams.get('lang');
+      const lang =
+        langParam === 'es' || langParam === 'en'
+          ? langParam
+          : request.headers.get('Accept-Language')?.includes('es')
+            ? 'es'
+            : 'en';
+
+      const html = renderTermsPage({
+        playStoreUrl: env.PLAY_STORE_URL,
+        supportEmail: env.SUPPORT_EMAIL,
+        lang,
+      });
+      return htmlResponse(html, 200, 'public, max-age=3600');
     }
 
     if (path === '/.well-known/assetlinks.json') {
@@ -98,6 +231,14 @@ async function handleJoin(
   const wantsJson =
     acceptHeader.includes('application/json') || url.searchParams.get('format') === 'json';
 
+  const langParam = url.searchParams.get('lang');
+  const lang =
+    langParam === 'es' || langParam === 'en'
+      ? langParam
+      : request.headers.get('Accept-Language')?.includes('es')
+        ? 'es'
+        : 'en';
+
   const playStoreUrl = sanitizePlayStoreUrl(env.PLAY_STORE_URL);
   const appScheme = env.APP_SCHEME || 'listix';
   const packageName = env.ANDROID_PACKAGE_NAME || 'com.nmenag.listix';
@@ -107,19 +248,23 @@ async function handleJoin(
     const result: InviteValidationResult = {
       valid: false,
       errorCode: 'INVALID_TOKEN_FORMAT',
-      message: 'El código de invitación proporcionado tiene un formato no válido.',
+      message:
+        lang === 'en'
+          ? 'The invite code provided has an invalid format.'
+          : 'El código de invitación proporcionado tiene un formato no válido.',
     };
 
     if (wantsJson) {
       return jsonResponse(result, 400);
     }
 
-    const html = renderLandingPage({
+    const html = renderInviteLandingPage({
       token: rawToken,
       result,
       playStoreUrl,
       appScheme,
       packageName,
+      lang,
     });
     return htmlResponse(html, 400);
   }
@@ -149,12 +294,13 @@ async function handleJoin(
           ? 404
           : 400;
 
-  const html = renderLandingPage({
+  const html = renderInviteLandingPage({
     token: rawToken,
     result,
     playStoreUrl,
     appScheme,
     packageName,
+    lang,
   });
 
   return htmlResponse(html, statusCode);
@@ -170,11 +316,15 @@ function jsonResponse(data: unknown, status: number): Response {
   return new Response(JSON.stringify(data), { status, headers });
 }
 
-function htmlResponse(html: string, status: number): Response {
+function htmlResponse(
+  html: string,
+  status: number,
+  cacheControl = 'no-store, max-age=0',
+): Response {
   const headers = applySecurityHeaders(
     new Headers({
       'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'no-store, max-age=0',
+      'Cache-Control': cacheControl,
     }),
   );
   return new Response(html, { status, headers });

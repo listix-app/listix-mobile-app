@@ -6,6 +6,20 @@ Cloudflare Worker implemented in **TypeScript** to handle Listix list invitation
 
 ## 🎯 Features
 
+- **ASO Landing Page & Static Website**: `GET /`
+  - High-converting landing page optimized following **App Store Optimization (ASO)** strategy and keywords (`shopping list`, `grocery list`, `offline checklist`, `lista de compras`, etc.).
+  - Showcases core value pillars: 100% Offline SQLite speed, 1-tap WhatsApp and Gmail sharing, real-time collaboration, and zero forced account signups.
+  - Interactive feature showcase, competitor comparison matrix, and direct Google Play download CTA.
+  - Interactive English / Spanish language switcher.
+  - Content negotiation: serves JSON (`{"status":"ok", ...}`) when requested with `Accept: application/json` or `?format=json`.
+- **Privacy Policy**: `GET /privacy` (aliases: `/privacy-policy`)
+  - Complete, Google Play Data Safety and App Store compliant Privacy Policy.
+  - Transparent disclosures on local SQLite persistence, anonymous Supabase sync, Google Mobile Ads (AdMob) advertising identifiers, and user data deletion rights.
+  - Bilingual (English and Spanish) with instant UI toggle and `?lang=` query support.
+- **Terms of Service**: `GET /terms` (aliases: `/terms-of-service`, `/terms-and-conditions`)
+  - Comprehensive Terms of Service covering acceptable use, offline architecture disclaimer, third-party services, and intellectual property.
+  - Bilingual (English and Spanish) with instant UI toggle and `?lang=` query support.
+- **Static Website Assets**: Located in `worker/public/` (`index.html`, `privacy.html`, `terms.html`, `styles.css`) for static hosting or Cloudflare Pages deployment.
 - **Invite Endpoint**: `GET /join/:token`
   - Validates token format (sanitizes against injections and illegal characters).
   - Calculates SHA-256 cryptographic hash identically to the Flutter mobile client.
