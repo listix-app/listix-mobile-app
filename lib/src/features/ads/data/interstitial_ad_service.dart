@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../../../core/config/app_environment.dart';
 import '../../../core/storage/app_database.dart';
 import 'ad_config.dart';
 
@@ -10,6 +11,7 @@ class InterstitialAdService {
   final AppDatabase _db;
   final Future<bool> Function(String adUnitId)? _adLauncher;
   final DateTime Function()? _clock;
+  final bool _adsEnabled;
 
   static const String lastShownKey = 'last_interstitial_date';
 
@@ -17,9 +19,11 @@ class InterstitialAdService {
     AppDatabase? db,
     Future<bool> Function(String adUnitId)? adLauncher,
     DateTime Function()? clock,
+    bool? adsEnabled,
   }) : _db = db ?? AppDatabase.instance,
        _adLauncher = adLauncher,
-       _clock = clock;
+       _clock = clock,
+       _adsEnabled = adsEnabled ?? AppEnvironmentConfig.adsEnabled;
 
   Future<bool> canShowToday() async {
     final lastShownStr = await _db.getSetting(lastShownKey);
@@ -35,6 +39,8 @@ class InterstitialAdService {
   }
 
   Future<bool> showInterstitialIfAllowed() async {
+    if (!_adsEnabled) return false;
+
     final allowed = await canShowToday();
     if (!allowed) return false;
 
@@ -91,5 +97,5 @@ class InterstitialAdService {
 }
 
 final interstitialAdServiceProvider = Provider<InterstitialAdService>((ref) {
-  return InterstitialAdService();
+  return InterstitialAdService(adsEnabled: ref.watch(adsEnabledProvider));
 });

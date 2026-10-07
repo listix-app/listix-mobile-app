@@ -2,9 +2,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../../../../core/config/app_environment.dart';
 import '../../data/ad_config.dart';
 
-enum BannerAdStatus { loading, loaded, failed }
+enum BannerAdStatus { loading, loaded, failed, disabled }
 
 class BannerAdNotifier extends Notifier<BannerAdStatus> {
   BannerAd? _ad;
@@ -13,12 +14,19 @@ class BannerAdNotifier extends Notifier<BannerAdStatus> {
 
   @override
   BannerAdStatus build() {
+    if (!ref.watch(adsEnabledProvider)) return BannerAdStatus.disabled;
     _load();
     ref.onDispose(_disposeAd);
     return BannerAdStatus.loading;
   }
 
   void _load() {
+    if (!ref.read(adsEnabledProvider)) {
+      _disposeAd();
+      state = BannerAdStatus.disabled;
+      return;
+    }
+
     _disposeAd();
     state = BannerAdStatus.loading;
 
@@ -62,12 +70,19 @@ class DetailBannerAdNotifier extends Notifier<BannerAdStatus> {
 
   @override
   BannerAdStatus build() {
+    if (!ref.watch(adsEnabledProvider)) return BannerAdStatus.disabled;
     _load();
     ref.onDispose(_disposeAd);
     return BannerAdStatus.loading;
   }
 
   void _load() {
+    if (!ref.read(adsEnabledProvider)) {
+      _disposeAd();
+      state = BannerAdStatus.disabled;
+      return;
+    }
+
     _disposeAd();
     state = BannerAdStatus.loading;
 

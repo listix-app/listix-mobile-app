@@ -23,9 +23,10 @@ class BannerAdWidget extends ConsumerWidget {
 
     return switch (status) {
       BannerAdStatus.loading => const SizedBox(height: _bannerHeight),
-      BannerAdStatus.failed => const SizedBox.shrink(),
       BannerAdStatus.loaded =>
         ad != null ? _buildAdContainer(ad) : const SizedBox.shrink(),
+      BannerAdStatus.failed ||
+      BannerAdStatus.disabled => const SizedBox.shrink(),
     };
   }
 

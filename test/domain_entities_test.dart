@@ -199,10 +199,11 @@ void main() {
 
   group('BannerAdStatus & SyncStatus', () {
     test('banner ad status enum values', () {
-      expect(BannerAdStatus.values.length, 3);
+      expect(BannerAdStatus.values.length, 4);
       expect(BannerAdStatus.loading, isNotNull);
       expect(BannerAdStatus.loaded, isNotNull);
       expect(BannerAdStatus.failed, isNotNull);
+      expect(BannerAdStatus.disabled, isNotNull);
     });
 
     test('sync status enum values', () {

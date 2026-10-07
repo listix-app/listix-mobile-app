@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:google_mobile_ads/src/ad_instance_manager.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
+import 'package:listix/src/core/config/app_environment.dart';
 import 'package:listix/src/core/services/url_launcher_service.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/features/about/presentation/screens/about_screen.dart';
@@ -66,6 +67,47 @@ void main() {
   group('AdConfig interstitialId Tests', () {
     test('AdConfig provides valid interstitialId', () {
       expect(AdConfig.interstitialId, isNotEmpty);
+    });
+  });
+
+  group('AppEnvironmentConfig Tests', () {
+    test('parses every environment name and unknown fallbacks', () {
+      expect(AppEnvironmentConfig.parse('dev'), AppEnvironment.dev);
+      expect(AppEnvironmentConfig.parse(' preview '), AppEnvironment.preview);
+      expect(AppEnvironmentConfig.parse('STAGING'), AppEnvironment.preview);
+      expect(AppEnvironmentConfig.parse('prod'), AppEnvironment.prod);
+      expect(AppEnvironmentConfig.parse('Production'), AppEnvironment.prod);
+      expect(AppEnvironmentConfig.parse('unknown'), AppEnvironment.dev);
+    });
+
+    test('ads are only enabled outside production', () {
+      expect(AppEnvironmentConfig.rawName, isNotEmpty);
+      expect(AppEnvironmentConfig.current, AppEnvironment.dev);
+      expect(AppEnvironmentConfig.adsEnabled, isTrue);
+
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(adsEnabledProvider), isTrue);
+    });
+
+    test('interstitialAdServiceProvider mirrors the ads enabled flag', () {
+      final enabledContainer = ProviderContainer(
+        overrides: [adsEnabledProvider.overrideWithValue(true)],
+      );
+      addTearDown(enabledContainer.dispose);
+      expect(
+        enabledContainer.read(interstitialAdServiceProvider),
+        isA<InterstitialAdService>(),
+      );
+
+      final disabledContainer = ProviderContainer(
+        overrides: [adsEnabledProvider.overrideWithValue(false)],
+      );
+      addTearDown(disabledContainer.dispose);
+      expect(
+        disabledContainer.read(interstitialAdServiceProvider),
+        isA<InterstitialAdService>(),
+      );
     });
   });
 
@@ -224,6 +266,34 @@ void main() {
           clock: () => nextDay,
         );
         expect(await serviceNextDay.canShowToday(), isTrue);
+      },
+    );
+
+    test(
+      'showInterstitialIfAllowed never shows ads when ads are disabled',
+      () async {
+        var adLauncherCalled = false;
+        final service = InterstitialAdService(
+          db: db,
+          clock: () => DateTime(2026, 5, 1),
+          adsEnabled: false,
+          adLauncher: (id) async {
+            adLauncherCalled = true;
+            return true;
+          },
+        );
+
+        await db.setSetting(
+          InterstitialAdService.lastShownKey,
+          DateTime(2026, 4, 30).toIso8601String(),
+        );
+
+        expect(await service.showInterstitialIfAllowed(), isFalse);
+        expect(adLauncherCalled, isFalse);
+        expect(
+          await db.getSetting(InterstitialAdService.lastShownKey),
+          DateTime(2026, 4, 30).toIso8601String(),
+        );
       },
     );
 
