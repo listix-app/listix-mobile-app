@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:google_mobile_ads/src/ad_instance_manager.dart';
+import 'package:listix/src/core/config/app_environment.dart';
 import 'package:listix/src/features/ads/data/ad_config.dart';
 import 'package:listix/src/features/ads/presentation/controllers/banner_ad_controller.dart';
 import 'package:listix/src/features/ads/presentation/widgets/banner_ad_widget.dart';
@@ -340,5 +341,80 @@ void main() {
         expect(sizedBoxes.where((box) => box.height == 50.0).length, 2);
       },
     );
+
+    testWidgets('BannerAdWidget renders nothing when ads are disabled', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [adsEnabledProvider.overrideWithValue(false)],
+          child: const MaterialApp(
+            home: Scaffold(bottomNavigationBar: BannerAdWidget()),
+          ),
+        ),
+      );
+
+      final sizedBoxes = tester.widgetList<SizedBox>(find.byType(SizedBox));
+      expect(sizedBoxes.any((box) => box.height == 50.0), isFalse);
+      expect(find.byType(AdWidget), findsNothing);
+    });
+
+    testWidgets('BannerAdNotifier stays disabled and never loads an ad', (
+      tester,
+    ) async {
+      late ProviderContainer container;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [adsEnabledProvider.overrideWithValue(false)],
+          child: Consumer(
+            builder: (context, ref, _) {
+              container = ProviderScope.containerOf(context);
+              return const MaterialApp(
+                home: Scaffold(bottomNavigationBar: BannerAdWidget()),
+              );
+            },
+          ),
+        ),
+      );
+
+      final notifier = container.read(bannerAdProvider.notifier);
+      expect(container.read(bannerAdProvider), BannerAdStatus.disabled);
+      expect(notifier.ad, isNull);
+
+      notifier.reload();
+      expect(container.read(bannerAdProvider), BannerAdStatus.disabled);
+      expect(notifier.ad, isNull);
+    });
+
+    testWidgets('DetailBannerAdNotifier stays disabled and never loads an ad', (
+      tester,
+    ) async {
+      late ProviderContainer container;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [adsEnabledProvider.overrideWithValue(false)],
+          child: Consumer(
+            builder: (context, ref, _) {
+              container = ProviderScope.containerOf(context);
+              return const MaterialApp(
+                home: Scaffold(
+                  bottomNavigationBar: BannerAdWidget(isDetail: true),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+
+      final notifier = container.read(detailBannerAdProvider.notifier);
+      expect(container.read(detailBannerAdProvider), BannerAdStatus.disabled);
+      expect(notifier.ad, isNull);
+
+      notifier.reload();
+      expect(container.read(detailBannerAdProvider), BannerAdStatus.disabled);
+      expect(notifier.ad, isNull);
+    });
   });
 }
