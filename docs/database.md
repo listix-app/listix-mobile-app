@@ -19,6 +19,7 @@ Listix operates on a **Local-First / Offline-First** principle:
 erDiagram
     LIST ||--o{ ITEM : "contains"
     LIST ||--o{ COLLABORATOR : "has"
+    LIST ||--o{ PENDING_OPERATION : "tracks mutations for"
 
     LIST {
         TEXT id PK "UUID v4"
@@ -26,6 +27,7 @@ erDiagram
         INTEGER is_synced "0 = pending, 1 = synced"
         INTEGER is_starred "0 = unstarred, 1 = starred"
         INTEGER is_shared "0 = local only, 1 = shared / sync enabled"
+        INTEGER has_invite "0 = no active invite, 1 = invite generated"
         INTEGER position "Sort order"
         INTEGER created_at "Unix epoch millis"
         INTEGER updated_at "Unix epoch millis"
@@ -52,6 +54,21 @@ erDiagram
         INTEGER is_owner "0 = member/admin, 1 = list owner"
         TEXT role "owner, admin, member"
     }
+
+    PENDING_OPERATION {
+        TEXT id PK "UUID v4"
+        TEXT list_id "Associated list UUID"
+        TEXT entity_type "list or item"
+        TEXT entity_id "Target entity UUID"
+        TEXT op_type "insert, update, delete"
+        TEXT payload "Serialized JSON change payload"
+        INTEGER created_at "Unix epoch millis"
+    }
+
+    APP_SETTING {
+        TEXT key PK "Setting key (e.g. appearance, consent)"
+        TEXT value "Setting value string"
+    }
 ```
 
 ---
@@ -68,6 +85,7 @@ Stores the high-level lists owned by or shared with the user.
 | `is_synced` | `INTEGER` | `NOT NULL DEFAULT 0` | Sync state: `0` = local only, `1` = synced |
 | `is_starred` | `INTEGER` | `NOT NULL DEFAULT 0` | Starred priority state |
 | `is_shared` | `INTEGER` | `NOT NULL DEFAULT 0` | `0` = private local only, `1` = shared & synced |
+| `has_invite` | `INTEGER` | `NOT NULL DEFAULT 0` | `0` = no invite active, `1` = invite token active |
 | `position` | `INTEGER` | `NOT NULL DEFAULT 0` | Display ordering position |
 | `created_at` | `INTEGER` | `NOT NULL` | Milliseconds since Unix epoch |
 | `updated_at` | `INTEGER` | `NOT NULL` | Milliseconds since Unix epoch |
@@ -100,6 +118,27 @@ Collaborators who have joined or been invited to a shared list.
 | `is_owner` | `INTEGER` | `NOT NULL DEFAULT 0` | `1` if creator/owner, `0` otherwise |
 | `role` | `TEXT` | `NOT NULL DEFAULT 'member'` | Collaborator role (`owner`, `admin`, `member`) |
 
+### D. `pending_operations`
+Tracks offline mutations pending remote sync to Supabase.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | `TEXT` | `PRIMARY KEY NOT NULL` | Unique operation UUID v4 |
+| `list_id` | `TEXT` | `NOT NULL` | Target list reference |
+| `entity_type` | `TEXT` | `NOT NULL` | Target entity: `'list'` or `'item'` |
+| `entity_id` | `TEXT` | `NOT NULL` | UUID of the entity being mutated |
+| `op_type` | `TEXT` | `NOT NULL` | Mutation type: `'insert'`, `'update'`, or `'delete'` |
+| `payload` | `TEXT` | `NULL` | Serialized JSON mutation payload |
+| `created_at` | `INTEGER` | `NOT NULL` | Milliseconds since Unix epoch |
+
+### E. `app_settings`
+Key-value storage for app-level configurations and preferences.
+
+| Column | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `key` | `TEXT` | `PRIMARY KEY NOT NULL` | Unique preference identifier |
+| `value` | `TEXT` | `NOT NULL` | Value string (e.g. appearance mode, ad consent) |
+
 ---
 
 ## 4. Indexing Strategy
@@ -121,6 +160,10 @@ CREATE INDEX idx_lists_is_shared ON lists(is_shared);
 
 -- Fast collaborator retrieval for active lists
 CREATE INDEX idx_collaborators_list_id ON collaborators(list_id);
+
+-- Rapid lookup and queue execution of pending offline operations
+CREATE INDEX idx_pending_ops_list ON pending_operations(list_id);
+CREATE INDEX idx_pending_ops_created ON pending_operations(created_at);
 ```
 
 ---
@@ -128,13 +171,10 @@ CREATE INDEX idx_collaborators_list_id ON collaborators(list_id);
 ## 5. Synchronization & Conflict Resolution Protocol
 
 1. **Client-Generated UUIDs**: All primary keys are UUID v4 values generated on the device. This guarantees that items created offline will never collide with items created by other collaborators or on the server.
-2. **Sync Loop**:
-   - `SELECT * FROM items WHERE is_synced = 0;`
-   - `SELECT * FROM lists WHERE is_synced = 0;`
-   - Payload is pushed to the backend sync endpoint.
-   - Upon HTTP 200 / successful acknowledgment:
-     - `UPDATE items SET is_synced = 1 WHERE id IN (...);`
-     - `UPDATE lists SET is_synced = 1 WHERE id IN (...);`
+2. **Offline Mutation Queue**:
+   - Every offline action records an entry in `pending_operations`.
+   - The queue processor batches pending records, executing transactional RPCs against Supabase when connectivity is restored.
+   - Upon successful server acknowledgment, local entities transition to `is_synced = 1` and corresponding pending operations are cleared.
 3. **Conflict Resolution Strategy**:
    - Uses **Last-Write-Wins (LWW)** backed by `updated_at` timestamps for scalar updates (e.g. list name).
    - Uses additive merge for todo items (items created on different devices are both appended).
@@ -142,7 +182,60 @@ CREATE INDEX idx_collaborators_list_id ON collaborators(list_id);
 
 ---
 
-## 6. Migration Roadmap (V2+)
+## 6. Backup Data Schema & Portability Architecture
+
+Listix provides an on-device backup and export mechanism designed for full data sovereignty, zero platform lock-in, and instant disaster recovery.
+
+### A. JSON Backup Format (Schema v1)
+Backups are serialized into formatted JSON containing schema versioning, metadata, and full relational hierarchies:
+
+```json
+{
+  "version": 1,
+  "exportedAt": "2026-10-08T00:00:00.000Z",
+  "appVersion": "1.0.0",
+  "lists": [
+    {
+      "id": "c3d18e8b-2d7c-4822-b2be-dcf444bbff30",
+      "name": "Supermercado",
+      "isStarred": 1,
+      "position": 0,
+      "createdAt": 1727000000000,
+      "updatedAt": 1727000000000,
+      "items": [
+        {
+          "id": "e4f29a1c-3e8d-4933-a3cf-edf555cc0041",
+          "listId": "c3d18e8b-2d7c-4822-b2be-dcf444bbff30",
+          "title": "Leche deslactosada",
+          "isCompleted": 0,
+          "position": 0,
+          "createdAt": 1727000000000,
+          "updatedAt": 1727000000000
+        }
+      ]
+    }
+  ]
+}
+```
+
+### B. CSV & Plain Text Exports
+- **CSV Export**: Tabular representation (`"List,Item,Status,Created"`) compatible with Google Sheets, Microsoft Excel, and Apple Numbers.
+- **Plain Text Summary**: Human-readable markdown checklist (`[ ] Item`, `[x] Item`) formatted for direct sharing via messaging apps or note-taking tools.
+
+### C. Atomic Restore & Conflict Resolution
+Restoring from a backup file executes inside an atomic SQLite transaction (`db.transaction(...)`):
+- **Replace Existing (`replaceExisting = true`)**:
+  1. Deletes all records from `items`, `collaborators`, and `lists`.
+  2. Inserts all lists and items from the backup payload with `is_synced = 1`.
+  3. Guarantees transactional rollback if parsing or insertion encounters invalid records.
+- **Merge (`replaceExisting = false`)**:
+  1. Inspects existing list IDs.
+  2. Existing lists preserve their current local state; missing lists and missing items are appended seamlessly.
+  3. Ensures no existing user lists are lost during restoration.
+
+---
+
+## 7. Migration Roadmap (V2+)
 
 In future versions, the schema will be expanded via incremental SQLite migrations (`ALTER TABLE` or migration scripts):
 

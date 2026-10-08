@@ -368,7 +368,7 @@ class ItemsScreen extends ConsumerWidget {
 11. **Pull Request Protocol**:
    - When the user asks for a **"pull request"** (or writes "pull request"), immediately produce a comprehensive Pull Request description formatted in Markdown following the template in Section 6.
 12. **Mandatory Context Loading — Read `.agents/skills/` and Architecture Docs**:
-   - **Read `.agents/skills/`**: Before executing any task, AI agents MUST inspect and read the relevant `SKILL.md` instructions within [`.agents/skills/`](.agents/skills/) (e.g., `flutter`, `mobile-expert`, `frontend-design`, `impeccable`, `aso`, `find-skills`).
+   - **Read `.agents/skills/`**: Before executing any task, AI agents MUST inspect and read the relevant `SKILL.md` instructions within [`.agents/skills/`](.agents/skills/) (e.g., `flutter`, `mobile-expert`, `frontend-design`, `impeccable`, `aso`).
    - **Read Architecture Documentation**: AI agents MUST read and strictly adhere to the technical and architectural blueprints located in [`docs/`](docs/) (specifically [`docs/architecture.md`](docs/architecture.md), [`docs/database.md`](docs/database.md), and [`docs/supabase.md`](docs/supabase.md)) before designing or implementing features.
 
 ---
@@ -385,7 +385,6 @@ Specialized domain skills are installed under `.agents/skills/`. Agents must con
 | **`frontend-design`** | [`.agents/skills/frontend-design/SKILL.md`](.agents/skills/frontend-design/SKILL.md) | Intentional visual design, typography, layout rhythm, distinctive themes, and micro-interactions avoiding cookie-cutter UI defaults. |
 | **`impeccable`** | [`.agents/skills/impeccable/SKILL.md`](.agents/skills/impeccable/SKILL.md) | Frontend craft, interface audits, responsive adaptation, light/dark theming, accessibility, error states, and UX copy clarity. |
 | **`aso`** | [`.agents/skills/aso/SKILL.md`](.agents/skills/aso/SKILL.md) | App Store Optimization for Google Play and App Store listings: keyword research, conversion copy, localized metadata, and competitive audits. |
-| **`find-skills`** | [`.agents/skills/find-skills/SKILL.md`](.agents/skills/find-skills/SKILL.md) | Discovering and installing new agent skills for extending capabilities. |
 
 ### B. Architecture Documentation (`docs/`)
 Agents must read and follow the architectural designs and schemas in `docs/` before implementing or modifying systems:

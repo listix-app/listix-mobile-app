@@ -50,6 +50,7 @@ Share your complete grocery list in one tap. Listix formats your pending and com
 • Quick-add items with intuitive one-tap input
 • Swipe-to-delete items and lists with tactile haptic feedback
 • Categorized Pending and Completed sections with progress indicators
+• Complete backup & export (JSON, CSV, Plain Text) with zero lock-in
 • Dark Mode, Light Mode, and System Default theme support
 • English and Spanish language localization
 
@@ -91,6 +92,7 @@ Envía tu lista de compras completa con un solo toque. Listix genera un formato 
 • Entrada rápida e intuitiva para agregar items en segundos
 • Gestos táctiles de deslizamiento para eliminar items con respuesta háptica
 • Progreso visual de items completados y pendientes
+• Respaldo completo y exportación (JSON, CSV, Texto) sin ataduras
 • Modo Oscuro, Modo Claro y Tema del Sistema
 • Disponible en Español e Inglés
 
@@ -111,3 +113,4 @@ Envía tu lista de compras completa con un solo toque. Listix genera un formato 
    - Native Gmail action button.
    - Quick clipboard copy.
 4. **Settings & Themes**: Added comprehensive appearance switcher (`System`, `Light`, `Dark`) with crisp contrast and iconography.
+5. **Backup & Data Sovereignty**: Reassuring copy highlighting local storage, portable JSON/CSV formats, and simple one-tap restore.
