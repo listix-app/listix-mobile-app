@@ -434,13 +434,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get switchLayout => 'Switch layout';
 
   @override
-  String get adPolicyTitle => 'Ad Policy & Privacy';
-
-  @override
-  String get adPolicyStatement =>
-      'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.';
-
-  @override
   String get shareSystem => 'Share via system';
 
   @override
@@ -567,4 +560,119 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get collaboratorsFeature => 'Easily invite via link or email';
+
+  @override
+  String get backupAndExport => 'Backup & Export Data';
+
+  @override
+  String get backupAndExportSubtitle =>
+      'Export or restore your lists using the file system';
+
+  @override
+  String get backupTitle => 'Backup';
+
+  @override
+  String get exportData => 'Export Data';
+
+  @override
+  String get exportJsonBackup => 'Export Full Backup (JSON)';
+
+  @override
+  String get exportJsonBackupDesc =>
+      'Save all lists and items into a JSON file';
+
+  @override
+  String get importBackup => 'Restore Backup (JSON)';
+
+  @override
+  String get importBackupDesc =>
+      'Load a backup file from the system file picker';
+
+  @override
+  String get exportTextSummary => 'Export Text Summary';
+
+  @override
+  String get exportTextSummaryDesc =>
+      'Copy or share a readable checklist summary of all lists';
+
+  @override
+  String get saveToDevice => 'Save File';
+
+  @override
+  String get shareBackupFile => 'Share File';
+
+  @override
+  String get openFromFileSystem => 'Open File';
+
+  @override
+  String get backupSuccess => 'Backup exported successfully';
+
+  @override
+  String restoreSuccess(int lists, int items) {
+    return 'Restored $lists lists and $items items';
+  }
+
+  @override
+  String get restoreConfirmTitle => 'Restore Backup?';
+
+  @override
+  String restoreConfirmMessage(int lists, int items) {
+    return 'The file contains $lists lists and $items items. How would you like to restore?';
+  }
+
+  @override
+  String get restoreMerge => 'Merge with Existing';
+
+  @override
+  String get restoreReplace => 'Replace Everything';
+
+  @override
+  String get backupInvalidFile => 'The file is not a valid Listix backup';
+
+  @override
+  String get backupEmpty => 'No lists available to export';
+
+  @override
+  String get listsSummaryTitle => 'Data Summary';
+
+  @override
+  String totalListsCount(int count) {
+    return '$count lists';
+  }
+
+  @override
+  String totalItemsCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get nativeFileSystemTitle => 'Native Android File System';
+
+  @override
+  String get nativeFileSystemDesc =>
+      'Listix uses Android\'s native Document Picker to save and open backups privately.';
+
+  @override
+  String get exportDataCsv => 'Export data CSV';
+
+  @override
+  String get exportDataCsvDesc =>
+      'Save lists and items as a CSV spreadsheet file';
+
+  @override
+  String get backupDataJson => 'Backup data JSON';
+
+  @override
+  String get backupDataJsonDesc =>
+      'Create a complete JSON backup to restore later';
+
+  @override
+  String get restoreJson => 'Restore JSON';
+
+  @override
+  String get restoreJsonDesc =>
+      'Open native file picker to restore from a JSON backup';
+
+  @override
+  String get csvExportSuccess => 'CSV file exported successfully';
 }

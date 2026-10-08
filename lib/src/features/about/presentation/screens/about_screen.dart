@@ -273,12 +273,6 @@ class AboutScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           _InfoCard(
-            icon: Icons.ads_click_rounded,
-            title: tr.adPolicyTitle,
-            content: tr.adPolicyStatement,
-          ),
-          const SizedBox(height: 16),
-          _InfoCard(
             icon: Icons.shield_outlined,
             title: tr.privacyPolicy,
             content: tr.privacyStatement,

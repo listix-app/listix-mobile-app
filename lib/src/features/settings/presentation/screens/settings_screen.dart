@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
@@ -7,6 +8,7 @@ import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/widgets/listix_logo.dart';
+import '../../../../routing/routes.dart';
 import '../../../lists/presentation/controllers/list_layout_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
 
@@ -335,6 +337,48 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
+          _SettingsSectionTitle(title: tr.backupAndExport),
+          const SizedBox(height: 10),
+          Card(
+            color: cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor),
+            ),
+            child: ListTile(
+              key: const Key('settings_backup_and_export_tile'),
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.backup_table_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+              ),
+              title: Text(
+                tr.backupAndExport,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textTitleColor,
+                ),
+              ),
+              subtitle: Text(
+                tr.backupAndExportSubtitle,
+                style: TextStyle(fontSize: 12, color: textSubColor),
+              ),
+              trailing: const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textMuted,
+              ),
+              onTap: () => context.push(AppRoutes.backup),
+            ),
+          ),
+          const SizedBox(height: 24),
+
           _SettingsSectionTitle(title: tr.supportAndFeedback),
           const SizedBox(height: 10),
           Card(
@@ -460,16 +504,6 @@ class SettingsScreen extends ConsumerWidget {
             icon: Icons.cloud_off_rounded,
             title: '100% Offline-First',
             content: tr.offlineFirstStatement,
-            cardBg: cardBg,
-            borderColor: borderColor,
-            titleColor: textTitleColor,
-            subColor: textSubColor,
-          ),
-          const SizedBox(height: 12),
-          _SettingsInfoCard(
-            icon: Icons.ads_click_rounded,
-            title: tr.adPolicyTitle,
-            content: tr.adPolicyStatement,
             cardBg: cardBg,
             borderColor: borderColor,
             titleColor: textTitleColor,

@@ -225,8 +225,6 @@
   "layoutList": "Lista",
   "layoutGrid": "Bloques",
   "switchLayout": "Cambiar diseño",
-  "adPolicyTitle": "Política de Anuncios y Privacidad",
-  "adPolicyStatement": "Listix utiliza Google AdMob. Los anuncios intersticiales se muestran como máximo una vez al día en transiciones naturales para respetar tu experiencia.",
   "shareSystem": "Compartir en el sistema",
   "shareSystemDesc": "Enviar lista y enlace a WhatsApp, Telegram, Correo y más",
   "shareInviteLinkPrompt": "🔗 Únete a esta lista para colaborar en tiempo real:\n{url}",
@@ -285,5 +283,72 @@
   "activateAndShare": "Activar y compartir lista",
   "enableCollaboration": "Activar colaboración",
   "realtimeSyncFeature": "Sincronización en tiempo real al agregar o tachar productos",
-  "collaboratorsFeature": "Invita fácilmente mediante un enlace o correo electrónico"
+  "collaboratorsFeature": "Invita fácilmente mediante un enlace o correo electrónico",
+  "backupAndExport": "Copia de seguridad y exportación",
+  "backupAndExportSubtitle": "Exporta o restaura tus listas mediante el sistema de archivos",
+  "backupTitle": "Copia de seguridad",
+  "exportData": "Exportar datos",
+  "exportJsonBackup": "Exportar copia completa (JSON)",
+  "exportJsonBackupDesc": "Guarda todas tus listas y elementos en un archivo JSON",
+  "importBackup": "Restaurar copia (JSON)",
+  "importBackupDesc": "Carga un archivo de respaldo desde el explorador de archivos",
+  "exportTextSummary": "Exportar resumen en texto",
+  "exportTextSummaryDesc": "Copia o comparte un resumen legible de todas tus listas",
+  "saveToDevice": "Guardar archivo",
+  "shareBackupFile": "Compartir archivo",
+  "openFromFileSystem": "Abrir archivo",
+  "backupSuccess": "Copia de seguridad exportada con éxito",
+  "restoreSuccess": "Se restauraron {lists} listas y {items} elementos",
+  "@restoreSuccess": {
+    "placeholders": {
+      "lists": {
+        "type": "int"
+      },
+      "items": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreConfirmTitle": "¿Restaurar copia de seguridad?",
+  "restoreConfirmMessage": "El archivo contiene {lists} listas y {items} elementos. ¿Cómo deseas restaurar?",
+  "@restoreConfirmMessage": {
+    "placeholders": {
+      "lists": {
+        "type": "int"
+      },
+      "items": {
+        "type": "int"
+      }
+    }
+  },
+  "restoreMerge": "Combinar con existentes",
+  "restoreReplace": "Reemplazar todo",
+  "backupInvalidFile": "El archivo no contiene un formato de respaldo válido de Listix",
+  "backupEmpty": "No hay listas para exportar",
+  "listsSummaryTitle": "Resumen de datos",
+  "totalListsCount": "{count} listas",
+  "@totalListsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "totalItemsCount": "{count} elementos",
+  "@totalItemsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nativeFileSystemTitle": "Explorador de archivos nativo de Android",
+  "nativeFileSystemDesc": "Listix utiliza el Selector de Documentos nativo de Android para guardar y abrir respaldos con total privacidad.",
+  "exportDataCsv": "Exportar datos CSV",
+  "exportDataCsvDesc": "Guarda tus listas y elementos en un archivo de hoja de cálculo CSV",
+  "backupDataJson": "Copia de seguridad JSON",
+  "backupDataJsonDesc": "Crea una copia de seguridad JSON completa para restaurar más tarde",
+  "restoreJson": "Restaurar JSON",
+  "restoreJsonDesc": "Abre el selector nativo para restaurar desde una copia JSON",
+  "csvExportSuccess": "Archivo CSV exportado con éxito"
 }

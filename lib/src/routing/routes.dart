@@ -5,6 +5,7 @@ abstract final class AppRoutes {
   static const String editList = '/list/:id/edit';
   static const String settings = '/settings';
   static const String about = '/about';
+  static const String backup = '/backup';
   static const String joinList = '/join/:token';
 
   static String listDetailPath(String id) => '/list/$id';

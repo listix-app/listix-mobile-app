@@ -866,18 +866,6 @@ abstract class AppLocalizations {
   /// **'Switch layout'**
   String get switchLayout;
 
-  /// No description provided for @adPolicyTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Ad Policy & Privacy'**
-  String get adPolicyTitle;
-
-  /// No description provided for @adPolicyStatement.
-  ///
-  /// In en, this message translates to:
-  /// **'Listix uses Google AdMob. Interstitial ads appear at most once per day during natural transitions to respect your user experience.'**
-  String get adPolicyStatement;
-
   /// No description provided for @shareSystem.
   ///
   /// In en, this message translates to:
@@ -1105,6 +1093,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Easily invite via link or email'**
   String get collaboratorsFeature;
+
+  /// No description provided for @backupAndExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup & Export Data'**
+  String get backupAndExport;
+
+  /// No description provided for @backupAndExportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export or restore your lists using the file system'**
+  String get backupAndExportSubtitle;
+
+  /// No description provided for @backupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup'**
+  String get backupTitle;
+
+  /// No description provided for @exportData.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Data'**
+  String get exportData;
+
+  /// No description provided for @exportJsonBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Full Backup (JSON)'**
+  String get exportJsonBackup;
+
+  /// No description provided for @exportJsonBackupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save all lists and items into a JSON file'**
+  String get exportJsonBackupDesc;
+
+  /// No description provided for @importBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Backup (JSON)'**
+  String get importBackup;
+
+  /// No description provided for @importBackupDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Load a backup file from the system file picker'**
+  String get importBackupDesc;
+
+  /// No description provided for @exportTextSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Text Summary'**
+  String get exportTextSummary;
+
+  /// No description provided for @exportTextSummaryDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy or share a readable checklist summary of all lists'**
+  String get exportTextSummaryDesc;
+
+  /// No description provided for @saveToDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Save File'**
+  String get saveToDevice;
+
+  /// No description provided for @shareBackupFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share File'**
+  String get shareBackupFile;
+
+  /// No description provided for @openFromFileSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Open File'**
+  String get openFromFileSystem;
+
+  /// No description provided for @backupSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup exported successfully'**
+  String get backupSuccess;
+
+  /// No description provided for @restoreSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Restored {lists} lists and {items} items'**
+  String restoreSuccess(int lists, int items);
+
+  /// No description provided for @restoreConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Backup?'**
+  String get restoreConfirmTitle;
+
+  /// No description provided for @restoreConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The file contains {lists} lists and {items} items. How would you like to restore?'**
+  String restoreConfirmMessage(int lists, int items);
+
+  /// No description provided for @restoreMerge.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge with Existing'**
+  String get restoreMerge;
+
+  /// No description provided for @restoreReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace Everything'**
+  String get restoreReplace;
+
+  /// No description provided for @backupInvalidFile.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is not a valid Listix backup'**
+  String get backupInvalidFile;
+
+  /// No description provided for @backupEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No lists available to export'**
+  String get backupEmpty;
+
+  /// No description provided for @listsSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Data Summary'**
+  String get listsSummaryTitle;
+
+  /// No description provided for @totalListsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} lists'**
+  String totalListsCount(int count);
+
+  /// No description provided for @totalItemsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items'**
+  String totalItemsCount(int count);
+
+  /// No description provided for @nativeFileSystemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Native Android File System'**
+  String get nativeFileSystemTitle;
+
+  /// No description provided for @nativeFileSystemDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Listix uses Android\'s native Document Picker to save and open backups privately.'**
+  String get nativeFileSystemDesc;
+
+  /// No description provided for @exportDataCsv.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data CSV'**
+  String get exportDataCsv;
+
+  /// No description provided for @exportDataCsvDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Save lists and items as a CSV spreadsheet file'**
+  String get exportDataCsvDesc;
+
+  /// No description provided for @backupDataJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup data JSON'**
+  String get backupDataJson;
+
+  /// No description provided for @backupDataJsonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a complete JSON backup to restore later'**
+  String get backupDataJsonDesc;
+
+  /// No description provided for @restoreJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore JSON'**
+  String get restoreJson;
+
+  /// No description provided for @restoreJsonDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Open native file picker to restore from a JSON backup'**
+  String get restoreJsonDesc;
+
+  /// No description provided for @csvExportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV file exported successfully'**
+  String get csvExportSuccess;
 }
 
 class _AppLocalizationsDelegate

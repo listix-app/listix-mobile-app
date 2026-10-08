@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:listix/src/features/backup/presentation/screens/backup_screen.dart';
 import 'package:listix/src/features/collaboration/presentation/screens/join_invite_screen.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
@@ -515,6 +516,10 @@ void main() {
       container.read(appRouterProvider).go(AppRoutes.settings);
       await tester.pumpAndSettle();
       expect(find.text('Configuración'), findsWidgets);
+
+      container.read(appRouterProvider).go(AppRoutes.backup);
+      await tester.pumpAndSettle();
+      expect(find.byType(BackupScreen), findsOneWidget);
 
       container.read(appRouterProvider).go(AppRoutes.joinListPath('token-123'));
       await tester.pumpAndSettle();
