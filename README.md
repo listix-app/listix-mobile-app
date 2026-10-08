@@ -20,6 +20,7 @@ A fast, minimalist, **offline-first** shopping and checklist mobile application 
 
 Listix is engineered for high-speed, everyday grocery and checklist management with an uncompromising commitment to local performance and seamless real-time collaboration:
 - **Offline-First (Local SQLite)**: Instant operations with zero input lag. All lists and items are persisted locally on your device in SQLite. No network connection is needed to organize your private lists.
+- **Offline Backup & Restore**: Export lists to JSON, CSV, or formatted Plain Text. Restore backups safely with overwrite or merge options using Android Storage Access Framework (SAF) and native share sheets.
 - **Real-Time Collaboration**: Share lists with friends and family using a secure invite link or code. Changes sync instantly across all devices using Supabase Realtime synchronization.
 - **Native Sharing & Deeplinks**: Share formatted lists directly through WhatsApp or Native Email, or copy an invite link. Integrated with app deeplinks to join a shared list seamlessly.
 - **Dark Mode, Light Mode & System Default**: Tailored Material 3 themes with an intuitive appearance switcher in Settings.
@@ -40,7 +41,8 @@ Listix is engineered for high-speed, everyday grocery and checklist management w
 | **3. Create / Edit List** | Minimalist single-input focus screen for creating or renaming lists. |
 | **4. Share List (Modal Sheet)** | One-tap sharing to invite collaborators via a secure link to join and sync the list in real-time. |
 | **5. Join Invite / Collaboration** | Invite screen to accept invitations via deeplink or manual code entry. |
-| **6. Settings & Appearance** | Appearance selector, language switcher, Privacy Policy, Terms of Service, version info, and Ads/Notifications configuration. |
+| **6. Settings & Appearance** | Appearance selector, language switcher, Backup shortcut, Privacy Policy, Terms of Service, version info, and Ads/Notifications configuration. |
+| **7. Backup & Restore** | Export lists to JSON, CSV, or Plain Text summary. Restore backups safely with overwrite or merge strategies via Android Storage Access Framework (SAF) or native sharing. |
 
 ---
 
@@ -59,6 +61,7 @@ lib/
     ├── features/
     │   ├── about/                          # About screen & metadata
     │   ├── ads/                            # Google Mobile Ads integration
+    │   ├── backup/                         # Full backup, JSON/CSV export, SAF & restore
     │   ├── collaboration/                  # Supabase Realtime, presence, and invite tokens
     │   ├── lists/                          # Core list management domain, SQLite repo & UI
     │   ├── notifications/                  # Local notifications management

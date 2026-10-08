@@ -56,6 +56,7 @@ When a user shares a list:
 3. The token is appended to `INVITE_BASE_URL`. The token never reveals or encodes the list ID directly.
 4. When another user opens the link or enters the token, `join_list_by_token` verifies the hash, assigns the anonymous user, and strictly enforces the 5-member limit in a transaction.
 5. The list data is downloaded to local SQLite; Realtime invalidates and refreshes the local copy.
+6. When offline, mutations are recorded in the local SQLite `pending_operations` table. Once network connectivity resumes, `SupabaseSyncService` batches and replays queued operations via transactional RPCs, ensuring zero data loss during network dropouts.
 
 During local testing, tokens or links can be entered directly via "Join a list" in the app. Once a public domain is provisioned, configure the matching HTTPS host in the Android intent filter and publish `/.well-known/assetlinks.json` with the application package name and SHA-256 certificate fingerprint.
 
