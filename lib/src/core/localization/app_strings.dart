@@ -157,8 +157,6 @@ class AppStrings {
   String get layoutList => _l10n.layoutList;
   String get layoutGrid => _l10n.layoutGrid;
   String get switchLayout => _l10n.switchLayout;
-  String get adPolicyTitle => _l10n.adPolicyTitle;
-  String get adPolicyStatement => _l10n.adPolicyStatement;
   String get notificationTimeTitle => _l10n.notificationTimeTitle;
   String notificationTimeSubtitle(String time) =>
       _l10n.notificationTimeSubtitle(time);
@@ -202,4 +200,39 @@ class AppStrings {
   String get enableCollaboration => _l10n.enableCollaboration;
   String get realtimeSyncFeature => _l10n.realtimeSyncFeature;
   String get collaboratorsFeature => _l10n.collaboratorsFeature;
+  String get backupAndExport => _l10n.backupAndExport;
+  String get backupAndExportSubtitle => _l10n.backupAndExportSubtitle;
+  String get backupTitle => _l10n.backupTitle;
+  String get exportData => _l10n.exportData;
+  String get exportJsonBackup => _l10n.exportJsonBackup;
+  String get exportJsonBackupDesc => _l10n.exportJsonBackupDesc;
+  String get importBackup => _l10n.importBackup;
+  String get importBackupDesc => _l10n.importBackupDesc;
+  String get exportTextSummary => _l10n.exportTextSummary;
+  String get exportTextSummaryDesc => _l10n.exportTextSummaryDesc;
+  String get saveToDevice => _l10n.saveToDevice;
+  String get shareBackupFile => _l10n.shareBackupFile;
+  String get openFromFileSystem => _l10n.openFromFileSystem;
+  String get backupSuccess => _l10n.backupSuccess;
+  String restoreSuccess(int lists, int items) =>
+      _l10n.restoreSuccess(lists, items);
+  String get restoreConfirmTitle => _l10n.restoreConfirmTitle;
+  String restoreConfirmMessage(int lists, int items) =>
+      _l10n.restoreConfirmMessage(lists, items);
+  String get restoreMerge => _l10n.restoreMerge;
+  String get restoreReplace => _l10n.restoreReplace;
+  String get backupInvalidFile => _l10n.backupInvalidFile;
+  String get backupEmpty => _l10n.backupEmpty;
+  String get listsSummaryTitle => _l10n.listsSummaryTitle;
+  String totalListsCount(int count) => _l10n.totalListsCount(count);
+  String totalItemsCount(int count) => _l10n.totalItemsCount(count);
+  String get nativeFileSystemTitle => _l10n.nativeFileSystemTitle;
+  String get nativeFileSystemDesc => _l10n.nativeFileSystemDesc;
+  String get exportDataCsv => _l10n.exportDataCsv;
+  String get exportDataCsvDesc => _l10n.exportDataCsvDesc;
+  String get backupDataJson => _l10n.backupDataJson;
+  String get backupDataJsonDesc => _l10n.backupDataJsonDesc;
+  String get restoreJson => _l10n.restoreJson;
+  String get restoreJsonDesc => _l10n.restoreJsonDesc;
+  String get csvExportSuccess => _l10n.csvExportSuccess;
 }

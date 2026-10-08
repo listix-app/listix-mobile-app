@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/about/presentation/screens/about_screen.dart';
+import '../features/backup/presentation/screens/backup_screen.dart';
 import '../features/collaboration/domain/services/invite_token_service.dart';
 import '../features/collaboration/presentation/screens/join_invite_screen.dart';
 import '../features/lists/presentation/screens/create_edit_list_screen.dart';
@@ -74,6 +75,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.backup,
+        builder: (context, state) => const BackupScreen(),
       ),
     ],
   );
