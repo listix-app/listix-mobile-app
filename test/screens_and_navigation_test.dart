@@ -653,6 +653,23 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      expect(find.text('¿Archivar lista?'), findsOneWidget);
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(fakeController.archivedListIds, isEmpty);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(ListCard),
+          matching: find.byIcon(Icons.archive_outlined),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Archivar lista?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Archivar'));
+      await tester.pumpAndSettle();
+
       expect(fakeController.archivedListIds, contains('act1'));
       expect(find.text('Lista archivada'), findsOneWidget);
 
@@ -1021,7 +1038,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('edit_item_to_edit')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Editar elemento'), findsOneWidget);
+      expect(find.text('Editar item'), findsOneWidget);
       expect(find.byKey(const Key('edit_item_title_input')), findsOneWidget);
 
       await tester.enterText(

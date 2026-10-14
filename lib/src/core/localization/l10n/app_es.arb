@@ -289,7 +289,7 @@
   "backupTitle": "Copia de seguridad",
   "exportData": "Exportar datos",
   "exportJsonBackup": "Exportar copia completa (JSON)",
-  "exportJsonBackupDesc": "Guarda todas tus listas y elementos en un archivo JSON",
+  "exportJsonBackupDesc": "Guarda todas tus listas y items en un archivo JSON",
   "importBackup": "Restaurar copia (JSON)",
   "importBackupDesc": "Carga un archivo de respaldo desde el explorador de archivos",
   "exportTextSummary": "Exportar resumen en texto",
@@ -298,7 +298,7 @@
   "shareBackupFile": "Compartir archivo",
   "openFromFileSystem": "Abrir archivo",
   "backupSuccess": "Copia de seguridad exportada con éxito",
-  "restoreSuccess": "Se restauraron {lists} listas y {items} elementos",
+  "restoreSuccess": "Se restauraron {lists} listas y {items} items",
   "@restoreSuccess": {
     "placeholders": {
       "lists": {
@@ -310,7 +310,7 @@
     }
   },
   "restoreConfirmTitle": "¿Restaurar copia de seguridad?",
-  "restoreConfirmMessage": "El archivo contiene {lists} listas y {items} elementos. ¿Cómo deseas restaurar?",
+  "restoreConfirmMessage": "El archivo contiene {lists} listas y {items} items. ¿Cómo deseas restaurar?",
   "@restoreConfirmMessage": {
     "placeholders": {
       "lists": {
@@ -334,7 +334,7 @@
       }
     }
   },
-  "totalItemsCount": "{count} elementos",
+  "totalItemsCount": "{count} items",
   "@totalItemsCount": {
     "placeholders": {
       "count": {
@@ -345,18 +345,18 @@
   "nativeFileSystemTitle": "Explorador de archivos nativo de Android",
   "nativeFileSystemDesc": "Listix utiliza el Selector de Documentos nativo de Android para guardar y abrir respaldos con total privacidad.",
   "exportDataCsv": "Exportar datos CSV",
-  "exportDataCsvDesc": "Guarda tus listas y elementos en un archivo de hoja de cálculo CSV",
+  "exportDataCsvDesc": "Guarda tus listas y items en un archivo de hoja de cálculo CSV",
   "backupDataJson": "Copia de seguridad JSON",
   "backupDataJsonDesc": "Crea una copia de seguridad JSON completa para restaurar más tarde",
   "restoreJson": "Restaurar JSON",
   "restoreJsonDesc": "Abre el selector nativo para restaurar desde una copia JSON",
   "csvExportSuccess": "Archivo CSV exportado con éxito",
-  "editItemTitle": "Editar elemento",
-  "itemTitleLabel": "Nombre del elemento",
+  "editItemTitle": "Editar item",
+  "itemTitleLabel": "Nombre del item",
   "itemTitleHint": "ej. Leche",
   "itemTitleValidation": "Por favor ingresa un nombre",
-  "searchItems": "Buscar elementos",
-  "searchItemsHint": "Buscar elementos...",
+  "searchItems": "Buscar items",
+  "searchItemsHint": "Buscar items...",
   "closeSearch": "Cerrar búsqueda",
   "searchLists": "Buscar listas",
   "searchListsHint": "Buscar listas...",
@@ -385,5 +385,14 @@
       }
     }
   },
-  "leave": "Abandonar"
+  "leave": "Abandonar",
+  "confirmArchiveTitle": "¿Archivar lista?",
+  "confirmArchiveMessage": "¿Deseas archivar la lista \"{name}\"?",
+  "@confirmArchiveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

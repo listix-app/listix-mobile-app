@@ -6,6 +6,7 @@ import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:listix/src/features/lists/domain/repositories/lists_repository.dart';
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
+import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
 import 'package:listix/src/features/sync/presentation/sync_controller.dart';
 
@@ -487,6 +488,28 @@ class FakeBackendSyncService extends MockBackendSyncService {
   Future<bool> synchronize() async {
     syncCallCount++;
     return true;
+  }
+}
+
+class _FakeNotificationsController extends NotificationsController {
+  final bool _initialEnabled;
+  int showCallCount = 0;
+  bool shouldThrow = false;
+
+  _FakeNotificationsController(this._initialEnabled);
+
+  @override
+  NotificationsState build() => NotificationsState(isEnabled: _initialEnabled);
+
+  @override
+  Future<void> showItemNotification({
+    required String listName,
+    required String itemTitle,
+  }) async {
+    if (shouldThrow) {
+      throw Exception('Simulated notification error');
+    }
+    showCallCount++;
   }
 }
 
@@ -1178,6 +1201,91 @@ void main() {
           .items
           .firstWhere((i) => i.id == 'item_1');
       expect(item.title, 'Leche Descremada');
+    });
+
+    test(
+      'addItem notification fires only when active, shared, and online',
+      () async {
+        final sharedList = ShoppingList(
+          id: 'shared_list_notif',
+          name: 'Compartida',
+          isShared: true,
+          hasInvite: true,
+          createdAt: DateTime(2026, 9, 22),
+        );
+        final privateList = ShoppingList(
+          id: 'private_list_notif',
+          name: 'Privada',
+          isShared: false,
+          createdAt: DateTime(2026, 9, 22),
+        );
+        final customRepo = FakeFailingListsRepository(
+          initial: [sharedList, privateList],
+        );
+        final customSync = FakeBackendSyncService();
+        final fakeNotif = _FakeNotificationsController(true);
+
+        final customContainer = ProviderContainer(
+          overrides: [
+            listsRepositoryProvider.overrideWithValue(customRepo),
+            mockBackendSyncServiceProvider.overrideWithValue(customSync),
+            notificationsControllerProvider.overrideWith(() => fakeNotif),
+          ],
+        );
+        addTearDown(customContainer.dispose);
+        await customContainer.read(listsControllerProvider.future);
+
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('shared_list_notif', 'Pan');
+        expect(fakeNotif.showCallCount, 1);
+
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('private_list_notif', 'Vino');
+        expect(fakeNotif.showCallCount, 1);
+
+        customSync.toggleSimulatedOffline();
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('shared_list_notif', 'Cerveza');
+        expect(fakeNotif.showCallCount, 1);
+
+        customSync.toggleSimulatedOffline();
+        fakeNotif.shouldThrow = true;
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('shared_list_notif', 'Queso');
+        expect(fakeNotif.showCallCount, 1);
+      },
+    );
+
+    test('addItem does not notify when notifications are inactive', () async {
+      final sharedList = ShoppingList(
+        id: 'shared_list_inactive',
+        name: 'Compartida 2',
+        isShared: true,
+        hasInvite: true,
+        createdAt: DateTime(2026, 9, 22),
+      );
+      final customRepo = FakeFailingListsRepository(initial: [sharedList]);
+      final customSync = FakeBackendSyncService();
+      final fakeNotif = _FakeNotificationsController(false);
+
+      final customContainer = ProviderContainer(
+        overrides: [
+          listsRepositoryProvider.overrideWithValue(customRepo),
+          mockBackendSyncServiceProvider.overrideWithValue(customSync),
+          notificationsControllerProvider.overrideWith(() => fakeNotif),
+        ],
+      );
+      addTearDown(customContainer.dispose);
+      await customContainer.read(listsControllerProvider.future);
+
+      await customContainer
+          .read(listsControllerProvider.notifier)
+          .addItem('shared_list_inactive', 'Manzana');
+      expect(fakeNotif.showCallCount, 0);
     });
   });
 }

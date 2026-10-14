@@ -583,7 +583,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get exportJsonBackupDesc =>
-      'Guarda todas tus listas y elementos en un archivo JSON';
+      'Guarda todas tus listas y items en un archivo JSON';
 
   @override
   String get importBackup => 'Restaurar copia (JSON)';
@@ -613,7 +613,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String restoreSuccess(int lists, int items) {
-    return 'Se restauraron $lists listas y $items elementos';
+    return 'Se restauraron $lists listas y $items items';
   }
 
   @override
@@ -621,7 +621,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String restoreConfirmMessage(int lists, int items) {
-    return 'El archivo contiene $lists listas y $items elementos. ¿Cómo deseas restaurar?';
+    return 'El archivo contiene $lists listas y $items items. ¿Cómo deseas restaurar?';
   }
 
   @override
@@ -647,7 +647,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String totalItemsCount(int count) {
-    return '$count elementos';
+    return '$count items';
   }
 
   @override
@@ -663,7 +663,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get exportDataCsvDesc =>
-      'Guarda tus listas y elementos en un archivo de hoja de cálculo CSV';
+      'Guarda tus listas y items en un archivo de hoja de cálculo CSV';
 
   @override
   String get backupDataJson => 'Copia de seguridad JSON';
@@ -683,10 +683,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get csvExportSuccess => 'Archivo CSV exportado con éxito';
 
   @override
-  String get editItemTitle => 'Editar elemento';
+  String get editItemTitle => 'Editar item';
 
   @override
-  String get itemTitleLabel => 'Nombre del elemento';
+  String get itemTitleLabel => 'Nombre del item';
 
   @override
   String get itemTitleHint => 'ej. Leche';
@@ -695,10 +695,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String get itemTitleValidation => 'Por favor ingresa un nombre';
 
   @override
-  String get searchItems => 'Buscar elementos';
+  String get searchItems => 'Buscar items';
 
   @override
-  String get searchItemsHint => 'Buscar elementos...';
+  String get searchItemsHint => 'Buscar items...';
 
   @override
   String get closeSearch => 'Cerrar búsqueda';
@@ -767,4 +767,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get leave => 'Abandonar';
+
+  @override
+  String get confirmArchiveTitle => '¿Archivar lista?';
+
+  @override
+  String confirmArchiveMessage(String name) {
+    return '¿Deseas archivar la lista \"$name\"?';
+  }
 }

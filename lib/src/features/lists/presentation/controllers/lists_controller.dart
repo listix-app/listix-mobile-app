@@ -352,6 +352,8 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.addItem(listId, title, id: itemId);
+      if (!ref.mounted) return;
+
       _broadcastEvent(
         CollaborationEvent.itemAdded(
           listId: listId,
@@ -360,12 +362,24 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           senderName: _getCurrentName(),
         ),
       );
-      final listName = targetList?.name ?? 'Lista';
-      try {
-        ref
-            .read(notificationsControllerProvider.notifier)
-            .showItemNotification(listName: listName, itemTitle: title.trim());
-      } catch (_) {}
+      final list = targetList;
+      final isShared =
+          (list?.isShared ?? false) || (list?.canSyncAndShare ?? false);
+      final notificationsActive = ref
+          .read(notificationsControllerProvider)
+          .isEnabled;
+      final isOffline = ref.read(syncControllerProvider.notifier).isOffline;
+      if (notificationsActive && isShared && !isOffline) {
+        final listName = list?.name ?? 'Lista';
+        try {
+          await ref
+              .read(notificationsControllerProvider.notifier)
+              .showItemNotification(
+                listName: listName,
+                itemTitle: title.trim(),
+              );
+        } catch (_) {}
+      }
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());

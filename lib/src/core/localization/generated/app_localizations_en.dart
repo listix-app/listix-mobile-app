@@ -761,4 +761,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leave => 'Leave';
+
+  @override
+  String get confirmArchiveTitle => 'Archive list?';
+
+  @override
+  String confirmArchiveMessage(String name) {
+    return 'Are you sure you want to archive \"$name\"?';
+  }
 }

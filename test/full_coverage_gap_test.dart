@@ -234,6 +234,8 @@ void main() {
         expect(tr.leaveListTitle, isNotEmpty);
         expect(tr.leaveListMessage('Lista'), contains('Lista'));
         expect(tr.leave, isNotEmpty);
+        expect(tr.confirmArchiveTitle, isNotEmpty);
+        expect(tr.confirmArchiveMessage('Lista'), contains('Lista'));
       }
     });
 

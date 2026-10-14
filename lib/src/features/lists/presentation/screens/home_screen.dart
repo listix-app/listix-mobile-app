@@ -101,6 +101,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ShoppingList list,
     AppStrings tr,
   ) async {
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(tr.confirmArchiveTitle),
+            content: Text(tr.confirmArchiveMessage(list.name)),
+            actions: [
+              TextButton(
+                onPressed: () => ctx.pop(false),
+                child: Text(tr.cancel),
+              ),
+              FilledButton(
+                onPressed: () => ctx.pop(true),
+                child: Text(tr.archiveListAction),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed) return;
+
     await ref.read(listsControllerProvider.notifier).archiveList(list.id);
     if (!context.mounted) return;
     final messenger = ScaffoldMessenger.of(context);

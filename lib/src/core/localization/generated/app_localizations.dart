@@ -1459,6 +1459,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Leave'**
   String get leave;
+
+  /// No description provided for @confirmArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive list?'**
+  String get confirmArchiveTitle;
+
+  /// No description provided for @confirmArchiveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to archive \"{name}\"?'**
+  String confirmArchiveMessage(String name);
 }
 
 class _AppLocalizationsDelegate

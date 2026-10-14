@@ -820,6 +820,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Archivar'));
+        await tester.pumpAndSettle();
 
         expect(find.text('Lista archivada'), findsOneWidget);
         await tester.tap(find.text('Deshacer'));
@@ -831,6 +833,8 @@ void main() {
             matching: find.byIcon(Icons.archive_outlined),
           ),
         );
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Archivar'));
         await tester.pumpAndSettle();
 
         await tester.tap(find.textContaining('Archivadas'));

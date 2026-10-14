@@ -385,5 +385,15 @@
       }
     }
   },
-  "leave": "Leave"
+  "leave": "Leave",
+  "confirmArchiveTitle": "Archive list?",
+  "confirmArchiveMessage": "Are you sure you want to archive \"{name}\"?",
+  "@confirmArchiveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
+

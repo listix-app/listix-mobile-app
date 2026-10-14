@@ -263,4 +263,7 @@ class AppStrings {
   String get leaveListTitle => _l10n.leaveListTitle;
   String leaveListMessage(String name) => _l10n.leaveListMessage(name);
   String get leave => _l10n.leave;
+  String get confirmArchiveTitle => _l10n.confirmArchiveTitle;
+  String confirmArchiveMessage(String name) =>
+      _l10n.confirmArchiveMessage(name);
 }

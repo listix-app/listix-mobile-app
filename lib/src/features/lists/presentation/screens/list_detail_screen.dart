@@ -12,7 +12,6 @@ import '../../../collaboration/presentation/controllers/collaboration_controller
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/todo_item.dart';
-import '../services/share_service.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
@@ -145,29 +144,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _copyListText(ShoppingList list) async {
-    if (list.items.isEmpty) return;
-
-    final tr = ref.read(stringsProvider);
-    final text = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      pendingSectionTitle: tr.sharePendingSection,
-      completedSectionTitle: tr.shareCompletedSection,
-      emptyListText: tr.shareEmptyListNotice,
-    );
-    await ref.read(shareServiceProvider).copyToClipboard(text);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(tr.listCopied),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
   }
 
   @override
@@ -314,11 +290,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             },
           ),
           if (!_isSearching) ...[
-            IconButton(
-              icon: const Icon(Icons.content_copy_rounded, size: 20),
-              tooltip: tr.copyListText,
-              onPressed: list.items.isEmpty ? null : () => _copyListText(list),
-            ),
             if (list.canSyncAndShare)
               Center(
                 child: RealtimePresenceBadge(
