@@ -46,6 +46,10 @@ class ListGridCard extends StatelessWidget {
         ? tr.allDoneBadge
         : tr.pendingBadge(list.progressText);
 
+    final listColor = list.color != null
+        ? Color(list.color!)
+        : AppColors.primary;
+
     return Card(
       elevation: 0,
       color: cardBg,
@@ -74,7 +78,7 @@ class ListGridCard extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: list.pendingCount == 0 && list.totalCount > 0
-                            ? AppColors.syncDone.withValues(alpha: 0.16)
+                            ? listColor.withValues(alpha: 0.16)
                             : (isDark
                                   ? AppColors.surfaceDark
                                   : AppColors.surfaceLight),
@@ -88,7 +92,7 @@ class ListGridCard extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: list.pendingCount == 0 && list.totalCount > 0
-                              ? AppColors.syncDone
+                              ? listColor
                               : textSubColor,
                         ),
                       ),
@@ -154,13 +158,7 @@ class ListGridCard extends StatelessWidget {
                       backgroundColor: isDark
                           ? AppColors.surfaceDark
                           : AppColors.surfaceLight,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        list.completionProgress == 1.0
-                            ? AppColors.syncDone
-                            : (list.color != null
-                                  ? Color(list.color!)
-                                  : AppColors.primary),
-                      ),
+                      valueColor: AlwaysStoppedAnimation<Color>(listColor),
                       minHeight: 5,
                     ),
                   ),

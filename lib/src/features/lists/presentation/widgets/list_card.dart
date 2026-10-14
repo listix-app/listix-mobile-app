@@ -41,13 +41,12 @@ class ListCard extends StatelessWidget {
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
-    final badgeBg = list.pendingCount == 0 && list.totalCount > 0
-        ? AppColors.syncDone.withValues(alpha: 0.16)
-        : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight);
-
     final listColor = list.color != null
         ? Color(list.color!)
         : AppColors.primary;
+    final badgeBg = list.pendingCount == 0 && list.totalCount > 0
+        ? listColor.withValues(alpha: 0.16)
+        : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight);
 
     return Card(
       elevation: 0,
@@ -144,11 +143,7 @@ class ListCard extends StatelessWidget {
                     backgroundColor: isDark
                         ? AppColors.surfaceDark
                         : AppColors.surfaceLight,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      list.completionProgress == 1.0
-                          ? AppColors.syncDone
-                          : listColor,
-                    ),
+                    valueColor: AlwaysStoppedAnimation<Color>(listColor),
                     minHeight: 4,
                   ),
                 ),
@@ -166,7 +161,7 @@ class ListCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: list.pendingCount == 0 && list.totalCount > 0
-                            ? AppColors.syncDone.withValues(alpha: 0.35)
+                            ? listColor.withValues(alpha: 0.35)
                             : (isDark
                                   ? AppColors.borderDark
                                   : AppColors.borderLight),
@@ -178,7 +173,7 @@ class ListCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: list.pendingCount == 0 && list.totalCount > 0
-                            ? AppColors.syncDone
+                            ? listColor
                             : (isDark
                                   ? AppColors.textSecondaryDark
                                   : AppColors.textSecondary),

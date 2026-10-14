@@ -9,6 +9,7 @@ class TodoItemTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
+  final Color? activeColor;
 
   const TodoItemTile({
     super.key,
@@ -16,11 +17,13 @@ class TodoItemTile extends StatelessWidget {
     required this.onToggle,
     required this.onDelete,
     this.onEdit,
+    this.activeColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final checkboxColor = activeColor ?? AppColors.primary;
     final tileBg = isDark ? AppColors.cardDark : Colors.white;
     final borderColor = isDark
         ? AppColors.borderDark.withValues(alpha: 0.7)
@@ -85,12 +88,12 @@ class TodoItemTile extends StatelessWidget {
                       height: 22,
                       decoration: BoxDecoration(
                         color: item.isCompleted
-                            ? AppColors.primary
+                            ? checkboxColor
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: item.isCompleted
-                              ? AppColors.primary
+                              ? checkboxColor
                               : (isDark
                                     ? AppColors.textMutedDark
                                     : AppColors.textMuted),

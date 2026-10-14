@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:google_mobile_ads/src/ad_instance_manager.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
+import 'package:listix/src/core/theme/app_colors.dart';
 import 'package:listix/src/core/config/app_environment.dart';
 import 'package:listix/src/core/services/url_launcher_service.dart';
 import 'package:listix/src/core/storage/app_database.dart';
@@ -628,6 +629,10 @@ void main() {
 
       expect(find.text('Completed List'), findsOneWidget);
       expect(find.text('Todo listo ✓'), findsOneWidget);
+      final gridIndicator = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator),
+      );
+      expect(gridIndicator.valueColor?.value, AppColors.primary);
 
       final partialList = ShoppingList(
         id: 'g3',
@@ -714,6 +719,44 @@ void main() {
 
         await tester.tap(find.byIcon(Icons.unarchive_outlined));
         expect(unarchived, isTrue);
+      },
+    );
+
+    testWidgets(
+      'renders custom list color on progress indicator when all items completed',
+      (tester) async {
+        final completedColorList = ShoppingList(
+          id: 'g_done_color',
+          name: 'Completed Color List',
+          color: 0xFFEF4444,
+          items: [
+            TodoItem(
+              id: 'i1',
+              listId: 'g_done_color',
+              title: 'Milk',
+              isCompleted: true,
+              createdAt: DateTime.now(),
+            ),
+          ],
+          createdAt: DateTime.now(),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ListGridCard(
+                list: completedColorList,
+                strings: AppStrings(AppLanguage.es),
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
+
+        final gridIndicator = tester.widget<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+        expect(gridIndicator.valueColor?.value, const Color(0xFFEF4444));
       },
     );
   });

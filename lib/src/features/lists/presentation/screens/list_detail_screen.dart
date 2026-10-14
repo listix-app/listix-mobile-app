@@ -475,6 +475,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                         return TodoItemTile(
                           key: ValueKey(item.id),
                           item: item,
+                          activeColor: listColor,
                           onToggle: () {
                             ref
                                 .read(listsControllerProvider.notifier)
@@ -536,6 +537,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                                     (item) => TodoItemTile(
                                       key: ValueKey(item.id),
                                       item: item,
+                                      activeColor: listColor,
                                       onToggle: () {
                                         ref
                                             .read(
