@@ -177,6 +177,7 @@
     }
   },
   "notificationsTitle": "Notifications",
+  "notificationsSubtitle": "Receive notifications when items are added to shared lists",
   "weeklyReminderTitle": "Weekly reminder",
   "weeklyReminderSubtitle": "Receive a weekly reminder to plan your shopping",
   "notificationTimeTitle": "Reminder time",
@@ -350,5 +351,50 @@
   "backupDataJsonDesc": "Create a complete JSON backup to restore later",
   "restoreJson": "Restore JSON",
   "restoreJsonDesc": "Open native file picker to restore from a JSON backup",
-  "csvExportSuccess": "CSV file exported successfully"
+  "csvExportSuccess": "CSV file exported successfully",
+  "editItemTitle": "Edit item",
+  "itemTitleLabel": "Item title",
+  "itemTitleHint": "e.g. Milk",
+  "itemTitleValidation": "Please enter a title",
+  "searchItems": "Search items",
+  "searchItemsHint": "Search items...",
+  "closeSearch": "Close search",
+  "searchLists": "Search lists",
+  "searchListsHint": "Search lists...",
+  "noSearchResults": "No results found",
+  "activeLists": "Active",
+  "archivedLists": "Archived",
+  "archiveListAction": "Archive",
+  "unarchiveListAction": "Unarchive",
+  "emptyArchivedTitle": "No archived lists",
+  "emptyArchivedMessage": "Lists you archive will appear here.",
+  "listArchived": "List archived",
+  "listUnarchived": "List unarchived",
+  "appLock": "App Lock",
+  "appLockSubtitle": "Protect your lists with biometrics or PIN",
+  "appLockReason": "Authenticate to unlock Listix",
+  "unlockApp": "Unlock",
+  "appLocked": "Listix is locked",
+  "ownerOnlyAction": "Only the owner can modify this list",
+  "pickColor": "List color",
+  "leaveListTitle": "Leave list?",
+  "leaveListMessage": "You will leave \"{name}\" and lose access.",
+  "@leaveListMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "leave": "Leave",
+  "confirmArchiveTitle": "Archive list?",
+  "confirmArchiveMessage": "Are you sure you want to archive \"{name}\"?",
+  "@confirmArchiveMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }
+

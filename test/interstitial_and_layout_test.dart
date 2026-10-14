@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:google_mobile_ads/src/ad_instance_manager.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
+import 'package:listix/src/core/theme/app_colors.dart';
 import 'package:listix/src/core/config/app_environment.dart';
 import 'package:listix/src/core/services/url_launcher_service.dart';
 import 'package:listix/src/core/storage/app_database.dart';
@@ -628,6 +629,10 @@ void main() {
 
       expect(find.text('Completed List'), findsOneWidget);
       expect(find.text('Todo listo ✓'), findsOneWidget);
+      final gridIndicator = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator),
+      );
+      expect(gridIndicator.valueColor?.value, AppColors.primary);
 
       final partialList = ShoppingList(
         id: 'g3',
@@ -669,6 +674,91 @@ void main() {
       await tester.longPress(find.text('Partial List'));
       expect(longPressed, isTrue);
     });
+
+    testWidgets(
+      'renders ListGridCard with color, onArchive and onUnarchive callbacks',
+      (tester) async {
+        var archived = false;
+        var unarchived = false;
+        final colorList = ShoppingList(
+          id: 'g_col',
+          name: 'Color Grid List',
+          color: 0xFFEF4444,
+          items: [
+            TodoItem(
+              id: 'i1',
+              listId: 'g_col',
+              title: 'Item 1',
+              isCompleted: false,
+              createdAt: DateTime.now(),
+            ),
+          ],
+          createdAt: DateTime.now(),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: ListGridCard(
+                list: colorList,
+                onTap: () {},
+                onArchive: () => archived = true,
+                onUnarchive: () => unarchived = true,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byIcon(Icons.archive_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.unarchive_outlined), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.archive_outlined));
+        expect(archived, isTrue);
+
+        await tester.tap(find.byIcon(Icons.unarchive_outlined));
+        expect(unarchived, isTrue);
+      },
+    );
+
+    testWidgets(
+      'renders custom list color on progress indicator when all items completed',
+      (tester) async {
+        final completedColorList = ShoppingList(
+          id: 'g_done_color',
+          name: 'Completed Color List',
+          color: 0xFFEF4444,
+          items: [
+            TodoItem(
+              id: 'i1',
+              listId: 'g_done_color',
+              title: 'Milk',
+              isCompleted: true,
+              createdAt: DateTime.now(),
+            ),
+          ],
+          createdAt: DateTime.now(),
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ListGridCard(
+                list: completedColorList,
+                strings: AppStrings(AppLanguage.es),
+                onTap: () {},
+              ),
+            ),
+          ),
+        );
+
+        final gridIndicator = tester.widget<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+        expect(gridIndicator.valueColor?.value, const Color(0xFFEF4444));
+      },
+    );
   });
 
   group('HomeScreen Grid View and Layout Switcher Tests', () {
@@ -766,6 +856,76 @@ void main() {
         await tester.tap(find.text('Deshacer'));
         await tester.pumpAndSettle();
 
+        await tester.tap(
+          find.descendant(
+            of: find.byKey(const ValueKey('grid_card_g1')),
+            matching: find.byIcon(Icons.archive_outlined),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Archivar'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Lista archivada'), findsOneWidget);
+        await tester.tap(find.text('Deshacer'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.descendant(
+            of: find.byKey(const ValueKey('grid_card_g1')),
+            matching: find.byIcon(Icons.archive_outlined),
+          ),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Archivar'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.textContaining('Archivadas'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.descendant(
+            of: find.byKey(const ValueKey('grid_card_g1')),
+            matching: find.byIcon(Icons.unarchive_outlined),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Lista restaurada'), findsOneWidget);
+        await tester.tap(find.text('Deshacer'));
+        await tester.pumpAndSettle();
+
+        fakeRepo.lists.add(
+          ShoppingList(
+            id: 'g_shared',
+            name: 'Shared Grid',
+            isOwner: false,
+            createdAt: DateTime.now(),
+          ),
+        );
+        await container.read(listsControllerProvider.notifier).manualSync();
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.textContaining('Activas'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.descendant(
+            of: find.byKey(const ValueKey('grid_card_g_shared')),
+            matching: find.byIcon(Icons.delete_outline_rounded),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Abandonar lista?'), findsOneWidget);
+        expect(
+          find.text('Abandonarás "Shared Grid" y perderás el acceso.'),
+          findsOneWidget,
+        );
+        await tester.tap(find.text('Abandonar'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('layout_toggle_button')));
         await tester.pump(const Duration(seconds: 15));
         await tester.pumpAndSettle();
       },
@@ -865,19 +1025,12 @@ void main() {
         expect(openedStore, isTrue);
 
         await tester.ensureVisible(
-          find.byKey(const Key('weekly_notification_switch')),
+          find.byKey(const Key('notification_switch')),
         );
         await tester.pumpAndSettle();
         final switchFinder = find.byType(Switch);
         await tester.tap(switchFinder.first);
         await tester.pumpAndSettle();
-        expect(find.byKey(const Key('notification_time_tile')), findsOneWidget);
-        await tester.tap(find.byKey(const Key('notification_time_tile')));
-        await tester.pumpAndSettle();
-        if (find.text('OK').evaluate().isNotEmpty) {
-          await tester.tap(find.text('OK'));
-          await tester.pumpAndSettle();
-        }
 
         await tester.pump(const Duration(seconds: 15));
         await tester.pumpAndSettle();
@@ -938,16 +1091,25 @@ class _FakeRepoWithLists implements ListsRepository {
       lists.where((l) => l.id == id).firstOrNull;
 
   @override
-  Future<ShoppingList> createList(String name) async {
-    final l = ShoppingList(id: 'new', name: name, createdAt: DateTime.now());
+  Future<ShoppingList> createList(String name, {int? color}) async {
+    final l = ShoppingList(
+      id: 'new',
+      name: name,
+      color: color,
+      createdAt: DateTime.now(),
+    );
     lists.add(l);
     return l;
   }
 
   @override
-  Future<ShoppingList> updateListName(String id, String newName) async {
+  Future<ShoppingList> updateListName(
+    String id,
+    String newName, {
+    int? color,
+  }) async {
     final idx = lists.indexWhere((l) => l.id == id);
-    final updated = lists[idx].copyWith(name: newName);
+    final updated = lists[idx].copyWith(name: newName, color: color);
     lists[idx] = updated;
     return updated;
   }
@@ -1121,6 +1283,51 @@ class _FakeRepoWithLists implements ListsRepository {
 
   @override
   Future<void> clearPendingOperationsForList(String listId) async {}
+
+  @override
+  Future<void> archiveList(String listId) async {
+    final idx = lists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      lists[idx] = lists[idx].copyWith(isArchived: true);
+    }
+  }
+
+  @override
+  Future<void> unarchiveList(String listId) async {
+    final idx = lists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      lists[idx] = lists[idx].copyWith(isArchived: false);
+    }
+  }
+
+  @override
+  Future<TodoItem> updateItemTitle(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    final idx = lists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      final itemIdx = lists[idx].items.indexWhere((i) => i.id == itemId);
+      if (itemIdx != -1) {
+        final updated = lists[idx].items[itemIdx].copyWith(title: newTitle);
+        final newItems = List<TodoItem>.from(lists[idx].items);
+        newItems[itemIdx] = updated;
+        lists[idx] = lists[idx].copyWith(items: newItems);
+        return updated;
+      }
+    }
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    await updateItemTitle(listId, itemId, newTitle);
+  }
 }
 
 class _TestSettingsNotificationService implements NotificationService {
@@ -1141,4 +1348,11 @@ class _TestSettingsNotificationService implements NotificationService {
 
   @override
   Future<void> cancelWeeklyReminder() async {}
+
+  @override
+  Future<void> showNotification({
+    int id = 0,
+    required String title,
+    required String body,
+  }) async {}
 }

@@ -13,6 +13,11 @@ abstract interface class NotificationService {
     int minute = 0,
   });
   Future<void> cancelWeeklyReminder();
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+  });
 }
 
 class LocalNotificationService implements NotificationService {
@@ -36,17 +41,21 @@ class LocalNotificationService implements NotificationService {
   Future<bool> initialize() async {
     if (_isInitialized) return true;
 
-    tz.initializeTimeZones();
+    try {
+      tz.initializeTimeZones();
 
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/launcher_icon',
-    );
+      const androidSettings = AndroidInitializationSettings(
+        '@mipmap/launcher_icon',
+      );
 
-    const initSettings = InitializationSettings(android: androidSettings);
+      const initSettings = InitializationSettings(android: androidSettings);
 
-    final result = await _plugin.initialize(settings: initSettings);
-    _isInitialized = result ?? true;
-    return _isInitialized;
+      final result = await _plugin.initialize(settings: initSettings);
+      _isInitialized = result ?? true;
+      return _isInitialized;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -128,5 +137,35 @@ class LocalNotificationService implements NotificationService {
   @override
   Future<void> cancelWeeklyReminder() async {
     await _plugin.cancel(id: weeklyNotificationId);
+  }
+
+  @override
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      final initialized = await initialize();
+      if (!initialized) return;
+
+      const androidDetails = AndroidNotificationDetails(
+        'items_notification_channel',
+        'Listix Item Updates',
+        channelDescription: 'Notifications for items added to shopping lists.',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/launcher_icon',
+      );
+
+      const details = NotificationDetails(android: androidDetails);
+
+      await _plugin.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: details,
+      );
+    } catch (_) {}
   }
 }

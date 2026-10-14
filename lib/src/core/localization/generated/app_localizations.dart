@@ -704,6 +704,12 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notificationsTitle;
 
+  /// No description provided for @notificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive notifications when items are added to shared lists'**
+  String get notificationsSubtitle;
+
   /// No description provided for @weeklyReminderTitle.
   ///
   /// In en, this message translates to:
@@ -1291,6 +1297,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CSV file exported successfully'**
   String get csvExportSuccess;
+
+  /// No description provided for @editItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit item'**
+  String get editItemTitle;
+
+  /// No description provided for @itemTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Item title'**
+  String get itemTitleLabel;
+
+  /// No description provided for @itemTitleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Milk'**
+  String get itemTitleHint;
+
+  /// No description provided for @itemTitleValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a title'**
+  String get itemTitleValidation;
+
+  /// No description provided for @searchItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Search items'**
+  String get searchItems;
+
+  /// No description provided for @searchItemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search items...'**
+  String get searchItemsHint;
+
+  /// No description provided for @closeSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Close search'**
+  String get closeSearch;
+
+  /// No description provided for @searchLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Search lists'**
+  String get searchLists;
+
+  /// No description provided for @searchListsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search lists...'**
+  String get searchListsHint;
+
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noSearchResults;
+
+  /// No description provided for @activeLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeLists;
+
+  /// No description provided for @archivedLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get archivedLists;
+
+  /// No description provided for @archiveListAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveListAction;
+
+  /// No description provided for @unarchiveListAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get unarchiveListAction;
+
+  /// No description provided for @emptyArchivedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived lists'**
+  String get emptyArchivedTitle;
+
+  /// No description provided for @emptyArchivedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Lists you archive will appear here.'**
+  String get emptyArchivedMessage;
+
+  /// No description provided for @listArchived.
+  ///
+  /// In en, this message translates to:
+  /// **'List archived'**
+  String get listArchived;
+
+  /// No description provided for @listUnarchived.
+  ///
+  /// In en, this message translates to:
+  /// **'List unarchived'**
+  String get listUnarchived;
+
+  /// No description provided for @appLock.
+  ///
+  /// In en, this message translates to:
+  /// **'App Lock'**
+  String get appLock;
+
+  /// No description provided for @appLockSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect your lists with biometrics or PIN'**
+  String get appLockSubtitle;
+
+  /// No description provided for @appLockReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to unlock Listix'**
+  String get appLockReason;
+
+  /// No description provided for @unlockApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get unlockApp;
+
+  /// No description provided for @appLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Listix is locked'**
+  String get appLocked;
+
+  /// No description provided for @ownerOnlyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Only the owner can modify this list'**
+  String get ownerOnlyAction;
+
+  /// No description provided for @pickColor.
+  ///
+  /// In en, this message translates to:
+  /// **'List color'**
+  String get pickColor;
+
+  /// No description provided for @leaveListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave list?'**
+  String get leaveListTitle;
+
+  /// No description provided for @leaveListMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You will leave \"{name}\" and lose access.'**
+  String leaveListMessage(String name);
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// No description provided for @confirmArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive list?'**
+  String get confirmArchiveTitle;
+
+  /// No description provided for @confirmArchiveMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to archive \"{name}\"?'**
+  String confirmArchiveMessage(String name);
 }
 
 class _AppLocalizationsDelegate

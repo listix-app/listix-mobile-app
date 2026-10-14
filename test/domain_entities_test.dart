@@ -3,6 +3,7 @@ import 'package:listix/src/features/ads/presentation/controllers/banner_ad_contr
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
+import 'package:listix/src/features/collaboration/domain/entities/collaboration_event.dart';
 import 'package:listix/src/features/sync/domain/sync_status.dart';
 
 void main() {
@@ -213,5 +214,35 @@ void main() {
       expect(SyncStatus.offline, isNotNull);
       expect(SyncStatus.pendingChanges, isNotNull);
     });
+  });
+
+  group('CollaborationEvent Entity', () {
+    test(
+      'CollaborationEvent.itemUpdated factory sets correct payload and type',
+      () {
+        final event = CollaborationEvent.itemUpdated(
+          listId: 'list_123',
+          itemId: 'item_456',
+          title: 'Fresh Milk',
+          senderEmail: 'test@listix.local',
+          senderName: 'Tester',
+        );
+
+        expect(event.type, CollaborationEventType.updateItem);
+        expect(event.listId, 'list_123');
+        expect(event.payload['itemId'], 'item_456');
+        expect(event.payload['title'], 'Fresh Milk');
+        expect(event.senderEmail, 'test@listix.local');
+        expect(event.senderName, 'Tester');
+
+        final json = event.toJson();
+        expect(json['type'], 'updateItem');
+        expect(json['payload']['title'], 'Fresh Milk');
+
+        final fromJson = CollaborationEvent.fromJson(json);
+        expect(fromJson.type, CollaborationEventType.updateItem);
+        expect(fromJson.payload['itemId'], 'item_456');
+      },
+    );
   });
 }

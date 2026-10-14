@@ -76,6 +76,26 @@ class NotificationsController extends Notifier<NotificationsState> {
     } catch (_) {}
   }
 
+  Future<bool> toggleNotifications(bool enabled) async {
+    _isModified = true;
+    final service = ref.read(notificationServiceProvider);
+    if (enabled) {
+      await service.requestPermissions();
+      state = state.copyWith(isEnabled: true);
+      try {
+        await _db.setSetting('notification_enabled', 'true');
+      } catch (_) {}
+      return true;
+    } else {
+      await service.cancelWeeklyReminder();
+      state = state.copyWith(isEnabled: false);
+      try {
+        await _db.setSetting('notification_enabled', 'false');
+      } catch (_) {}
+      return true;
+    }
+  }
+
   Future<bool> toggleWeeklyNotifications({
     required bool enabled,
     required String title,
@@ -133,6 +153,31 @@ class NotificationsController extends Notifier<NotificationsState> {
   void setEnabledState(bool enabled) {
     _isModified = true;
     state = state.copyWith(isEnabled: enabled);
+  }
+
+  Future<void> showItemNotification({
+    required String listName,
+    required String itemTitle,
+  }) async {
+    final service = ref.read(notificationServiceProvider);
+    await service.showNotification(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: listName,
+      body: 'Elemento añadido: $itemTitle',
+    );
+  }
+
+  Future<void> showSharedItemNotification({
+    required String listName,
+    required String itemTitle,
+    required String senderName,
+  }) async {
+    final service = ref.read(notificationServiceProvider);
+    await service.showNotification(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: listName,
+      body: '$senderName añadió: $itemTitle',
+    );
   }
 }
 

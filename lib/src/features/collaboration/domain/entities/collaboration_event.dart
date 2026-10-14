@@ -6,6 +6,7 @@ enum CollaborationEventType {
   leaveList,
   presence,
   addItem,
+  updateItem,
   deleteItem,
   toggleItem,
   inviteCollaborator,
@@ -86,6 +87,23 @@ class CollaborationEvent {
       senderName: senderName,
       timestamp: DateTime.now(),
       payload: {'item': item.toJson()},
+    );
+  }
+
+  factory CollaborationEvent.itemUpdated({
+    required String listId,
+    required String itemId,
+    required String title,
+    required String senderEmail,
+    required String senderName,
+  }) {
+    return CollaborationEvent(
+      type: CollaborationEventType.updateItem,
+      listId: listId,
+      senderEmail: senderEmail,
+      senderName: senderName,
+      timestamp: DateTime.now(),
+      payload: {'itemId': itemId, 'title': title},
     );
   }
 

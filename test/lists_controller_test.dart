@@ -6,6 +6,7 @@ import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:listix/src/features/lists/domain/repositories/lists_repository.dart';
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
+import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
 import 'package:listix/src/features/sync/presentation/sync_controller.dart';
 
@@ -24,10 +25,11 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> createList(String name) async {
+  Future<ShoppingList> createList(String name, {int? color}) async {
     final list = ShoppingList(
       id: 'l_${internalLists.length + 1}',
       name: name,
+      color: color,
       position: internalLists.length,
       createdAt: DateTime.now(),
     );
@@ -36,7 +38,11 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> updateListName(String id, String newName) async {
+  Future<ShoppingList> updateListName(
+    String id,
+    String newName, {
+    int? color,
+  }) async {
     if (newName.contains('FAIL')) {
       throw Exception('Simulated update error');
     }
@@ -44,7 +50,7 @@ class FakeFailingListsRepository implements ListsRepository {
     if (index == -1) {
       throw Exception('Not found');
     }
-    final updated = internalLists[index].copyWith(name: newName);
+    final updated = internalLists[index].copyWith(name: newName, color: color);
     internalLists[index] = updated;
     return updated;
   }
@@ -419,6 +425,60 @@ class FakeFailingListsRepository implements ListsRepository {
 
   @override
   Future<void> clearPendingOperationsForList(String listId) async {}
+
+  @override
+  Future<void> archiveList(String listId) async {
+    if (listId.contains('FAIL')) throw Exception('Simulated archive error');
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: true);
+    }
+  }
+
+  @override
+  Future<void> unarchiveList(String listId) async {
+    if (listId.contains('FAIL')) throw Exception('Simulated unarchive error');
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: false);
+    }
+  }
+
+  @override
+  Future<TodoItem> updateItemTitle(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    if (newTitle.contains('FAIL')) {
+      throw Exception('Simulated update item error');
+    }
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      final itemIdx = internalLists[idx].items.indexWhere(
+        (i) => i.id == itemId,
+      );
+      if (itemIdx != -1) {
+        final updated = internalLists[idx].items[itemIdx].copyWith(
+          title: newTitle,
+        );
+        final newItems = List<TodoItem>.from(internalLists[idx].items);
+        newItems[itemIdx] = updated;
+        internalLists[idx] = internalLists[idx].copyWith(items: newItems);
+        return updated;
+      }
+    }
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    await updateItemTitle(listId, itemId, newTitle);
+  }
 }
 
 class FakeBackendSyncService extends MockBackendSyncService {
@@ -428,6 +488,28 @@ class FakeBackendSyncService extends MockBackendSyncService {
   Future<bool> synchronize() async {
     syncCallCount++;
     return true;
+  }
+}
+
+class _FakeNotificationsController extends NotificationsController {
+  final bool _initialEnabled;
+  int showCallCount = 0;
+  bool shouldThrow = false;
+
+  _FakeNotificationsController(this._initialEnabled);
+
+  @override
+  NotificationsState build() => NotificationsState(isEnabled: _initialEnabled);
+
+  @override
+  Future<void> showItemNotification({
+    required String listName,
+    required String itemTitle,
+  }) async {
+    if (shouldThrow) {
+      throw Exception('Simulated notification error');
+    }
+    showCallCount++;
   }
 }
 
@@ -1025,5 +1107,185 @@ void main() {
         expect(list2.canSyncAndShare, isFalse);
       },
     );
+
+    test('archiveList updates state and handles repository failure', () async {
+      await container.read(listsControllerProvider.future);
+
+      fakeRepo.internalLists.add(
+        ShoppingList(
+          id: 'list_FAIL_archive',
+          name: 'Failing archive',
+          createdAt: DateTime.now(),
+        ),
+      );
+      container.invalidate(listsControllerProvider);
+      await container.read(listsControllerProvider.future);
+
+      await expectLater(
+        container
+            .read(listsControllerProvider.notifier)
+            .archiveList('list_FAIL_archive'),
+        throwsA(isA<Exception>()),
+      );
+
+      await container
+          .read(listsControllerProvider.notifier)
+          .archiveList('list_1');
+      expect(
+        container.read(shoppingListProvider('list_1'))!.isArchived,
+        isTrue,
+      );
+    });
+
+    test(
+      'unarchiveList updates state and handles repository failure',
+      () async {
+        await container.read(listsControllerProvider.future);
+
+        fakeRepo.internalLists.add(
+          ShoppingList(
+            id: 'list_FAIL_unarchive',
+            name: 'Failing unarchive',
+            isArchived: true,
+            createdAt: DateTime.now(),
+          ),
+        );
+        container.invalidate(listsControllerProvider);
+        await container.read(listsControllerProvider.future);
+
+        await expectLater(
+          container
+              .read(listsControllerProvider.notifier)
+              .unarchiveList('list_FAIL_unarchive'),
+          throwsA(isA<Exception>()),
+        );
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .unarchiveList('list_1');
+        expect(
+          container.read(shoppingListProvider('list_1'))!.isArchived,
+          isFalse,
+        );
+      },
+    );
+
+    test('updateItem updates title in state and broadcasts event', () async {
+      await container.read(listsControllerProvider.future);
+
+      await expectLater(
+        container
+            .read(listsControllerProvider.notifier)
+            .updateItem('list_1', 'item_1', 'FAIL_title'),
+        throwsA(isA<Exception>()),
+      );
+
+      await container
+          .read(listsControllerProvider.notifier)
+          .updateItem('list_1', 'item_1', 'Leche Entera');
+      final item = container
+          .read(shoppingListProvider('list_1'))!
+          .items
+          .firstWhere((i) => i.id == 'item_1');
+      expect(item.title, 'Leche Entera');
+    });
+
+    test('applyRemoteItemUpdate updates local item state', () async {
+      await container.read(listsControllerProvider.future);
+
+      await container
+          .read(listsControllerProvider.notifier)
+          .applyRemoteItemUpdate('list_1', 'item_1', 'Leche Descremada');
+      final item = container
+          .read(shoppingListProvider('list_1'))!
+          .items
+          .firstWhere((i) => i.id == 'item_1');
+      expect(item.title, 'Leche Descremada');
+    });
+
+    test(
+      'addItem notification fires only when active, shared, and online',
+      () async {
+        final sharedList = ShoppingList(
+          id: 'shared_list_notif',
+          name: 'Compartida',
+          isShared: true,
+          hasInvite: true,
+          createdAt: DateTime(2026, 9, 22),
+        );
+        final privateList = ShoppingList(
+          id: 'private_list_notif',
+          name: 'Privada',
+          isShared: false,
+          createdAt: DateTime(2026, 9, 22),
+        );
+        final customRepo = FakeFailingListsRepository(
+          initial: [sharedList, privateList],
+        );
+        final customSync = FakeBackendSyncService();
+        final fakeNotif = _FakeNotificationsController(true);
+
+        final customContainer = ProviderContainer(
+          overrides: [
+            listsRepositoryProvider.overrideWithValue(customRepo),
+            mockBackendSyncServiceProvider.overrideWithValue(customSync),
+            notificationsControllerProvider.overrideWith(() => fakeNotif),
+          ],
+        );
+        addTearDown(customContainer.dispose);
+        await customContainer.read(listsControllerProvider.future);
+
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('shared_list_notif', 'Pan');
+        expect(fakeNotif.showCallCount, 1);
+
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('private_list_notif', 'Vino');
+        expect(fakeNotif.showCallCount, 1);
+
+        customSync.toggleSimulatedOffline();
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('shared_list_notif', 'Cerveza');
+        expect(fakeNotif.showCallCount, 1);
+
+        customSync.toggleSimulatedOffline();
+        fakeNotif.shouldThrow = true;
+        await customContainer
+            .read(listsControllerProvider.notifier)
+            .addItem('shared_list_notif', 'Queso');
+        expect(fakeNotif.showCallCount, 1);
+      },
+    );
+
+    test('addItem does not notify when notifications are inactive', () async {
+      final sharedList = ShoppingList(
+        id: 'shared_list_inactive',
+        name: 'Compartida 2',
+        isShared: true,
+        hasInvite: true,
+        createdAt: DateTime(2026, 9, 22),
+      );
+      final customRepo = FakeFailingListsRepository(initial: [sharedList]);
+      final customSync = FakeBackendSyncService();
+      final fakeNotif = _FakeNotificationsController(false);
+
+      final customContainer = ProviderContainer(
+        overrides: [
+          listsRepositoryProvider.overrideWithValue(customRepo),
+          mockBackendSyncServiceProvider.overrideWithValue(customSync),
+          notificationsControllerProvider.overrideWith(() => fakeNotif),
+        ],
+      );
+      addTearDown(customContainer.dispose);
+      await customContainer.read(listsControllerProvider.future);
+
+      await customContainer
+          .read(listsControllerProvider.notifier)
+          .addItem('shared_list_inactive', 'Manzana');
+      expect(fakeNotif.showCallCount, 0);
+    });
   });
 }

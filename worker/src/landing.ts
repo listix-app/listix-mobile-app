@@ -243,7 +243,7 @@ export function renderLandingPage(options: LandingPageOptions = {}): string {
           <div class="feature-icon">🎨</div>
           <h3>Modo Oscuro y Gestos Táctiles</h3>
           <p>
-            Diseño moderno Material 3 con modo oscuro, gestos intuitivos de deslizamiento para eliminar y respuesta háptica al marcar cada elemento.
+            Diseño moderno Material 3 con modo oscuro, gestos intuitivos de deslizamiento para eliminar y respuesta háptica al marcar cada item.
           </p>
         </div>
 

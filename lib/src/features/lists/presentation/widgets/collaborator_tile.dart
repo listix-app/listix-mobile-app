@@ -139,6 +139,20 @@ class CollaboratorTile extends StatelessWidget {
                 onSelected: onRoleChanged,
                 itemBuilder: (context) => [
                   PopupMenuItem(
+                    value: CollaboratorRole.owner,
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(ownerLabel),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
                     value: CollaboratorRole.admin,
                     child: Row(
                       children: [

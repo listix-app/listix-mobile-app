@@ -8,17 +8,22 @@ class TodoItemTile extends StatelessWidget {
   final TodoItem item;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
+  final VoidCallback? onEdit;
+  final Color? activeColor;
 
   const TodoItemTile({
     super.key,
     required this.item,
     required this.onToggle,
     required this.onDelete,
+    this.onEdit,
+    this.activeColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final checkboxColor = activeColor ?? AppColors.primary;
     final tileBg = isDark ? AppColors.cardDark : Colors.white;
     final borderColor = isDark
         ? AppColors.borderDark.withValues(alpha: 0.7)
@@ -68,6 +73,7 @@ class TodoItemTile extends StatelessWidget {
                 HapticFeedback.lightImpact();
                 onToggle();
               },
+              onLongPress: onEdit,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -82,12 +88,12 @@ class TodoItemTile extends StatelessWidget {
                       height: 22,
                       decoration: BoxDecoration(
                         color: item.isCompleted
-                            ? AppColors.primary
+                            ? checkboxColor
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: item.isCompleted
-                              ? AppColors.primary
+                              ? checkboxColor
                               : (isDark
                                     ? AppColors.textMutedDark
                                     : AppColors.textMuted),
@@ -125,8 +131,25 @@ class TodoItemTile extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (onEdit != null) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        key: ValueKey('edit_${item.id}'),
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
+                        ),
+                        splashRadius: 16,
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(4),
+                        onPressed: onEdit,
+                      ),
+                    ],
                     if (!item.isCompleted) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Icon(
                         Icons.drag_handle_rounded,
                         size: 18,

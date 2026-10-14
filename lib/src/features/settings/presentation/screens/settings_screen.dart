@@ -11,6 +11,7 @@ import '../../../../core/widgets/listix_logo.dart';
 import '../../../../routing/routes.dart';
 import '../../../lists/presentation/controllers/list_layout_controller.dart';
 import '../../../notifications/presentation/controllers/notifications_controller.dart';
+import '../../../security/presentation/controllers/app_lock_controller.dart';
 
 class SettingsScreen extends ConsumerWidget {
   final bool showBuyCoffee;
@@ -35,6 +36,7 @@ class SettingsScreen extends ConsumerWidget {
     final currentThemeMode = ref.watch(themeModeControllerProvider);
     final themeNotifier = ref.read(themeModeControllerProvider.notifier);
     final notifState = ref.watch(notificationsControllerProvider);
+    final lockState = ref.watch(appLockControllerProvider);
     final layoutMode = ref.watch(listLayoutControllerProvider);
     final layoutNotifier = ref.read(listLayoutControllerProvider.notifier);
     final urlService = ref.read(urlLauncherServiceProvider);
@@ -208,131 +210,147 @@ class SettingsScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: borderColor),
             ),
-            child: Column(
-              children: [
-                SwitchListTile.adaptive(
-                  key: const Key('weekly_notification_switch'),
-                  value: notifState.isEnabled,
-                  activeThumbColor: AppColors.primary,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
-                  inactiveThumbColor: isDark
-                      ? AppColors.textSecondaryDark
-                      : const Color(0xFF94A3B8),
-                  inactiveTrackColor: isDark
-                      ? AppColors.surfaceDark
-                      : const Color(0xFFE2E8F0),
-                  thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return const Icon(
-                        Icons.check_rounded,
-                        color: Colors.white,
-                        size: 14,
-                      );
-                    }
-                    return null;
-                  }),
-                  onChanged: (bool value) {
-                    ref
-                        .read(notificationsControllerProvider.notifier)
-                        .toggleWeeklyNotifications(
-                          enabled: value,
-                          title: tr.weeklyReminderNotificationTitle,
-                          body: tr.weeklyReminderNotificationBody,
-                        );
-                  },
-                  title: Text(
-                    tr.weeklyReminderTitle,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: textTitleColor,
-                    ),
-                  ),
-                  subtitle: Text(
-                    tr.weeklyReminderSubtitle,
-                    style: TextStyle(fontSize: 12, color: textSubColor),
-                  ),
-                  secondary: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: notifState.isEnabled
-                          ? AppColors.primary.withValues(alpha: 0.12)
-                          : (isDark
-                                ? AppColors.surfaceDark
-                                : AppColors.surfaceLight),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      notifState.isEnabled
-                          ? Icons.notifications_active_rounded
-                          : Icons.notifications_outlined,
-                      color: notifState.isEnabled
-                          ? AppColors.primary
-                          : (isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textMuted),
-                      size: 22,
-                    ),
-                  ),
+            child: SwitchListTile.adaptive(
+              key: const Key('notification_switch'),
+              value: notifState.isEnabled,
+              activeThumbColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
+              inactiveThumbColor: isDark
+                  ? AppColors.textSecondaryDark
+                  : const Color(0xFF94A3B8),
+              inactiveTrackColor: isDark
+                  ? AppColors.surfaceDark
+                  : const Color(0xFFE2E8F0),
+              thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  );
+                }
+                return null;
+              }),
+              onChanged: (bool value) {
+                ref
+                    .read(notificationsControllerProvider.notifier)
+                    .toggleNotifications(value);
+              },
+              title: Text(
+                tr.notificationsTitle,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textTitleColor,
                 ),
-                if (notifState.isEnabled) ...[
-                  Divider(height: 1, color: borderColor),
-                  ListTile(
-                    key: const Key('notification_time_tile'),
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.access_time_rounded,
-                        color: AppColors.primary,
-                        size: 22,
-                      ),
+              ),
+              subtitle: Text(
+                tr.notificationsSubtitle,
+                style: TextStyle(fontSize: 12, color: textSubColor),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: notifState.isEnabled
+                      ? AppColors.primary.withValues(alpha: 0.12)
+                      : (isDark
+                            ? AppColors.surfaceDark
+                            : AppColors.surfaceLight),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  notifState.isEnabled
+                      ? Icons.notifications_active_rounded
+                      : Icons.notifications_outlined,
+                  color: notifState.isEnabled
+                      ? AppColors.primary
+                      : (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textMuted),
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _SettingsSectionTitle(title: tr.appLock),
+          const SizedBox(height: 10),
+          Card(
+            color: cardBg,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: borderColor),
+            ),
+            child: SwitchListTile.adaptive(
+              key: const Key('app_lock_switch'),
+              value: lockState.isEnabled,
+              activeThumbColor: AppColors.primary,
+              activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
+              inactiveThumbColor: isDark
+                  ? AppColors.textSecondaryDark
+                  : const Color(0xFF94A3B8),
+              inactiveTrackColor: isDark
+                  ? AppColors.surfaceDark
+                  : const Color(0xFFE2E8F0),
+              thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 14,
+                  );
+                }
+                return null;
+              }),
+              onChanged: (bool value) async {
+                final success = await ref
+                    .read(appLockControllerProvider.notifier)
+                    .toggleAppLock(
+                      enabled: value,
+                      localizedReason: tr.appLockReason,
+                    );
+                if (!success && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr.errorPrefix('Authentication failed')),
+                      behavior: SnackBarBehavior.floating,
                     ),
-                    title: Text(
-                      tr.notificationTimeTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: textTitleColor,
-                      ),
-                    ),
-                    subtitle: Text(
-                      tr.notificationTimeSubtitle(
-                        TimeOfDay(
-                          hour: notifState.hour,
-                          minute: notifState.minute,
-                        ).format(context),
-                      ),
-                      style: TextStyle(fontSize: 12, color: textSubColor),
-                    ),
-                    trailing: const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: AppColors.textMuted,
-                    ),
-                    onTap: () async {
-                      final picked = await showTimePicker(
-                        context: context,
-                        initialTime: TimeOfDay(
-                          hour: notifState.hour,
-                          minute: notifState.minute,
-                        ),
-                      );
-                      if (picked != null) {
-                        ref
-                            .read(notificationsControllerProvider.notifier)
-                            .setReminderTime(
-                              hour: picked.hour,
-                              minute: picked.minute,
-                              title: tr.weeklyReminderNotificationTitle,
-                              body: tr.weeklyReminderNotificationBody,
-                            );
-                      }
-                    },
-                  ),
-                ],
-              ],
+                  );
+                }
+              },
+              title: Text(
+                tr.appLock,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: textTitleColor,
+                ),
+              ),
+              subtitle: Text(
+                tr.appLockSubtitle,
+                style: TextStyle(fontSize: 12, color: textSubColor),
+              ),
+              secondary: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: lockState.isEnabled
+                      ? AppColors.primary.withValues(alpha: 0.12)
+                      : (isDark
+                            ? AppColors.surfaceDark
+                            : AppColors.surfaceLight),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  lockState.isEnabled
+                      ? Icons.lock_rounded
+                      : Icons.lock_open_rounded,
+                  color: lockState.isEnabled
+                      ? AppColors.primary
+                      : (isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textMuted),
+                  size: 22,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 24),

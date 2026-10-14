@@ -151,7 +151,7 @@ export function renderPrivacyPage(options: PrivacyPageOptions = {}): string {
       </p>
       <ul>
         <li><strong>Persistencia Local:</strong> Estos datos nunca salen de tu teléfono a menos que decidas compartirlos explícitamente.</li>
-        <li><strong>Eliminación Definitiva:</strong> Al borrar un elemento o lista, se destruye permanentemente de la base de datos local. Desinstalar la app elimina todos los datos locales de inmediato.</li>
+        <li><strong>Eliminación Definitiva:</strong> Al borrar un item o lista, se destruye permanentemente de la base de datos local. Desinstalar la app elimina todos los datos locales de inmediato.</li>
       </ul>
 
       <h2>4. Listas Compartidas y Sincronización en la Nube</h2>
@@ -194,7 +194,7 @@ export function renderPrivacyPage(options: PrivacyPageOptions = {}): string {
         Tienes control absoluto sobre tu información:
       </p>
       <ul>
-        <li><strong>Datos Locales:</strong> Puedes eliminarlos deslizando cualquier elemento o borrando los datos de la app en los ajustes del dispositivo.</li>
+        <li><strong>Datos Locales:</strong> Puedes eliminarlos deslizando cualquier item o borrando los datos de la app en los ajustes del dispositivo.</li>
         <li><strong>Listas en la Nube:</strong> El creador de la lista puede borrarla en cualquier momento. También puedes escribirnos para solicitar la eliminación de datos de listas vinculadas a un código de invitación.</li>
       </ul>
 

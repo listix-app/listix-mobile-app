@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:listix/src/core/theme/app_colors.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:listix/src/core/widgets/empty_state_widget.dart';
 import 'package:listix/src/core/widgets/sync_indicator.dart';
@@ -307,6 +308,38 @@ void main() {
       expect(hasLineThrough, isTrue);
       expect(find.byIcon(Icons.check), findsOneWidget);
     });
+
+    testWidgets('renders custom activeColor when completed', (tester) async {
+      final item = TodoItem(
+        id: 'item_c',
+        listId: 'list_1',
+        title: 'Custom item',
+        isCompleted: true,
+        createdAt: now,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TodoItemTile(
+              item: item,
+              activeColor: const Color(0xFFEF4444),
+              onToggle: () {},
+              onDelete: () {},
+            ),
+          ),
+        ),
+      );
+
+      final container = tester.widget<AnimatedContainer>(
+        find.ancestor(
+          of: find.byIcon(Icons.check),
+          matching: find.byType(AnimatedContainer),
+        ),
+      );
+      final decoration = container.decoration as BoxDecoration;
+      expect(decoration.color, const Color(0xFFEF4444));
+    });
   });
 
   group('ListCard Tests', () {
@@ -359,7 +392,46 @@ void main() {
       );
 
       expect(find.text('Todo listo ✓'), findsOneWidget);
+      final indicator = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator),
+      );
+      expect(indicator.valueColor?.value, AppColors.primary);
     });
+
+    testWidgets(
+      'renders custom list color on progress indicator when all items completed',
+      (tester) async {
+        final list = ShoppingList(
+          id: 'l_custom_done',
+          name: 'Lista Roja Completa',
+          color: 0xFFEF4444,
+          items: [
+            TodoItem(
+              id: 'i1',
+              listId: 'l_custom_done',
+              title: 'Pan',
+              isCompleted: true,
+              createdAt: now,
+            ),
+          ],
+          createdAt: now,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: ListCard(list: list, onTap: () {}),
+            ),
+          ),
+        );
+
+        expect(find.text('Todo listo ✓'), findsOneWidget);
+        final indicator = tester.widget<LinearProgressIndicator>(
+          find.byType(LinearProgressIndicator),
+        );
+        expect(indicator.valueColor?.value, const Color(0xFFEF4444));
+      },
+    );
 
     testWidgets('renders ListCard in dark mode with star toggle', (
       tester,
@@ -445,6 +517,44 @@ void main() {
       await tester.tap(find.text('Asado con amigos'));
       expect(tapped, isTrue);
     });
+
+    testWidgets(
+      'renders ListCard with color, onArchive and onUnarchive callbacks',
+      (tester) async {
+        var archived = false;
+        var unarchived = false;
+        final list = ShoppingList(
+          id: 'l_col',
+          name: 'Color List',
+          color: 0xFFEF4444,
+          createdAt: now,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: ListCard(
+                list: list,
+                onTap: () {},
+                onArchive: () => archived = true,
+                onUnarchive: () => unarchived = true,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byIcon(Icons.archive_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.unarchive_outlined), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.archive_outlined));
+        expect(archived, isTrue);
+
+        await tester.tap(find.byIcon(Icons.unarchive_outlined));
+        expect(unarchived, isTrue);
+      },
+    );
   });
 
   group('SyncIndicator Tests', () {
@@ -598,5 +708,43 @@ void main() {
         expect(find.byKey(const Key('copy_text_tile')), findsNothing);
       },
     );
+
+    testWidgets('renders ownerOnlyAction message when list.isOwner is false', (
+      tester,
+    ) async {
+      final list = ShoppingList(
+        id: 'not_owner_list',
+        name: 'Lista Compartida Ajena',
+        isOwner: false,
+        collaborators: const [
+          Collaborator(
+            id: 'c_owner',
+            name: 'Other Person',
+            email: 'other@test.com',
+            isOwner: true,
+          ),
+        ],
+        createdAt: now,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            shoppingListProvider('not_owner_list').overrideWithValue(list),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ShareListSheet(listId: 'not_owner_list')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Solo el dueño puede modificar esta lista'),
+        findsOneWidget,
+      );
+    });
   });
 }

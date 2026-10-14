@@ -41,6 +41,19 @@ class FakeNotificationService implements NotificationService {
   Future<void> cancelWeeklyReminder() async {
     cancelCallCount++;
   }
+
+  int showCallCount = 0;
+
+  @override
+  Future<void> showNotification({
+    int id = 0,
+    required String title,
+    required String body,
+  }) async {
+    showCallCount++;
+    lastTitle = title;
+    lastBody = body;
+  }
 }
 
 class MockAndroidFlutterLocalNotificationsPlugin
@@ -100,8 +113,20 @@ class MockLocalNotificationsPlugin implements FlutterLocalNotificationsPlugin {
     return null;
   }
 
+  int showCallCount = 0;
+  bool shouldThrowOnShow = false;
+
   @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+  dynamic noSuchMethod(Invocation invocation) {
+    if (invocation.memberName == #show) {
+      if (shouldThrowOnShow) {
+        throw Exception('Show error');
+      }
+      showCallCount++;
+      return Future<void>.value();
+    }
+    return super.noSuchMethod(invocation);
+  }
 }
 
 void main() {
@@ -203,6 +228,34 @@ void main() {
       },
     );
 
+    test(
+      'showNotification displays notification via plugin when initialized',
+      () async {
+        await service.showNotification(id: 1, title: 'Title', body: 'Body');
+        expect(mockPlugin.showCallCount, 1);
+      },
+    );
+
+    test('showNotification ignores exception when plugin throws', () async {
+      mockPlugin.shouldThrowOnShow = true;
+      await service.showNotification(id: 1, title: 'Title', body: 'Body');
+      expect(mockPlugin.showCallCount, 0);
+    });
+
+    test(
+      'showNotification does nothing when initialize returns false',
+      () async {
+        mockPlugin.initializeSuccess = false;
+        final uninitService = LocalNotificationService(plugin: mockPlugin);
+        await uninitService.showNotification(
+          id: 1,
+          title: 'Title',
+          body: 'Body',
+        );
+        expect(mockPlugin.showCallCount, 0);
+      },
+    );
+
     test('default constructor creates instance', () {
       final defaultService = LocalNotificationService();
       expect(defaultService, isNotNull);
@@ -281,6 +334,59 @@ void main() {
       expect(fakeService.cancelCallCount, 1);
     });
 
+    test(
+      'toggleNotifications to true requests permissions and enables state',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            notificationServiceProvider.overrideWithValue(fakeService),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(
+          notificationsControllerProvider.notifier,
+        );
+        final success = await notifier.toggleNotifications(true);
+
+        expect(success, isTrue);
+        expect(
+          container.read(notificationsControllerProvider).isEnabled,
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'toggleNotifications to false cancels reminder and disables state',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            notificationServiceProvider.overrideWithValue(fakeService),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(
+          notificationsControllerProvider.notifier,
+        );
+        notifier.setEnabledState(true);
+        expect(
+          container.read(notificationsControllerProvider).isEnabled,
+          isTrue,
+        );
+
+        final success = await notifier.toggleNotifications(false);
+
+        expect(success, isTrue);
+        expect(
+          container.read(notificationsControllerProvider).isEnabled,
+          isFalse,
+        );
+        expect(fakeService.cancelCallCount, 1);
+      },
+    );
+
     test('setReminderTime updates time and reschedules if enabled', () async {
       final container = ProviderContainer(
         overrides: [notificationServiceProvider.overrideWithValue(fakeService)],
@@ -349,6 +455,46 @@ void main() {
       expect(state1.hashCode, state4.hashCode);
       expect(state1 == state2, isFalse);
     });
+
+    test('showItemNotification calls service.showNotification', () async {
+      final container = ProviderContainer(
+        overrides: [notificationServiceProvider.overrideWithValue(fakeService)],
+      );
+      addTearDown(container.dispose);
+
+      final ctrl = container.read(notificationsControllerProvider.notifier);
+      await ctrl.showItemNotification(
+        listName: 'Groceries',
+        itemTitle: 'Apples',
+      );
+
+      expect(fakeService.showCallCount, 1);
+      expect(fakeService.lastTitle, 'Groceries');
+      expect(fakeService.lastBody, 'Elemento añadido: Apples');
+    });
+
+    test(
+      'showSharedItemNotification calls service.showNotification with sender',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            notificationServiceProvider.overrideWithValue(fakeService),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final ctrl = container.read(notificationsControllerProvider.notifier);
+        await ctrl.showSharedItemNotification(
+          listName: 'Party',
+          itemTitle: 'Drinks',
+          senderName: 'Carlos',
+        );
+
+        expect(fakeService.showCallCount, 1);
+        expect(fakeService.lastTitle, 'Party');
+        expect(fakeService.lastBody, 'Carlos añadió: Drinks');
+      },
+    );
 
     test(
       'default notificationServiceProvider creates LocalNotificationService',

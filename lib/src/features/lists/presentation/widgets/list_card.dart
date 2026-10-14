@@ -8,7 +8,8 @@ import '../../domain/entities/shopping_list.dart';
 class ListCard extends StatelessWidget {
   final ShoppingList list;
   final VoidCallback onTap;
-  final VoidCallback? onDelete;
+  final VoidCallback? onArchive;
+  final VoidCallback? onUnarchive;
   final VoidCallback? onToggleStar;
   final AppStrings? strings;
 
@@ -16,7 +17,8 @@ class ListCard extends StatelessWidget {
     super.key,
     required this.list,
     required this.onTap,
-    this.onDelete,
+    this.onArchive,
+    this.onUnarchive,
     this.onToggleStar,
     this.strings,
   });
@@ -39,8 +41,11 @@ class ListCard extends StatelessWidget {
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
+    final listColor = list.color != null
+        ? Color(list.color!)
+        : AppColors.primary;
     final badgeBg = list.pendingCount == 0 && list.totalCount > 0
-        ? AppColors.syncDone.withValues(alpha: 0.16)
+        ? listColor.withValues(alpha: 0.16)
         : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight);
 
     return Card(
@@ -62,6 +67,17 @@ class ListCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  if (list.color != null) ...[
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Color(list.color!),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Expanded(
                     child: Text(
                       list.name,
@@ -75,6 +91,22 @@ class ListCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (onArchive != null)
+                    IconButton(
+                      icon: const Icon(Icons.archive_outlined, size: 20),
+                      tooltip: tr.archiveListAction,
+                      onPressed: onArchive,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                    ),
+                  if (onUnarchive != null)
+                    IconButton(
+                      icon: const Icon(Icons.unarchive_outlined, size: 20),
+                      tooltip: tr.unarchiveListAction,
+                      onPressed: onUnarchive,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                    ),
                   if (onToggleStar != null)
                     IconButton(
                       icon: Icon(
@@ -102,6 +134,20 @@ class ListCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (list.totalCount > 0) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: list.completionProgress,
+                    backgroundColor: isDark
+                        ? AppColors.surfaceDark
+                        : AppColors.surfaceLight,
+                    valueColor: AlwaysStoppedAnimation<Color>(listColor),
+                    minHeight: 4,
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -115,7 +161,7 @@ class ListCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: list.pendingCount == 0 && list.totalCount > 0
-                            ? AppColors.syncDone.withValues(alpha: 0.35)
+                            ? listColor.withValues(alpha: 0.35)
                             : (isDark
                                   ? AppColors.borderDark
                                   : AppColors.borderLight),
@@ -127,7 +173,7 @@ class ListCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: list.pendingCount == 0 && list.totalCount > 0
-                            ? AppColors.syncDone
+                            ? listColor
                             : (isDark
                                   ? AppColors.textSecondaryDark
                                   : AppColors.textSecondary),

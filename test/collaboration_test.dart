@@ -25,6 +25,9 @@ import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.
 import 'package:listix/src/features/lists/presentation/screens/home_screen.dart';
 import 'package:listix/src/features/lists/presentation/screens/list_detail_screen.dart';
 import 'package:listix/src/features/lists/presentation/services/share_service.dart';
+import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
+import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
+import 'package:listix/src/features/sync/presentation/sync_controller.dart';
 
 Future<void> _pumpJoinListDialog(
   WidgetTester tester,
@@ -84,10 +87,11 @@ class _FakeListsRepoForCollab implements ListsRepository {
       internalLists.where((l) => l.id == id).firstOrNull;
 
   @override
-  Future<ShoppingList> createList(String name) async {
+  Future<ShoppingList> createList(String name, {int? color}) async {
     final list = ShoppingList(
       id: 'created_${internalLists.length}',
       name: name,
+      color: color,
       createdAt: DateTime.now(),
     );
     internalLists.add(list);
@@ -121,8 +125,68 @@ class _FakeListsRepoForCollab implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> updateListName(String id, String newName) async =>
-      throw UnimplementedError();
+  Future<ShoppingList> updateListName(
+    String id,
+    String newName, {
+    int? color,
+  }) async {
+    final idx = internalLists.indexWhere((l) => l.id == id);
+    if (idx != -1) {
+      final updated = internalLists[idx].copyWith(name: newName, color: color);
+      internalLists[idx] = updated;
+      return updated;
+    }
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> archiveList(String listId) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: true);
+    }
+  }
+
+  @override
+  Future<void> unarchiveList(String listId) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: false);
+    }
+  }
+
+  @override
+  Future<TodoItem> updateItemTitle(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      final itemIdx = internalLists[idx].items.indexWhere(
+        (i) => i.id == itemId,
+      );
+      if (itemIdx != -1) {
+        final updated = internalLists[idx].items[itemIdx].copyWith(
+          title: newTitle,
+        );
+        final newItems = List<TodoItem>.from(internalLists[idx].items);
+        newItems[itemIdx] = updated;
+        internalLists[idx] = internalLists[idx].copyWith(items: newItems);
+        return updated;
+      }
+    }
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    await updateItemTitle(listId, itemId, newTitle);
+  }
 
   @override
   Future<void> deleteList(String id) async {}
@@ -1118,6 +1182,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      await container.read(listsControllerProvider.future);
 
       final collabCtrl = container.read(
         collaborationControllerProvider.notifier,
@@ -1156,6 +1221,26 @@ void main() {
         CollaborationEvent.itemAdded(
           listId: 'event_list',
           item: testItem,
+          senderEmail: 'other@test.com',
+          senderName: 'Other',
+        ),
+      );
+
+      fakeRepo.emitEvent(
+        CollaborationEvent.itemAdded(
+          listId: 'unknown_list',
+          item: testItem,
+          senderEmail: 'other@test.com',
+          senderName: '',
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 20));
+
+      fakeRepo.emitEvent(
+        CollaborationEvent.itemUpdated(
+          listId: 'event_list',
+          itemId: 'new_item_remote',
+          title: 'Queso Gouda Añejo',
           senderEmail: 'other@test.com',
           senderName: 'Other',
         ),
@@ -1284,6 +1369,66 @@ void main() {
       );
       await Future.delayed(const Duration(milliseconds: 20));
     });
+
+    test(
+      'incoming addItem event sends notification when active and online, but ignores when offline',
+      () async {
+        final fakeRepo = _FakeCollaborationRepoStreams();
+        final targetList = ShoppingList(
+          id: 'event_list_notif',
+          name: 'Lista Compartida Notif',
+          isShared: true,
+          items: const [],
+          collaborators: const [],
+          createdAt: DateTime.now(),
+        );
+        final fakeListsRepo = _FakeListsRepoForCollab([targetList]);
+        final fakeSync = _FakeSyncServiceForCollab();
+        final fakeNotif = _FakeNotificationsControllerForCollab(true);
+
+        final container = ProviderContainer(
+          overrides: [
+            collaborationRepositoryProvider.overrideWithValue(fakeRepo),
+            listsRepositoryProvider.overrideWithValue(fakeListsRepo),
+            mockBackendSyncServiceProvider.overrideWithValue(fakeSync),
+            notificationsControllerProvider.overrideWith(() => fakeNotif),
+          ],
+        );
+        addTearDown(container.dispose);
+        await container.read(listsControllerProvider.future);
+        container.read(collaborationControllerProvider.notifier);
+
+        final item = TodoItem(
+          id: 'remote_item_notif',
+          listId: 'event_list_notif',
+          title: 'Yogurt Griego',
+          createdAt: DateTime.now(),
+        );
+
+        fakeRepo.emitEvent(
+          CollaborationEvent.itemAdded(
+            listId: 'event_list_notif',
+            item: item,
+            senderEmail: 'camila@test.com',
+            senderName: 'Camila',
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 20));
+        expect(fakeNotif.sharedCallCount, 1);
+
+        fakeSync.toggleSimulatedOffline();
+        fakeRepo.emitEvent(
+          CollaborationEvent.itemAdded(
+            listId: 'event_list_notif',
+            item: item.copyWith(id: 'remote_item_offline'),
+            senderEmail: 'camila@test.com',
+            senderName: 'Camila',
+          ),
+        );
+        await Future.delayed(const Duration(milliseconds: 20));
+        expect(fakeNotif.sharedCallCount, 1);
+      },
+    );
   });
 
   group('WebSocketCollaborationRepository Full Socket Coverage', () {
@@ -1800,3 +1945,24 @@ class _TestWebSocketChannel extends StreamChannelMixin
   @override
   String? get protocol => null;
 }
+
+class _FakeNotificationsControllerForCollab extends NotificationsController {
+  final bool _initialEnabled;
+  int sharedCallCount = 0;
+
+  _FakeNotificationsControllerForCollab(this._initialEnabled);
+
+  @override
+  NotificationsState build() => NotificationsState(isEnabled: _initialEnabled);
+
+  @override
+  Future<void> showSharedItemNotification({
+    required String listName,
+    required String itemTitle,
+    required String senderName,
+  }) async {
+    sharedCallCount++;
+  }
+}
+
+class _FakeSyncServiceForCollab extends MockBackendSyncService {}

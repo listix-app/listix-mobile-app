@@ -12,14 +12,19 @@ import 'package:listix/src/features/lists/presentation/screens/create_edit_list_
 import 'package:listix/src/features/lists/presentation/screens/home_screen.dart';
 import 'package:listix/src/features/lists/presentation/screens/list_detail_screen.dart';
 import 'package:listix/src/features/lists/presentation/widgets/list_card.dart';
+import 'package:listix/src/core/localization/generated/app_localizations.dart';
+import 'package:listix/src/core/theme/app_colors.dart';
 import 'package:listix/src/routing/app_router.dart';
 import 'package:listix/src/routing/routes.dart';
+import 'package:listix/src/core/storage/app_database.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  setUpAll(() {
+  setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    AppDatabase.overrideDbPath = inMemoryDatabasePath;
+    await AppDatabase.instance.database;
   });
 
   final now = DateTime(2026, 9, 22);
@@ -155,9 +160,125 @@ void main() {
 
       expect(find.text('Go New'), findsOneWidget);
     });
+
+    testWidgets(
+      'edit list mode shows snackbar and pops when isOwner is false',
+      (tester) async {
+        final list = ShoppingList(
+          id: 'not_owned',
+          name: 'Lista Ajena',
+          isOwner: false,
+          createdAt: now,
+        );
+        final fakeController = _ScreensTestListsController([list]);
+
+        final router = GoRouter(
+          initialLocation: '/prev',
+          routes: [
+            GoRoute(
+              path: '/prev',
+              builder: (ctx, state) => Scaffold(
+                body: ElevatedButton(
+                  onPressed: () => ctx.push('/list/not_owned/edit'),
+                  child: const Text('Go Edit Not Owned'),
+                ),
+              ),
+            ),
+            GoRoute(
+              path: '/list/:id/edit',
+              builder: (context, state) =>
+                  CreateEditListScreen(listId: state.pathParameters['id']!),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              shoppingListProvider('not_owned').overrideWithValue(list),
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+
+        await tester.tap(find.text('Go Edit Not Owned'));
+        await tester.pumpAndSettle();
+
+        expect(
+          find.text('Solo el dueño puede modificar esta lista'),
+          findsOneWidget,
+        );
+        expect(find.text('Go Edit Not Owned'), findsOneWidget);
+      },
+    );
+
+    testWidgets('selects and deselects list color in color picker', (
+      tester,
+    ) async {
+      final fakeController = _ScreensTestListsController([]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: CreateEditListScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final firstColor = AppColors.listColors.first;
+      final colorKey = Key(
+        'color_picker_${firstColor.toARGB32().toRadixString(16)}',
+      );
+
+      // Tap to select
+      await tester.tap(find.byKey(colorKey));
+      await tester.pumpAndSettle();
+
+      // Tap again to deselect
+      await tester.tap(find.byKey(colorKey));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('selects list color in dark mode', (tester) async {
+      final fakeController = _ScreensTestListsController([]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            theme: ThemeData.dark(),
+            home: const Scaffold(body: CreateEditListScreen()),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final firstColor = AppColors.listColors.first;
+      final colorKey = Key(
+        'color_picker_${firstColor.toARGB32().toRadixString(16)}',
+      );
+
+      await tester.tap(find.byKey(colorKey));
+      await tester.pumpAndSettle();
+    });
   });
 
   group('HomeScreen widget tests', () {
+    setUp(() async {
+      await AppDatabase.instance.setSetting('list_layout_mode', 'list');
+    });
+
     testWidgets(
       'renders empty state when lists are empty and navigates to new list',
       (tester) async {
@@ -294,6 +415,328 @@ void main() {
         await tester.tap(find.byType(FloatingActionButton));
         await tester.pumpAndSettle();
         expect(find.text('New Target'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'search lists filters items, handles empty results, and clears',
+      (tester) async {
+        final list1 = ShoppingList(
+          id: 'l1',
+          name: 'Supermercado',
+          createdAt: now,
+        );
+        final list2 = ShoppingList(id: 'l2', name: 'Farmacia', createdAt: now);
+        final fakeController = _ScreensTestListsController([list1, list2]);
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Supermercado'), findsOneWidget);
+        expect(find.text('Farmacia'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('list_search_toggle_button')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('list_search_input')), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const Key('list_search_input')),
+          'farm',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Farmacia'), findsOneWidget);
+        expect(find.text('Supermercado'), findsNothing);
+
+        await tester.enterText(
+          find.byKey(const Key('list_search_input')),
+          'inexistente',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('No se encontraron resultados'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('list_search_toggle_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('list_search_input')), findsNothing);
+        expect(find.text('Supermercado'), findsOneWidget);
+        expect(find.text('Farmacia'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'segmented tabs switch between active and archived, and render empty states',
+      (tester) async {
+        final activeList = ShoppingList(
+          id: 'act1',
+          name: 'Lista Activa',
+          isArchived: false,
+          createdAt: now,
+        );
+        final archivedList = ShoppingList(
+          id: 'arc1',
+          name: 'Lista Archivada',
+          isArchived: true,
+          createdAt: now,
+        );
+        final fakeController = _ScreensTestListsController([
+          activeList,
+          archivedList,
+        ]);
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+            GoRoute(
+              path: '/lists/new',
+              builder: (ctx, state) => const Text('New Target'),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Lista Activa'), findsOneWidget);
+        expect(find.text('Lista Archivada'), findsNothing);
+
+        await tester.tap(find.textContaining('Archivadas'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Lista Archivada'), findsOneWidget);
+        expect(find.text('Lista Activa'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'renders empty archived state when tab is archived and no archived lists',
+      (tester) async {
+        final activeList = ShoppingList(
+          id: 'act1',
+          name: 'Lista Activa',
+          isArchived: false,
+          createdAt: now,
+        );
+        final fakeController = _ScreensTestListsController([activeList]);
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.textContaining('Archivadas'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('No hay listas archivadas'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'renders empty active lists state and navigates to new list when all lists are archived',
+      (tester) async {
+        final archivedList = ShoppingList(
+          id: 'arc1',
+          name: 'Lista Archivada',
+          isArchived: true,
+          createdAt: now,
+        );
+        final fakeController = _ScreensTestListsController([archivedList]);
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+            GoRoute(
+              path: '/lists/new',
+              builder: (ctx, state) => const Text('New Target'),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tus listas, siempre contigo'), findsOneWidget);
+        await tester.tap(find.text('Crear mi primera lista'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('New Target'), findsOneWidget);
+      },
+    );
+
+    testWidgets('archive and unarchive lists with undo snackbars', (
+      tester,
+    ) async {
+      final activeList = ShoppingList(
+        id: 'act1',
+        name: 'Lista Activa',
+        isArchived: false,
+        isOwner: true,
+        createdAt: now,
+      );
+      final archivedList = ShoppingList(
+        id: 'arc1',
+        name: 'Lista Archivada',
+        isArchived: true,
+        isOwner: true,
+        createdAt: now,
+      );
+      final fakeController = _ScreensTestListsController([
+        activeList,
+        archivedList,
+      ]);
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(ListCard),
+          matching: find.byIcon(Icons.archive_outlined),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Archivar lista?'), findsOneWidget);
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(fakeController.archivedListIds, isEmpty);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(ListCard),
+          matching: find.byIcon(Icons.archive_outlined),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Archivar lista?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(FilledButton, 'Archivar'));
+      await tester.pumpAndSettle();
+
+      expect(fakeController.archivedListIds, contains('act1'));
+      expect(find.text('Lista archivada'), findsOneWidget);
+
+      await tester.tap(find.text('Deshacer'));
+      await tester.pumpAndSettle();
+      expect(fakeController.unarchivedListIds, contains('act1'));
+
+      await tester.tap(find.textContaining('Archivadas'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(ListCard),
+          matching: find.byIcon(Icons.unarchive_outlined),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(fakeController.unarchivedListIds, contains('arc1'));
+      expect(find.text('Lista restaurada'), findsOneWidget);
+
+      await tester.tap(find.text('Deshacer'));
+      await tester.pumpAndSettle();
+      expect(fakeController.archivedListIds, contains('arc1'));
+    });
+
+    testWidgets(
+      'non-owner list dismissal prompts leave confirmation and leaves list',
+      (tester) async {
+        final sharedList = ShoppingList(
+          id: 'l_shared',
+          name: 'Lista Compartida',
+          isOwner: false,
+          createdAt: now,
+        );
+        final fakeController = _ScreensTestListsController([sharedList]);
+
+        final router = GoRouter(
+          initialLocation: '/',
+          routes: [
+            GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Abandonar lista?'), findsOneWidget);
+        expect(
+          find.text('Abandonarás "Lista Compartida" y perderás el acceso.'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('Abandonar'));
+        await tester.pumpAndSettle();
+
+        expect(fakeController.deletedListIds, contains('l_shared'));
       },
     );
   });
@@ -468,6 +911,156 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Compartir "Lista Sin Cosas"'), findsOneWidget);
+    });
+
+    testWidgets(
+      'search items filters items, handles empty results, and clears',
+      (tester) async {
+        final list = ShoppingList(
+          id: 'detail_search',
+          name: 'Lista Con Cosas',
+          items: [
+            TodoItem(
+              id: 'it1',
+              listId: 'detail_search',
+              title: 'Manzanas',
+              isCompleted: false,
+              createdAt: now,
+            ),
+            TodoItem(
+              id: 'it2',
+              listId: 'detail_search',
+              title: 'Plátanos',
+              isCompleted: true,
+              createdAt: now,
+            ),
+          ],
+          createdAt: now,
+        );
+        final fakeController = _ScreensTestListsController([list]);
+
+        final router = GoRouter(
+          initialLocation: '/list/detail_search',
+          routes: [
+            GoRoute(
+              path: '/list/:id',
+              builder: (ctx, state) =>
+                  ListDetailScreen(listId: state.pathParameters['id']!),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              shoppingListProvider('detail_search').overrideWithValue(list),
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Manzanas'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('item_search_toggle_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('item_search_input')), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const Key('item_search_input')),
+          'plát',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Manzanas'), findsNothing);
+        expect(find.text('Plátanos'), findsOneWidget);
+
+        await tester.enterText(
+          find.byKey(const Key('item_search_input')),
+          'nada',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('No se encontraron resultados'), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('item_search_toggle_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('item_search_input')), findsNothing);
+        expect(find.text('Manzanas'), findsOneWidget);
+      },
+    );
+
+    testWidgets('edit item opens dialog, validates input, and updates item', (
+      tester,
+    ) async {
+      final item = TodoItem(
+        id: 'item_to_edit',
+        listId: 'detail_edit',
+        title: 'Queso Original',
+        isCompleted: false,
+        createdAt: now,
+      );
+      final list = ShoppingList(
+        id: 'detail_edit',
+        name: 'Lista Editar',
+        items: [item],
+        createdAt: now,
+      );
+      final fakeController = _ScreensTestListsController([list]);
+
+      final router = GoRouter(
+        initialLocation: '/list/detail_edit',
+        routes: [
+          GoRoute(
+            path: '/list/:id',
+            builder: (ctx, state) =>
+                ListDetailScreen(listId: state.pathParameters['id']!),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            shoppingListProvider('detail_edit').overrideWithValue(list),
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Queso Original'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('edit_item_to_edit')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Editar item'), findsOneWidget);
+      expect(find.byKey(const Key('edit_item_title_input')), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('edit_item_title_input')),
+        '',
+      );
+      await tester.tap(find.byKey(const Key('save_edit_item_button')));
+      await tester.pump();
+
+      expect(find.text('Por favor ingresa un nombre'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('edit_item_title_input')),
+        'Queso Mozzarella',
+      );
+      await tester.tap(find.byKey(const Key('save_edit_item_button')));
+      await tester.pumpAndSettle();
+
+      expect(
+        fakeController.updatedItemTitles['item_to_edit'],
+        'Queso Mozzarella',
+      );
     });
   });
 
@@ -715,6 +1308,9 @@ class _ScreensTestListsController extends ListsController {
   final List<String> toggledItemIds = [];
   final List<String> deletedItemIds = [];
   final List<TodoItem> restoredItems = [];
+  final List<String> archivedListIds = [];
+  final List<String> unarchivedListIds = [];
+  final Map<String, String> updatedItemTitles = {};
   bool manualSyncCalled = false;
   bool reorderedListsCalled = false;
   bool reorderedItemsCalled = false;
@@ -725,11 +1321,27 @@ class _ScreensTestListsController extends ListsController {
   Future<List<ShoppingList>> build() async => _lists;
 
   @override
-  Future<ShoppingList> createList(String name) async {
+  Future<void> archiveList(String listId) async {
+    archivedListIds.add(listId);
+  }
+
+  @override
+  Future<void> unarchiveList(String listId) async {
+    unarchivedListIds.add(listId);
+  }
+
+  @override
+  Future<void> updateItem(String listId, String itemId, String newTitle) async {
+    updatedItemTitles[itemId] = newTitle;
+  }
+
+  @override
+  Future<ShoppingList> createList(String name, {int? color}) async {
     createdNames.add(name);
     return ShoppingList(
       id: 'created_new',
       name: name,
+      color: color,
       createdAt: DateTime(2026, 9, 22),
     );
   }
@@ -748,7 +1360,11 @@ class _ScreensTestListsController extends ListsController {
   }
 
   @override
-  Future<void> updateListName(String listId, String newName) async {
+  Future<void> updateListName(
+    String listId,
+    String newName, {
+    int? color,
+  }) async {
     updatedNames[listId] = newName;
   }
 

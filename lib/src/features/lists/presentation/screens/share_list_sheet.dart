@@ -182,6 +182,45 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
             ),
             const SizedBox(height: 14),
 
+            if (!list.isOwner)
+              Container(
+                margin: const EdgeInsets.only(bottom: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.surfaceDark
+                      : AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.borderDark
+                        : AppColors.borderLight,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.lock_outline_rounded,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        tr.ownerOnlyAction,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             // Collaboration & Cloud Sync status switch
             Container(
               margin: const EdgeInsets.only(bottom: 14),
@@ -265,57 +304,63 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                         : tr.listLocalOnlyDescription,
                     style: TextStyle(fontSize: 12, color: textMutedColor),
                   ),
-                  onChanged: (bool value) async {
-                    await ref
-                        .read(listsControllerProvider.notifier)
-                        .setListShared(list.id, value);
-                  },
+                  onChanged: list.isOwner
+                      ? (bool value) async {
+                          await ref
+                              .read(listsControllerProvider.notifier)
+                              .setListShared(list.id, value);
+                        }
+                      : null,
                 ),
               ),
             ),
 
             if (!list.isShared) ...[
-              // When inactive: show dedicated List Invite Component
-              _InactiveShareInviteComponent(
-                list: list,
-                tr: tr,
-                isDark: isDark,
-                cardBg: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-                borderColor: handleColor,
-                textTitleColor: textTitleColor,
-                textMutedColor: textMutedColor,
-                onActivateAndShare: () async {
-                  await ref
-                      .read(listsControllerProvider.notifier)
-                      .setListShared(list.id, true);
-                  if (context.mounted) {
-                    await _shareInviteLink(context, ref, list);
-                  }
-                },
-                onEnableCollaboration: () async {
-                  await ref
-                      .read(listsControllerProvider.notifier)
-                      .setListShared(list.id, true);
-                },
-              ),
-            ] else ...[
-              OutlinedButton.icon(
-                key: const Key('share_invite_link_button'),
-                icon: const Icon(Icons.share_rounded, size: 18),
-                label: Text(tr.copyInviteLink),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
-                  minimumSize: const Size(double.infinity, 44),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+              if (list.isOwner)
+                _InactiveShareInviteComponent(
+                  list: list,
+                  tr: tr,
+                  isDark: isDark,
+                  cardBg: isDark
+                      ? AppColors.surfaceDark
+                      : AppColors.surfaceLight,
+                  borderColor: handleColor,
+                  textTitleColor: textTitleColor,
+                  textMutedColor: textMutedColor,
+                  onActivateAndShare: () async {
+                    await ref
+                        .read(listsControllerProvider.notifier)
+                        .setListShared(list.id, true);
+                    if (context.mounted) {
+                      await _shareInviteLink(context, ref, list);
+                    }
+                  },
+                  onEnableCollaboration: () async {
+                    await ref
+                        .read(listsControllerProvider.notifier)
+                        .setListShared(list.id, true);
+                  },
                 ),
-                // coverage:ignore-start
-                onPressed: () => _shareInviteLink(context, ref, list),
-                // coverage:ignore-end
-              ),
-              const SizedBox(height: 14),
+            ] else ...[
+              if (list.isOwner) ...[
+                OutlinedButton.icon(
+                  key: const Key('share_invite_link_button'),
+                  icon: const Icon(Icons.share_rounded, size: 18),
+                  label: Text(tr.copyInviteLink),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    minimumSize: const Size(double.infinity, 44),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  // coverage:ignore-start
+                  onPressed: () => _shareInviteLink(context, ref, list),
+                  // coverage:ignore-end
+                ),
+                const SizedBox(height: 14),
+              ],
 
               // Section: Current Collaborators
               Row(
@@ -365,9 +410,8 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                     adminLabel: tr.adminBadge,
                     memberLabel: tr.memberBadge,
                     removeTooltip: tr.removeCollaborator,
-                    onRoleChanged: collab.isOwner
-                        ? null
-                        : (newRole) {
+                    onRoleChanged: (list.isOwner && !collab.isOwner)
+                        ? (newRole) {
                             ref
                                 .read(listsControllerProvider.notifier)
                                 .updateCollaboratorRole(
@@ -375,14 +419,15 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                                   collab.id,
                                   newRole,
                                 );
-                          },
-                    onRemove: collab.isOwner
-                        ? null
-                        : () {
+                          }
+                        : null,
+                    onRemove: (list.isOwner && !collab.isOwner)
+                        ? () {
                             ref
                                 .read(listsControllerProvider.notifier)
                                 .removeCollaborator(list.id, collab.id);
-                          },
+                          }
+                        : null,
                   ),
                 ),
             ],
