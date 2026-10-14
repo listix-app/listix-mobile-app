@@ -177,6 +177,7 @@
     }
   },
   "notificationsTitle": "Notificaciones",
+  "notificationsSubtitle": "Recibe notificaciones cuando se añaden elementos a listas compartidas",
   "weeklyReminderTitle": "Recordatorio semanal",
   "weeklyReminderSubtitle": "Recibe un recordatorio semanal para planificar tus compras",
   "notificationTimeTitle": "Hora del recordatorio",

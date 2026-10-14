@@ -76,6 +76,26 @@ class NotificationsController extends Notifier<NotificationsState> {
     } catch (_) {}
   }
 
+  Future<bool> toggleNotifications(bool enabled) async {
+    _isModified = true;
+    final service = ref.read(notificationServiceProvider);
+    if (enabled) {
+      await service.requestPermissions();
+      state = state.copyWith(isEnabled: true);
+      try {
+        await _db.setSetting('notification_enabled', 'true');
+      } catch (_) {}
+      return true;
+    } else {
+      await service.cancelWeeklyReminder();
+      state = state.copyWith(isEnabled: false);
+      try {
+        await _db.setSetting('notification_enabled', 'false');
+      } catch (_) {}
+      return true;
+    }
+  }
+
   Future<bool> toggleWeeklyNotifications({
     required bool enabled,
     required String title,

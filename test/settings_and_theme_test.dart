@@ -106,7 +106,7 @@ void main() {
       await tester.tap(find.text('English'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('weekly_notification_switch')));
+      await tester.tap(find.byKey(const Key('notification_switch')));
       await tester.pumpAndSettle();
 
       expect(find.text('Settings'), findsOneWidget);

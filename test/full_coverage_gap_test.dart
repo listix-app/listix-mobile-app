@@ -130,6 +130,7 @@ void main() {
         expect(tr.copyListTextDesc, isNotEmpty);
         expect(tr.offlineNotice, isNotEmpty);
         expect(tr.notificationsTitle, isNotEmpty);
+        expect(tr.notificationsSubtitle, isNotEmpty);
         expect(tr.weeklyReminderTitle, isNotEmpty);
         expect(tr.weeklyReminderSubtitle, isNotEmpty);
         expect(tr.weeklyReminderNotificationTitle, isNotEmpty);

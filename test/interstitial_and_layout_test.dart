@@ -982,19 +982,12 @@ void main() {
         expect(openedStore, isTrue);
 
         await tester.ensureVisible(
-          find.byKey(const Key('weekly_notification_switch')),
+          find.byKey(const Key('notification_switch')),
         );
         await tester.pumpAndSettle();
         final switchFinder = find.byType(Switch);
         await tester.tap(switchFinder.first);
         await tester.pumpAndSettle();
-        expect(find.byKey(const Key('notification_time_tile')), findsOneWidget);
-        await tester.tap(find.byKey(const Key('notification_time_tile')));
-        await tester.pumpAndSettle();
-        if (find.text('OK').evaluate().isNotEmpty) {
-          await tester.tap(find.text('OK'));
-          await tester.pumpAndSettle();
-        }
 
         await tester.pump(const Duration(seconds: 15));
         await tester.pumpAndSettle();

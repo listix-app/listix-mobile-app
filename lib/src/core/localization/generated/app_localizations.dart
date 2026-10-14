@@ -704,6 +704,12 @@ abstract class AppLocalizations {
   /// **'Notifications'**
   String get notificationsTitle;
 
+  /// No description provided for @notificationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive notifications when items are added to shared lists'**
+  String get notificationsSubtitle;
+
   /// No description provided for @weeklyReminderTitle.
   ///
   /// In en, this message translates to:

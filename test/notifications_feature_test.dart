@@ -334,6 +334,59 @@ void main() {
       expect(fakeService.cancelCallCount, 1);
     });
 
+    test(
+      'toggleNotifications to true requests permissions and enables state',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            notificationServiceProvider.overrideWithValue(fakeService),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(
+          notificationsControllerProvider.notifier,
+        );
+        final success = await notifier.toggleNotifications(true);
+
+        expect(success, isTrue);
+        expect(
+          container.read(notificationsControllerProvider).isEnabled,
+          isTrue,
+        );
+      },
+    );
+
+    test(
+      'toggleNotifications to false cancels reminder and disables state',
+      () async {
+        final container = ProviderContainer(
+          overrides: [
+            notificationServiceProvider.overrideWithValue(fakeService),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final notifier = container.read(
+          notificationsControllerProvider.notifier,
+        );
+        notifier.setEnabledState(true);
+        expect(
+          container.read(notificationsControllerProvider).isEnabled,
+          isTrue,
+        );
+
+        final success = await notifier.toggleNotifications(false);
+
+        expect(success, isTrue);
+        expect(
+          container.read(notificationsControllerProvider).isEnabled,
+          isFalse,
+        );
+        expect(fakeService.cancelCallCount, 1);
+      },
+    );
+
     test('setReminderTime updates time and reschedules if enabled', () async {
       final container = ProviderContainer(
         overrides: [notificationServiceProvider.overrideWithValue(fakeService)],

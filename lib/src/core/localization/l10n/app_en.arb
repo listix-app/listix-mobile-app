@@ -177,6 +177,7 @@
     }
   },
   "notificationsTitle": "Notifications",
+  "notificationsSubtitle": "Receive notifications when items are added to shared lists",
   "weeklyReminderTitle": "Weekly reminder",
   "weeklyReminderSubtitle": "Receive a weekly reminder to plan your shopping",
   "notificationTimeTitle": "Reminder time",

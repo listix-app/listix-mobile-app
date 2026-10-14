@@ -112,6 +112,7 @@ class AppStrings {
   String get themeDark => _l10n.themeDark;
 
   String get notificationsTitle => _l10n.notificationsTitle;
+  String get notificationsSubtitle => _l10n.notificationsSubtitle;
   String get weeklyReminderTitle => _l10n.weeklyReminderTitle;
   String get weeklyReminderSubtitle => _l10n.weeklyReminderSubtitle;
   String get weeklyReminderNotificationTitle =>

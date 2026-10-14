@@ -345,6 +345,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationsTitle => 'Notifications';
 
   @override
+  String get notificationsSubtitle =>
+      'Receive notifications when items are added to shared lists';
+
+  @override
   String get weeklyReminderTitle => 'Weekly reminder';
 
   @override
