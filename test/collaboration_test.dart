@@ -84,10 +84,11 @@ class _FakeListsRepoForCollab implements ListsRepository {
       internalLists.where((l) => l.id == id).firstOrNull;
 
   @override
-  Future<ShoppingList> createList(String name) async {
+  Future<ShoppingList> createList(String name, {int? color}) async {
     final list = ShoppingList(
       id: 'created_${internalLists.length}',
       name: name,
+      color: color,
       createdAt: DateTime.now(),
     );
     internalLists.add(list);
@@ -121,8 +122,68 @@ class _FakeListsRepoForCollab implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> updateListName(String id, String newName) async =>
-      throw UnimplementedError();
+  Future<ShoppingList> updateListName(
+    String id,
+    String newName, {
+    int? color,
+  }) async {
+    final idx = internalLists.indexWhere((l) => l.id == id);
+    if (idx != -1) {
+      final updated = internalLists[idx].copyWith(name: newName, color: color);
+      internalLists[idx] = updated;
+      return updated;
+    }
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> archiveList(String listId) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: true);
+    }
+  }
+
+  @override
+  Future<void> unarchiveList(String listId) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: false);
+    }
+  }
+
+  @override
+  Future<TodoItem> updateItemTitle(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      final itemIdx = internalLists[idx].items.indexWhere(
+        (i) => i.id == itemId,
+      );
+      if (itemIdx != -1) {
+        final updated = internalLists[idx].items[itemIdx].copyWith(
+          title: newTitle,
+        );
+        final newItems = List<TodoItem>.from(internalLists[idx].items);
+        newItems[itemIdx] = updated;
+        internalLists[idx] = internalLists[idx].copyWith(items: newItems);
+        return updated;
+      }
+    }
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    await updateItemTitle(listId, itemId, newTitle);
+  }
 
   @override
   Future<void> deleteList(String id) async {}
@@ -1118,6 +1179,7 @@ void main() {
         ],
       );
       addTearDown(container.dispose);
+      await container.read(listsControllerProvider.future);
 
       final collabCtrl = container.read(
         collaborationControllerProvider.notifier,
@@ -1156,6 +1218,26 @@ void main() {
         CollaborationEvent.itemAdded(
           listId: 'event_list',
           item: testItem,
+          senderEmail: 'other@test.com',
+          senderName: 'Other',
+        ),
+      );
+
+      fakeRepo.emitEvent(
+        CollaborationEvent.itemAdded(
+          listId: 'unknown_list',
+          item: testItem,
+          senderEmail: 'other@test.com',
+          senderName: '',
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 20));
+
+      fakeRepo.emitEvent(
+        CollaborationEvent.itemUpdated(
+          listId: 'event_list',
+          itemId: 'new_item_remote',
+          title: 'Queso Gouda Añejo',
           senderEmail: 'other@test.com',
           senderName: 'Other',
         ),

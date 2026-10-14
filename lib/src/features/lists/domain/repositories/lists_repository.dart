@@ -6,14 +6,21 @@ import '../../../sync/domain/pending_operation.dart';
 abstract interface class ListsRepository {
   Future<List<ShoppingList>> getLists();
   Future<ShoppingList?> getListById(String id);
-  Future<ShoppingList> createList(String name);
-  Future<ShoppingList> updateListName(String id, String newName);
+  Future<ShoppingList> createList(String name, {int? color});
+  Future<ShoppingList> updateListName(String id, String newName, {int? color});
+  Future<void> archiveList(String listId);
+  Future<void> unarchiveList(String listId);
   Future<void> deleteList(String id);
   Future<void> toggleListStar(String listId);
   Future<void> reorderLists(List<String> orderedListIds);
   Future<void> restoreList(ShoppingList list);
 
   Future<TodoItem> addItem(String listId, String title, {String? id});
+  Future<TodoItem> updateItemTitle(
+    String listId,
+    String itemId,
+    String newTitle,
+  );
   Future<TodoItem> toggleItemCompletion(String listId, String itemId);
   Future<void> deleteItem(String listId, String itemId);
   Future<void> reorderItems(String listId, List<String> orderedItemIds);
@@ -38,6 +45,11 @@ abstract interface class ListsRepository {
   });
 
   Future<void> applyRemoteItem(TodoItem item);
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  );
   Future<void> applyRemoteItemToggle(
     String listId,
     String itemId,

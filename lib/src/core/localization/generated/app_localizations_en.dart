@@ -675,4 +675,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get csvExportSuccess => 'CSV file exported successfully';
+
+  @override
+  String get editItemTitle => 'Edit item';
+
+  @override
+  String get itemTitleLabel => 'Item title';
+
+  @override
+  String get itemTitleHint => 'e.g. Milk';
+
+  @override
+  String get itemTitleValidation => 'Please enter a title';
+
+  @override
+  String get searchItems => 'Search items';
+
+  @override
+  String get searchItemsHint => 'Search items...';
+
+  @override
+  String get closeSearch => 'Close search';
+
+  @override
+  String get searchLists => 'Search lists';
+
+  @override
+  String get searchListsHint => 'Search lists...';
+
+  @override
+  String get noSearchResults => 'No results found';
+
+  @override
+  String get activeLists => 'Active';
+
+  @override
+  String get archivedLists => 'Archived';
+
+  @override
+  String get archiveListAction => 'Archive';
+
+  @override
+  String get unarchiveListAction => 'Unarchive';
+
+  @override
+  String get emptyArchivedTitle => 'No archived lists';
+
+  @override
+  String get emptyArchivedMessage => 'Lists you archive will appear here.';
+
+  @override
+  String get listArchived => 'List archived';
+
+  @override
+  String get listUnarchived => 'List unarchived';
+
+  @override
+  String get appLock => 'App Lock';
+
+  @override
+  String get appLockSubtitle => 'Protect your lists with biometrics or PIN';
+
+  @override
+  String get appLockReason => 'Authenticate to unlock Listix';
+
+  @override
+  String get unlockApp => 'Unlock';
+
+  @override
+  String get appLocked => 'Listix is locked';
+
+  @override
+  String get ownerOnlyAction => 'Only the owner can modify this list';
+
+  @override
+  String get pickColor => 'List color';
+
+  @override
+  String get leaveListTitle => 'Leave list?';
+
+  @override
+  String leaveListMessage(String name) {
+    return 'You will leave \"$name\" and lose access.';
+  }
+
+  @override
+  String get leave => 'Leave';
 }

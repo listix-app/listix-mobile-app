@@ -4,6 +4,7 @@ import 'package:google_mobile_ads/src/ad_instance_manager.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'app_lock_test.dart' as app_lock_test;
 import 'about_and_localization_test.dart' as about_test;
 import 'backup_feature_test.dart' as backup_test;
 import 'collaboration_test.dart' as collab_test;
@@ -52,6 +53,7 @@ void main() {
         });
   });
 
+  app_lock_test.main();
   about_test.main();
   backup_test.main();
   collab_test.main();

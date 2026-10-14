@@ -445,6 +445,44 @@ void main() {
       await tester.tap(find.text('Asado con amigos'));
       expect(tapped, isTrue);
     });
+
+    testWidgets(
+      'renders ListCard with color, onArchive and onUnarchive callbacks',
+      (tester) async {
+        var archived = false;
+        var unarchived = false;
+        final list = ShoppingList(
+          id: 'l_col',
+          name: 'Color List',
+          color: 0xFFEF4444,
+          createdAt: now,
+        );
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(
+              body: ListCard(
+                list: list,
+                onTap: () {},
+                onArchive: () => archived = true,
+                onUnarchive: () => unarchived = true,
+              ),
+            ),
+          ),
+        );
+
+        expect(find.byIcon(Icons.archive_outlined), findsOneWidget);
+        expect(find.byIcon(Icons.unarchive_outlined), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.archive_outlined));
+        expect(archived, isTrue);
+
+        await tester.tap(find.byIcon(Icons.unarchive_outlined));
+        expect(unarchived, isTrue);
+      },
+    );
   });
 
   group('SyncIndicator Tests', () {
@@ -598,5 +636,43 @@ void main() {
         expect(find.byKey(const Key('copy_text_tile')), findsNothing);
       },
     );
+
+    testWidgets('renders ownerOnlyAction message when list.isOwner is false', (
+      tester,
+    ) async {
+      final list = ShoppingList(
+        id: 'not_owner_list',
+        name: 'Lista Compartida Ajena',
+        isOwner: false,
+        collaborators: const [
+          Collaborator(
+            id: 'c_owner',
+            name: 'Other Person',
+            email: 'other@test.com',
+            isOwner: true,
+          ),
+        ],
+        createdAt: now,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            shoppingListProvider('not_owner_list').overrideWithValue(list),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ShareListSheet(listId: 'not_owner_list')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Solo el dueño puede modificar esta lista'),
+        findsOneWidget,
+      );
+    });
   });
 }

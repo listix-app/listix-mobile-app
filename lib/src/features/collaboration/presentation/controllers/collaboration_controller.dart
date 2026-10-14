@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../lists/domain/entities/collaborator.dart';
 import '../../../lists/domain/entities/todo_item.dart';
 import '../../../lists/presentation/controllers/lists_controller.dart';
+import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../../domain/entities/collaboration_event.dart';
 import '../../domain/repositories/collaboration_repository.dart';
 import '../../data/repositories/websocket_collaboration_repository.dart';
@@ -171,6 +172,24 @@ class CollaborationController extends Notifier<CollaborationState> {
           if (rawItem is Map<String, dynamic>) {
             final item = TodoItem.fromJson(rawItem);
             listsCtrl.applyRemoteItem(item);
+            final currentList = ref.read(shoppingListProvider(event.listId));
+            final listTitle = currentList?.name ?? 'Lista compartida';
+            ref
+                .read(notificationsControllerProvider.notifier)
+                .showSharedItemNotification(
+                  listName: listTitle,
+                  itemTitle: item.title,
+                  senderName: event.senderName.isNotEmpty
+                      ? event.senderName
+                      : 'Colaborador',
+                );
+          }
+          break;
+        case CollaborationEventType.updateItem:
+          final itemId = event.payload['itemId'] as String?;
+          final title = event.payload['title'] as String?;
+          if (itemId != null && title != null) {
+            listsCtrl.applyRemoteItemUpdate(event.listId, itemId, title);
           }
           break;
         case CollaborationEventType.toggleItem:

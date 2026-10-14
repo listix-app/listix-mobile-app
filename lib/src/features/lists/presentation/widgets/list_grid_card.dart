@@ -8,6 +8,8 @@ class ListGridCard extends StatelessWidget {
   final ShoppingList list;
   final VoidCallback onTap;
   final VoidCallback? onDelete;
+  final VoidCallback? onArchive;
+  final VoidCallback? onUnarchive;
   final VoidCallback? onToggleStar;
   final AppStrings? strings;
 
@@ -16,6 +18,8 @@ class ListGridCard extends StatelessWidget {
     required this.list,
     required this.onTap,
     this.onDelete,
+    this.onArchive,
+    this.onUnarchive,
     this.onToggleStar,
     this.strings,
   });
@@ -111,16 +115,33 @@ class ListGridCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              Text(
-                list.name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
-                  color: textTitleColor,
-                ),
+              Row(
+                children: [
+                  if (list.color != null) ...[
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Color(list.color!),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  Expanded(
+                    child: Text(
+                      list.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.2,
+                        color: textTitleColor,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               Column(
@@ -136,7 +157,9 @@ class ListGridCard extends StatelessWidget {
                       valueColor: AlwaysStoppedAnimation<Color>(
                         list.completionProgress == 1.0
                             ? AppColors.syncDone
-                            : AppColors.primary,
+                            : (list.color != null
+                                  ? Color(list.color!)
+                                  : AppColors.primary),
                       ),
                       minHeight: 5,
                     ),
@@ -153,18 +176,45 @@ class ListGridCard extends StatelessWidget {
                           color: textSubColor,
                         ),
                       ),
-                      if (onDelete != null)
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline_rounded,
-                            size: 18,
-                            color: AppColors.delete,
-                          ),
-                          tooltip: tr.delete,
-                          onPressed: onDelete,
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (onArchive != null)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.archive_outlined,
+                                size: 18,
+                              ),
+                              tooltip: tr.archiveListAction,
+                              onPressed: onArchive,
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.only(right: 6),
+                            ),
+                          if (onUnarchive != null)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.unarchive_outlined,
+                                size: 18,
+                              ),
+                              tooltip: tr.unarchiveListAction,
+                              onPressed: onUnarchive,
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.only(right: 6),
+                            ),
+                          if (onDelete != null)
+                            IconButton(
+                              icon: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: AppColors.delete,
+                              ),
+                              tooltip: tr.delete,
+                              onPressed: onDelete,
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.zero,
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ],

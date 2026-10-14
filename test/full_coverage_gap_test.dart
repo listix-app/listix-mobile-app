@@ -206,6 +206,34 @@ void main() {
         expect(tr.makeAdmin, isNotEmpty);
         expect(tr.makeMember, isNotEmpty);
         expect(tr.inviteAsRole, isNotEmpty);
+        expect(tr.editItemTitle, isNotEmpty);
+        expect(tr.itemTitleLabel, isNotEmpty);
+        expect(tr.itemTitleHint, isNotEmpty);
+        expect(tr.itemTitleValidation, isNotEmpty);
+        expect(tr.searchItems, isNotEmpty);
+        expect(tr.searchItemsHint, isNotEmpty);
+        expect(tr.closeSearch, isNotEmpty);
+        expect(tr.searchLists, isNotEmpty);
+        expect(tr.searchListsHint, isNotEmpty);
+        expect(tr.noSearchResults, isNotEmpty);
+        expect(tr.activeLists, isNotEmpty);
+        expect(tr.archivedLists, isNotEmpty);
+        expect(tr.archiveListAction, isNotEmpty);
+        expect(tr.unarchiveListAction, isNotEmpty);
+        expect(tr.emptyArchivedTitle, isNotEmpty);
+        expect(tr.emptyArchivedMessage, isNotEmpty);
+        expect(tr.listArchived, isNotEmpty);
+        expect(tr.listUnarchived, isNotEmpty);
+        expect(tr.appLock, isNotEmpty);
+        expect(tr.appLockSubtitle, isNotEmpty);
+        expect(tr.appLockReason, isNotEmpty);
+        expect(tr.unlockApp, isNotEmpty);
+        expect(tr.appLocked, isNotEmpty);
+        expect(tr.ownerOnlyAction, isNotEmpty);
+        expect(tr.pickColor, isNotEmpty);
+        expect(tr.leaveListTitle, isNotEmpty);
+        expect(tr.leaveListMessage('Lista'), contains('Lista'));
+        expect(tr.leave, isNotEmpty);
       }
     });
 
@@ -813,11 +841,12 @@ class _ScreensTestListsController extends ListsController {
   Future<List<ShoppingList>> build() async => _lists;
 
   @override
-  Future<ShoppingList> createList(String name) async {
+  Future<ShoppingList> createList(String name, {int? color}) async {
     createdNames.add(name);
     return ShoppingList(
       id: 'created_new',
       name: name,
+      color: color,
       createdAt: DateTime(2026, 9, 22),
     );
   }

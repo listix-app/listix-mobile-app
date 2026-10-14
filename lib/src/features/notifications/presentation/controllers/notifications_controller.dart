@@ -134,6 +134,31 @@ class NotificationsController extends Notifier<NotificationsState> {
     _isModified = true;
     state = state.copyWith(isEnabled: enabled);
   }
+
+  Future<void> showItemNotification({
+    required String listName,
+    required String itemTitle,
+  }) async {
+    final service = ref.read(notificationServiceProvider);
+    await service.showNotification(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: listName,
+      body: 'Elemento añadido: $itemTitle',
+    );
+  }
+
+  Future<void> showSharedItemNotification({
+    required String listName,
+    required String itemTitle,
+    required String senderName,
+  }) async {
+    final service = ref.read(notificationServiceProvider);
+    await service.showNotification(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: listName,
+      body: '$senderName añadió: $itemTitle',
+    );
+  }
 }
 
 final notificationsControllerProvider =

@@ -5,6 +5,7 @@ import 'core/localization/generated/app_localizations.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
+import 'features/security/presentation/widgets/app_lock_wrapper.dart';
 import 'features/sync/presentation/sync_controller.dart';
 import 'routing/app_router.dart';
 
@@ -28,6 +29,7 @@ class ListixApp extends ConsumerWidget {
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
+      builder: (context, child) => AppLockWrapper(child: child!),
     );
   }
 }

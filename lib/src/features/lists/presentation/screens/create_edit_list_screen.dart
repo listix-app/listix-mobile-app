@@ -22,6 +22,7 @@ class CreateEditListScreen extends ConsumerStatefulWidget {
 class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
+  int? _selectedColor;
   bool _isLoading = false;
 
   @override
@@ -33,7 +34,20 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final list = ref.read(shoppingListProvider(widget.listId!));
         if (list != null) {
+          if (!list.isOwner) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(ref.read(stringsProvider).ownerOnlyAction),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            context.pop();
+            return;
+          }
           _nameController.text = list.name;
+          setState(() {
+            _selectedColor = list.color;
+          });
         }
       });
     }
@@ -55,10 +69,14 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
       final notifier = ref.read(listsControllerProvider.notifier);
 
       if (widget.isEditing) {
-        await notifier.updateListName(widget.listId!, name);
+        await notifier.updateListName(
+          widget.listId!,
+          name,
+          color: _selectedColor,
+        );
         if (mounted) context.pop();
       } else {
-        final created = await notifier.createList(name);
+        final created = await notifier.createList(name, color: _selectedColor);
         ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
         if (mounted) {
           context.pushReplacement('/list/${created.id}');
@@ -149,6 +167,66 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                               }
                               return null;
                             },
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            tr.pickColor,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.textSecondaryDark
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: AppColors.listColors.map((color) {
+                              final colorValue = color.toARGB32();
+                              final isSelected = _selectedColor == colorValue;
+                              return InkWell(
+                                key: Key(
+                                  'color_picker_${colorValue.toRadixString(16)}',
+                                ),
+                                onTap: () {
+                                  setState(() {
+                                    _selectedColor = isSelected
+                                        ? null
+                                        : colorValue;
+                                  });
+                                },
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                    border: isSelected
+                                        ? Border.all(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                            width: 3,
+                                          )
+                                        : null,
+                                  ),
+                                  child: isSelected
+                                      ? const Icon(
+                                          Icons.check_rounded,
+                                          color: Colors.white,
+                                          size: 22,
+                                        )
+                                      : null,
+                                ),
+                              );
+                            }).toList(),
                           ),
                         ],
                       ),

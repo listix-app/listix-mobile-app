@@ -8,6 +8,7 @@ import '../../../collaboration/data/repositories/supabase_collaboration_reposito
 import '../../../collaboration/domain/entities/collaboration_event.dart';
 import '../../../collaboration/domain/services/invite_token_service.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
+import '../../../notifications/presentation/controllers/notifications_controller.dart';
 import '../../../sync/presentation/sync_controller.dart';
 import '../../data/repositories/sqlite_lists_repository.dart';
 import '../../domain/entities/collaborator.dart';
@@ -79,9 +80,9 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     state = AsyncData(await repository.getLists());
   }
 
-  Future<ShoppingList> createList(String name) async {
+  Future<ShoppingList> createList(String name, {int? color}) async {
     final repository = ref.read(listsRepositoryProvider);
-    final created = await repository.createList(name);
+    final created = await repository.createList(name, color: color);
     state = AsyncData(await repository.getLists());
     return created;
   }
@@ -136,12 +137,16 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     return await joinList(cleanId, 'Lista Compartida');
   }
 
-  Future<void> updateListName(String id, String newName) async {
+  Future<void> updateListName(String id, String newName, {int? color}) async {
     final currentLists = state.value;
     if (currentLists != null) {
       final updatedLists = currentLists.map((l) {
         if (l.id == id) {
-          return l.copyWith(name: newName.trim(), isSynced: false);
+          return l.copyWith(
+            name: newName.trim(),
+            color: color ?? l.color,
+            isSynced: false,
+          );
         }
         return l;
       }).toList();
@@ -150,7 +155,51 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
     try {
       final repository = ref.read(listsRepositoryProvider);
-      await repository.updateListName(id, newName);
+      await repository.updateListName(id, newName, color: color);
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<void> archiveList(String id) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      final updatedLists = currentLists.map((l) {
+        if (l.id == id) {
+          return l.copyWith(isArchived: true);
+        }
+        return l;
+      }).toList();
+      state = AsyncData(updatedLists);
+    }
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.archiveList(id);
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<void> unarchiveList(String id) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      final updatedLists = currentLists.map((l) {
+        if (l.id == id) {
+          return l.copyWith(isArchived: false);
+        }
+        return l;
+      }).toList();
+      state = AsyncData(updatedLists);
+    }
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.unarchiveList(id);
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -307,6 +356,49 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
         CollaborationEvent.itemAdded(
           listId: listId,
           item: optimisticItem,
+          senderEmail: _getCurrentEmail(),
+          senderName: _getCurrentName(),
+        ),
+      );
+      final listName = targetList?.name ?? 'Lista';
+      try {
+        ref
+            .read(notificationsControllerProvider.notifier)
+            .showItemNotification(listName: listName, itemTitle: title.trim());
+      } catch (_) {}
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<void> updateItem(String listId, String itemId, String newTitle) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      final updatedLists = currentLists.map((l) {
+        if (l.id == listId) {
+          final updatedItems = l.items.map((item) {
+            if (item.id == itemId) {
+              return item.copyWith(title: newTitle.trim(), isSynced: false);
+            }
+            return item;
+          }).toList();
+          return l.copyWith(isSynced: false, items: updatedItems);
+        }
+        return l;
+      }).toList();
+      state = AsyncData(updatedLists);
+    }
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.updateItemTitle(listId, itemId, newTitle);
+      _broadcastEvent(
+        CollaborationEvent.itemUpdated(
+          listId: listId,
+          itemId: itemId,
+          title: newTitle.trim(),
           senderEmail: _getCurrentEmail(),
           senderName: _getCurrentName(),
         ),
@@ -628,6 +720,33 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.applyRemoteItem(item);
+    } catch (_) {}
+  }
+
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      final updatedLists = currentLists.map((l) {
+        if (l.id == listId) {
+          final updatedItems = l.items.map((item) {
+            if (item.id == itemId) {
+              return item.copyWith(title: newTitle.trim());
+            }
+            return item;
+          }).toList();
+          return l.copyWith(items: updatedItems);
+        }
+        return l;
+      }).toList();
+      state = AsyncData(updatedLists);
+    }
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.applyRemoteItemUpdate(listId, itemId, newTitle);
     } catch (_) {}
   }
 

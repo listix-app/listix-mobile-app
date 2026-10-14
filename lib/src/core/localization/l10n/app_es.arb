@@ -350,5 +350,40 @@
   "backupDataJsonDesc": "Crea una copia de seguridad JSON completa para restaurar más tarde",
   "restoreJson": "Restaurar JSON",
   "restoreJsonDesc": "Abre el selector nativo para restaurar desde una copia JSON",
-  "csvExportSuccess": "Archivo CSV exportado con éxito"
+  "csvExportSuccess": "Archivo CSV exportado con éxito",
+  "editItemTitle": "Editar elemento",
+  "itemTitleLabel": "Nombre del elemento",
+  "itemTitleHint": "ej. Leche",
+  "itemTitleValidation": "Por favor ingresa un nombre",
+  "searchItems": "Buscar elementos",
+  "searchItemsHint": "Buscar elementos...",
+  "closeSearch": "Cerrar búsqueda",
+  "searchLists": "Buscar listas",
+  "searchListsHint": "Buscar listas...",
+  "noSearchResults": "No se encontraron resultados",
+  "activeLists": "Activas",
+  "archivedLists": "Archivadas",
+  "archiveListAction": "Archivar",
+  "unarchiveListAction": "Desarchivar",
+  "emptyArchivedTitle": "No hay listas archivadas",
+  "emptyArchivedMessage": "Las listas que archives aparecerán aquí.",
+  "listArchived": "Lista archivada",
+  "listUnarchived": "Lista restaurada",
+  "appLock": "Bloqueo de la app",
+  "appLockSubtitle": "Protege tus listas con biometría o PIN",
+  "appLockReason": "Autentícate para desbloquear Listix",
+  "unlockApp": "Desbloquear",
+  "appLocked": "Listix está bloqueado",
+  "ownerOnlyAction": "Solo el dueño puede modificar esta lista",
+  "pickColor": "Color de la lista",
+  "leaveListTitle": "Abandonar lista?",
+  "leaveListMessage": "Abandonarás \"{name}\" y perderás el acceso.",
+  "@leaveListMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "leave": "Abandonar"
 }

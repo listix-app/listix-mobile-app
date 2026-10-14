@@ -681,4 +681,90 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get csvExportSuccess => 'Archivo CSV exportado con éxito';
+
+  @override
+  String get editItemTitle => 'Editar elemento';
+
+  @override
+  String get itemTitleLabel => 'Nombre del elemento';
+
+  @override
+  String get itemTitleHint => 'ej. Leche';
+
+  @override
+  String get itemTitleValidation => 'Por favor ingresa un nombre';
+
+  @override
+  String get searchItems => 'Buscar elementos';
+
+  @override
+  String get searchItemsHint => 'Buscar elementos...';
+
+  @override
+  String get closeSearch => 'Cerrar búsqueda';
+
+  @override
+  String get searchLists => 'Buscar listas';
+
+  @override
+  String get searchListsHint => 'Buscar listas...';
+
+  @override
+  String get noSearchResults => 'No se encontraron resultados';
+
+  @override
+  String get activeLists => 'Activas';
+
+  @override
+  String get archivedLists => 'Archivadas';
+
+  @override
+  String get archiveListAction => 'Archivar';
+
+  @override
+  String get unarchiveListAction => 'Desarchivar';
+
+  @override
+  String get emptyArchivedTitle => 'No hay listas archivadas';
+
+  @override
+  String get emptyArchivedMessage => 'Las listas que archives aparecerán aquí.';
+
+  @override
+  String get listArchived => 'Lista archivada';
+
+  @override
+  String get listUnarchived => 'Lista restaurada';
+
+  @override
+  String get appLock => 'Bloqueo de la app';
+
+  @override
+  String get appLockSubtitle => 'Protege tus listas con biometría o PIN';
+
+  @override
+  String get appLockReason => 'Autentícate para desbloquear Listix';
+
+  @override
+  String get unlockApp => 'Desbloquear';
+
+  @override
+  String get appLocked => 'Listix está bloqueado';
+
+  @override
+  String get ownerOnlyAction => 'Solo el dueño puede modificar esta lista';
+
+  @override
+  String get pickColor => 'Color de la lista';
+
+  @override
+  String get leaveListTitle => 'Abandonar lista?';
+
+  @override
+  String leaveListMessage(String name) {
+    return 'Abandonarás \"$name\" y perderás el acceso.';
+  }
+
+  @override
+  String get leave => 'Abandonar';
 }

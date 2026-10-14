@@ -75,6 +75,14 @@ class AppDatabase {
       'role',
       "TEXT NOT NULL DEFAULT 'member'",
     );
+    await _ensureColumn(
+      db,
+      'lists',
+      'is_archived',
+      'INTEGER NOT NULL DEFAULT 0',
+    );
+    await _ensureColumn(db, 'lists', 'color', 'INTEGER');
+    await _ensureColumn(db, 'lists', 'is_owner', 'INTEGER NOT NULL DEFAULT 1');
     await db.execute('''
       CREATE TABLE IF NOT EXISTS pending_operations (
         id TEXT PRIMARY KEY NOT NULL,
@@ -116,6 +124,9 @@ class AppDatabase {
         is_starred INTEGER NOT NULL DEFAULT 0,
         is_shared INTEGER NOT NULL DEFAULT 0,
         has_invite INTEGER NOT NULL DEFAULT 0,
+        is_archived INTEGER NOT NULL DEFAULT 0,
+        color INTEGER,
+        is_owner INTEGER NOT NULL DEFAULT 1,
         position INTEGER NOT NULL DEFAULT 0,
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,

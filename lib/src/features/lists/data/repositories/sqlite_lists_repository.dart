@@ -118,6 +118,9 @@ class SqliteListsRepository implements ListsRepository {
         isStarred: (list['is_starred'] as int) == 1,
         isShared: (list['is_shared'] as int) == 1,
         hasInvite: (list['has_invite'] as int? ?? 0) == 1,
+        isArchived: (list['is_archived'] as int? ?? 0) == 1,
+        color: list['color'] as int?,
+        isOwner: (list['is_owner'] as int? ?? 1) == 1,
         position: (list['position'] as int?) ?? 0,
         items: itemsByList[id] ?? [],
         collaborators: collaboratorsByList[id] ?? [],
@@ -139,7 +142,7 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> createList(String name) async {
+  Future<ShoppingList> createList(String name, {int? color}) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = _uuid.v4();
@@ -156,6 +159,9 @@ class SqliteListsRepository implements ListsRepository {
       'is_starred': 0,
       'is_shared': 0,
       'has_invite': 0,
+      'is_archived': 0,
+      'color': color,
+      'is_owner': 1,
       'position': nextPosition,
       'created_at': now,
       'updated_at': now,
@@ -168,6 +174,9 @@ class SqliteListsRepository implements ListsRepository {
       isStarred: false,
       isShared: false,
       hasInvite: false,
+      isArchived: false,
+      color: color,
+      isOwner: true,
       position: nextPosition,
       createdAt: DateTime.fromMillisecondsSinceEpoch(now),
       items: const [],
@@ -176,27 +185,39 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> updateListName(String id, String newName) async {
+  Future<ShoppingList> updateListName(
+    String id,
+    String newName, {
+    int? color,
+  }) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
 
     await db.transaction((txn) async {
-      await txn.update(
-        'lists',
-        {'name': newName.trim(), 'is_synced': 0, 'updated_at': now},
-        where: 'id = ?',
-        whereArgs: [id],
-      );
+      final values = <String, dynamic>{
+        'name': newName.trim(),
+        'is_synced': 0,
+        'updated_at': now,
+      };
+      if (color != null) {
+        values['color'] = color;
+      }
+      await txn.update('lists', values, where: 'id = ?', whereArgs: [id]);
 
       final isShared = await _isListShared(txn, id);
       if (isShared) {
+        final payloadMap = <String, dynamic>{
+          'name': newName.trim(),
+          'updated_at': now,
+        };
+        if (color != null) payloadMap['color'] = color;
         await txn.insert('pending_operations', {
           'id': _uuid.v4(),
           'list_id': id,
           'entity_type': PendingEntityType.list.name,
           'entity_id': id,
           'op_type': PendingOpType.upsert.name,
-          'payload': jsonEncode({'name': newName.trim(), 'updated_at': now}),
+          'payload': jsonEncode(payloadMap),
           'created_at': now,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
@@ -205,6 +226,58 @@ class SqliteListsRepository implements ListsRepository {
     final updated = await getListById(id);
     if (updated == null) throw Exception('Lista no encontrada tras actualizar');
     return updated;
+  }
+
+  @override
+  Future<void> archiveList(String listId) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      await txn.update(
+        'lists',
+        {'is_archived': 1, 'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+      final isShared = await _isListShared(txn, listId);
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'entity_type': PendingEntityType.list.name,
+          'entity_id': listId,
+          'op_type': PendingOpType.upsert.name,
+          'payload': jsonEncode({'is_archived': 1, 'updated_at': now}),
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
+  @override
+  Future<void> unarchiveList(String listId) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      await txn.update(
+        'lists',
+        {'is_archived': 0, 'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+      final isShared = await _isListShared(txn, listId);
+      if (isShared) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'entity_type': PendingEntityType.list.name,
+          'entity_id': listId,
+          'op_type': PendingOpType.upsert.name,
+          'payload': jsonEncode({'is_archived': 0, 'updated_at': now}),
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
   }
 
   @override
@@ -318,6 +391,9 @@ class SqliteListsRepository implements ListsRepository {
         'is_starred': list.isStarred ? 1 : 0,
         'is_shared': list.isShared ? 1 : 0,
         'has_invite': list.hasInvite ? 1 : 0,
+        'is_archived': list.isArchived ? 1 : 0,
+        'color': list.color,
+        'is_owner': list.isOwner ? 1 : 0,
         'position': list.position,
         'created_at': list.createdAt.millisecondsSinceEpoch,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
@@ -347,6 +423,65 @@ class SqliteListsRepository implements ListsRepository {
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
     });
+  }
+
+  @override
+  Future<TodoItem> updateItemTitle(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      await txn.update(
+        'items',
+        {'title': newTitle.trim(), 'is_synced': 0, 'updated_at': now},
+        where: 'id = ? AND list_id = ?',
+        whereArgs: [itemId, listId],
+      );
+
+      final isShared = await _isListShared(txn, listId);
+      await txn.update(
+        'lists',
+        {'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+
+      if (isShared) {
+        final existingItemRes = await txn.query(
+          'items',
+          where: 'id = ? AND list_id = ?',
+          whereArgs: [itemId, listId],
+          limit: 1,
+        );
+        if (existingItemRes.isNotEmpty) {
+          final row = existingItemRes.first;
+          await txn.insert('pending_operations', {
+            'id': _uuid.v4(),
+            'list_id': listId,
+            'entity_type': PendingEntityType.item.name,
+            'entity_id': itemId,
+            'op_type': PendingOpType.upsert.name,
+            'payload': jsonEncode({
+              'id': itemId,
+              'list_id': listId,
+              'title': newTitle.trim(),
+              'is_completed': row['is_completed'],
+              'position': row['position'],
+              'created_at': row['created_at'],
+              'updated_at': now,
+            }),
+            'created_at': now,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+      }
+    });
+
+    final list = await getListById(listId);
+    return list!.items.firstWhere((i) => i.id == itemId);
   }
 
   @override
@@ -704,6 +839,7 @@ class SqliteListsRepository implements ListsRepository {
         'is_starred': 0,
         'is_shared': 1,
         'has_invite': 1,
+        'is_owner': 0,
         'position': 0,
         'created_at': now,
         'updated_at': now,
@@ -745,6 +881,9 @@ class SqliteListsRepository implements ListsRepository {
         'is_starred': list.isStarred ? 1 : 0,
         'is_shared': 1,
         'has_invite': 1,
+        'is_archived': list.isArchived ? 1 : 0,
+        'color': list.color,
+        'is_owner': list.isOwner ? 1 : 0,
         'position': list.position,
         'created_at': list.createdAt.millisecondsSinceEpoch,
         'updated_at': now,
@@ -795,6 +934,22 @@ class SqliteListsRepository implements ListsRepository {
       'updated_at': now,
       'deleted_at': null,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.update(
+      'items',
+      {'title': newTitle.trim(), 'is_synced': 1, 'updated_at': now},
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [itemId, listId],
+    );
   }
 
   @override

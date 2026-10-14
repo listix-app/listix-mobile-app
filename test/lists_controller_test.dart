@@ -24,10 +24,11 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> createList(String name) async {
+  Future<ShoppingList> createList(String name, {int? color}) async {
     final list = ShoppingList(
       id: 'l_${internalLists.length + 1}',
       name: name,
+      color: color,
       position: internalLists.length,
       createdAt: DateTime.now(),
     );
@@ -36,7 +37,11 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> updateListName(String id, String newName) async {
+  Future<ShoppingList> updateListName(
+    String id,
+    String newName, {
+    int? color,
+  }) async {
     if (newName.contains('FAIL')) {
       throw Exception('Simulated update error');
     }
@@ -44,7 +49,7 @@ class FakeFailingListsRepository implements ListsRepository {
     if (index == -1) {
       throw Exception('Not found');
     }
-    final updated = internalLists[index].copyWith(name: newName);
+    final updated = internalLists[index].copyWith(name: newName, color: color);
     internalLists[index] = updated;
     return updated;
   }
@@ -419,6 +424,60 @@ class FakeFailingListsRepository implements ListsRepository {
 
   @override
   Future<void> clearPendingOperationsForList(String listId) async {}
+
+  @override
+  Future<void> archiveList(String listId) async {
+    if (listId.contains('FAIL')) throw Exception('Simulated archive error');
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: true);
+    }
+  }
+
+  @override
+  Future<void> unarchiveList(String listId) async {
+    if (listId.contains('FAIL')) throw Exception('Simulated unarchive error');
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      internalLists[idx] = internalLists[idx].copyWith(isArchived: false);
+    }
+  }
+
+  @override
+  Future<TodoItem> updateItemTitle(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    if (newTitle.contains('FAIL')) {
+      throw Exception('Simulated update item error');
+    }
+    final idx = internalLists.indexWhere((l) => l.id == listId);
+    if (idx != -1) {
+      final itemIdx = internalLists[idx].items.indexWhere(
+        (i) => i.id == itemId,
+      );
+      if (itemIdx != -1) {
+        final updated = internalLists[idx].items[itemIdx].copyWith(
+          title: newTitle,
+        );
+        final newItems = List<TodoItem>.from(internalLists[idx].items);
+        newItems[itemIdx] = updated;
+        internalLists[idx] = internalLists[idx].copyWith(items: newItems);
+        return updated;
+      }
+    }
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> applyRemoteItemUpdate(
+    String listId,
+    String itemId,
+    String newTitle,
+  ) async {
+    await updateItemTitle(listId, itemId, newTitle);
+  }
 }
 
 class FakeBackendSyncService extends MockBackendSyncService {
@@ -1025,5 +1084,100 @@ void main() {
         expect(list2.canSyncAndShare, isFalse);
       },
     );
+
+    test('archiveList updates state and handles repository failure', () async {
+      await container.read(listsControllerProvider.future);
+
+      fakeRepo.internalLists.add(
+        ShoppingList(
+          id: 'list_FAIL_archive',
+          name: 'Failing archive',
+          createdAt: DateTime.now(),
+        ),
+      );
+      container.invalidate(listsControllerProvider);
+      await container.read(listsControllerProvider.future);
+
+      await expectLater(
+        container
+            .read(listsControllerProvider.notifier)
+            .archiveList('list_FAIL_archive'),
+        throwsA(isA<Exception>()),
+      );
+
+      await container
+          .read(listsControllerProvider.notifier)
+          .archiveList('list_1');
+      expect(
+        container.read(shoppingListProvider('list_1'))!.isArchived,
+        isTrue,
+      );
+    });
+
+    test(
+      'unarchiveList updates state and handles repository failure',
+      () async {
+        await container.read(listsControllerProvider.future);
+
+        fakeRepo.internalLists.add(
+          ShoppingList(
+            id: 'list_FAIL_unarchive',
+            name: 'Failing unarchive',
+            isArchived: true,
+            createdAt: DateTime.now(),
+          ),
+        );
+        container.invalidate(listsControllerProvider);
+        await container.read(listsControllerProvider.future);
+
+        await expectLater(
+          container
+              .read(listsControllerProvider.notifier)
+              .unarchiveList('list_FAIL_unarchive'),
+          throwsA(isA<Exception>()),
+        );
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .unarchiveList('list_1');
+        expect(
+          container.read(shoppingListProvider('list_1'))!.isArchived,
+          isFalse,
+        );
+      },
+    );
+
+    test('updateItem updates title in state and broadcasts event', () async {
+      await container.read(listsControllerProvider.future);
+
+      await expectLater(
+        container
+            .read(listsControllerProvider.notifier)
+            .updateItem('list_1', 'item_1', 'FAIL_title'),
+        throwsA(isA<Exception>()),
+      );
+
+      await container
+          .read(listsControllerProvider.notifier)
+          .updateItem('list_1', 'item_1', 'Leche Entera');
+      final item = container
+          .read(shoppingListProvider('list_1'))!
+          .items
+          .firstWhere((i) => i.id == 'item_1');
+      expect(item.title, 'Leche Entera');
+    });
+
+    test('applyRemoteItemUpdate updates local item state', () async {
+      await container.read(listsControllerProvider.future);
+
+      await container
+          .read(listsControllerProvider.notifier)
+          .applyRemoteItemUpdate('list_1', 'item_1', 'Leche Descremada');
+      final item = container
+          .read(shoppingListProvider('list_1'))!
+          .items
+          .firstWhere((i) => i.id == 'item_1');
+      expect(item.title, 'Leche Descremada');
+    });
   });
 }

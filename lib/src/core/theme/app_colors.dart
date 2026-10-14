@@ -33,6 +33,17 @@ abstract final class AppColors {
   static const Color syncDoneSubtle = Color(0xFFD1FAE5); // Emerald 100
   static const Color offline = Color(0xFF64748B); // Slate 500
   static const Color offlineSubtle = Color(0xFFF1F5F9); // Slate 100
-  static const Color delete = Color(0xFFDC2626); // Red 600
-  static const Color deleteBackground = Color(0xFFFEE2E2); // Red 100
+  static const Color delete = Color(0xFFDC2626);
+  static const Color deleteBackground = Color(0xFFFEE2E2);
+
+  static const List<Color> listColors = [
+    Color(0xFF0D9488),
+    Color(0xFF2563EB),
+    Color(0xFF7C3AED),
+    Color(0xFFDB2777),
+    Color(0xFFEA580C),
+    Color(0xFF16A34A),
+    Color(0xFFD97706),
+    Color(0xFFDC2626),
+  ];
 }

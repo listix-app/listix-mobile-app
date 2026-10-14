@@ -8,12 +8,14 @@ class TodoItemTile extends StatelessWidget {
   final TodoItem item;
   final VoidCallback onToggle;
   final VoidCallback onDelete;
+  final VoidCallback? onEdit;
 
   const TodoItemTile({
     super.key,
     required this.item,
     required this.onToggle,
     required this.onDelete,
+    this.onEdit,
   });
 
   @override
@@ -68,6 +70,7 @@ class TodoItemTile extends StatelessWidget {
                 HapticFeedback.lightImpact();
                 onToggle();
               },
+              onLongPress: onEdit,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -125,8 +128,25 @@ class TodoItemTile extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (onEdit != null) ...[
+                      const SizedBox(width: 4),
+                      IconButton(
+                        key: ValueKey('edit_${item.id}'),
+                        icon: Icon(
+                          Icons.edit_outlined,
+                          size: 16,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
+                        ),
+                        splashRadius: 16,
+                        constraints: const BoxConstraints(),
+                        padding: const EdgeInsets.all(4),
+                        onPressed: onEdit,
+                      ),
+                    ],
                     if (!item.isCompleted) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Icon(
                         Icons.drag_handle_rounded,
                         size: 18,

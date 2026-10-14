@@ -8,7 +8,8 @@ import '../../domain/entities/shopping_list.dart';
 class ListCard extends StatelessWidget {
   final ShoppingList list;
   final VoidCallback onTap;
-  final VoidCallback? onDelete;
+  final VoidCallback? onArchive;
+  final VoidCallback? onUnarchive;
   final VoidCallback? onToggleStar;
   final AppStrings? strings;
 
@@ -16,7 +17,8 @@ class ListCard extends StatelessWidget {
     super.key,
     required this.list,
     required this.onTap,
-    this.onDelete,
+    this.onArchive,
+    this.onUnarchive,
     this.onToggleStar,
     this.strings,
   });
@@ -43,6 +45,10 @@ class ListCard extends StatelessWidget {
         ? AppColors.syncDone.withValues(alpha: 0.16)
         : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight);
 
+    final listColor = list.color != null
+        ? Color(list.color!)
+        : AppColors.primary;
+
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
@@ -62,6 +68,17 @@ class ListCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  if (list.color != null) ...[
+                    Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Color(list.color!),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Expanded(
                     child: Text(
                       list.name,
@@ -75,6 +92,22 @@ class ListCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (onArchive != null)
+                    IconButton(
+                      icon: const Icon(Icons.archive_outlined, size: 20),
+                      tooltip: tr.archiveListAction,
+                      onPressed: onArchive,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                    ),
+                  if (onUnarchive != null)
+                    IconButton(
+                      icon: const Icon(Icons.unarchive_outlined, size: 20),
+                      tooltip: tr.unarchiveListAction,
+                      onPressed: onUnarchive,
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(4),
+                    ),
                   if (onToggleStar != null)
                     IconButton(
                       icon: Icon(
@@ -102,6 +135,24 @@ class ListCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (list.totalCount > 0) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: list.completionProgress,
+                    backgroundColor: isDark
+                        ? AppColors.surfaceDark
+                        : AppColors.surfaceLight,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      list.completionProgress == 1.0
+                          ? AppColors.syncDone
+                          : listColor,
+                    ),
+                    minHeight: 4,
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               Row(
                 children: [

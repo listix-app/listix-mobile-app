@@ -25,6 +25,13 @@ class _SettingsTestNotificationService implements NotificationService {
 
   @override
   Future<void> cancelWeeklyReminder() async {}
+
+  @override
+  Future<void> showNotification({
+    int id = 0,
+    required String title,
+    required String body,
+  }) async {}
 }
 
 void main() {

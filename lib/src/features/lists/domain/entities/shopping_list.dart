@@ -10,6 +10,9 @@ class ShoppingList {
   final bool isStarred;
   final bool isShared;
   final bool hasInvite;
+  final bool isArchived;
+  final int? color;
+  final bool isOwner;
   final int position;
   final List<TodoItem> items;
   final List<Collaborator> collaborators;
@@ -22,6 +25,9 @@ class ShoppingList {
     this.isStarred = false,
     this.isShared = false,
     this.hasInvite = false,
+    this.isArchived = false,
+    this.color,
+    this.isOwner = true,
     this.position = 0,
     this.items = const [],
     this.collaborators = const [],
@@ -46,6 +52,9 @@ class ShoppingList {
     bool? isStarred,
     bool? isShared,
     bool? hasInvite,
+    bool? isArchived,
+    int? color,
+    bool? isOwner,
     int? position,
     List<TodoItem>? items,
     List<Collaborator>? collaborators,
@@ -58,6 +67,9 @@ class ShoppingList {
       isStarred: isStarred ?? this.isStarred,
       isShared: isShared ?? this.isShared,
       hasInvite: hasInvite ?? this.hasInvite,
+      isArchived: isArchived ?? this.isArchived,
+      color: color ?? this.color,
+      isOwner: isOwner ?? this.isOwner,
       position: position ?? this.position,
       items: items ?? this.items,
       collaborators: collaborators ?? this.collaborators,
@@ -72,6 +84,9 @@ class ShoppingList {
     'isStarred': isStarred,
     'isShared': isShared,
     'hasInvite': hasInvite,
+    'isArchived': isArchived,
+    'color': color,
+    'isOwner': isOwner,
     'position': position,
     'items': items.map((i) => i.toJson()).toList(),
     'collaborators': collaborators.map((c) => c.toJson()).toList(),
@@ -86,6 +101,9 @@ class ShoppingList {
       isStarred: json['isStarred'] as bool? ?? false,
       isShared: json['isShared'] as bool? ?? false,
       hasInvite: json['hasInvite'] as bool? ?? false,
+      isArchived: json['isArchived'] as bool? ?? false,
+      color: json['color'] as int?,
+      isOwner: json['isOwner'] as bool? ?? true,
       position: json['position'] as int? ?? 0,
       items:
           (json['items'] as List<dynamic>?)
@@ -112,6 +130,9 @@ class ShoppingList {
           isStarred == other.isStarred &&
           isShared == other.isShared &&
           hasInvite == other.hasInvite &&
+          isArchived == other.isArchived &&
+          color == other.color &&
+          isOwner == other.isOwner &&
           position == other.position &&
           listEquals(items, other.items) &&
           listEquals(collaborators, other.collaborators) &&
@@ -125,6 +146,9 @@ class ShoppingList {
     isStarred,
     isShared,
     hasInvite,
+    isArchived,
+    color,
+    isOwner,
     position,
     Object.hashAll(items),
     Object.hashAll(collaborators),
