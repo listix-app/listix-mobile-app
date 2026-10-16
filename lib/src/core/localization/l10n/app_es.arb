@@ -256,6 +256,10 @@
   "joinListPrompt": "Ingresa el código o enlace de invitación para colaborar en tiempo real.",
   "joinListHint": "Código o enlace de la lista",
   "joinAction": "Unirse",
+  "yourNicknameLabel": "Tu nombre o apodo",
+  "yourNicknameHint": "Ej: Juan o @juani",
+  "yourNicknamePrompt": "Ingresa tu nombre o apodo para colaborar en tiempo real.",
+  "yourNicknameValidation": "Por favor ingresa tu nombre o apodo",
   "listJoined": "Te has unido a \"{name}\"",
   "@listJoined": {
     "placeholders": {

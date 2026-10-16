@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/storage/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../lists/domain/entities/shopping_list.dart';
 import '../../../lists/presentation/controllers/lists_controller.dart';
@@ -19,19 +20,41 @@ class JoinInviteScreen extends ConsumerStatefulWidget {
 }
 
 class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
-  bool _isLoading = true;
+  final _nameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
   String? _errorMessage;
   ShoppingList? _joinedList;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _processJoin();
-    });
+    _loadSavedNickname();
+  }
+
+  Future<void> _loadSavedNickname() async {
+    try {
+      final saved = await AppDatabase.instance.getSetting('user_nickname');
+      if (saved != null && saved.isNotEmpty && mounted) {
+        _nameController.text = saved;
+      }
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
   }
 
   Future<void> _processJoin() async {
+    final nickname = _nameController.text.trim();
+    if (nickname.isNotEmpty) {
+      try {
+        await AppDatabase.instance.setSetting('user_nickname', nickname);
+      } catch (_) {}
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -40,7 +63,10 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
     try {
       final list = await ref
           .read(listsControllerProvider.notifier)
-          .joinListByInviteToken(widget.token);
+          .joinListByInviteToken(
+            widget.token,
+            displayName: nickname.isNotEmpty ? nickname : null,
+          );
 
       if (!mounted) return;
 
@@ -176,17 +202,37 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
                       style: TextStyle(fontSize: 14, color: textSecondary),
                     ),
                     const SizedBox(height: 28),
-                    FilledButton.icon(
-                      onPressed: () => context.go('/'),
-                      icon: const Icon(Icons.home_rounded),
-                      label: const Text('Ir al inicio'),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => context.go('/'),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Ir al inicio'),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              setState(() => _errorMessage = null);
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              minimumSize: const Size(0, 48),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text('Reintentar'),
+                          ),
+                        ),
+                      ],
                     ),
                   ] else if (_joinedList != null) ...[
                     Container(
@@ -233,6 +279,69 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
                       },
                       icon: const Icon(Icons.arrow_forward_rounded),
                       label: const Text('Abrir lista'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        minimumSize: const Size(double.infinity, 48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ] else ...[
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.group_add_rounded,
+                        color: AppColors.primary,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      tr.joinListTitle,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      tr.yourNicknamePrompt,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: textSecondary),
+                    ),
+                    const SizedBox(height: 24),
+                    Form(
+                      key: _formKey,
+                      child: TextFormField(
+                        key: const Key('join_invite_nickname_input'),
+                        controller: _nameController,
+                        textCapitalization: TextCapitalization.words,
+                        maxLength: 30,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          labelText: tr.yourNicknameLabel,
+                          hintText: tr.yourNicknameHint,
+                          prefixIcon: const Icon(Icons.person_outline_rounded),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onFieldSubmitted: (_) => _processJoin(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      key: const Key('join_invite_submit_button'),
+                      onPressed: _processJoin,
+                      icon: const Icon(Icons.check_circle_outline_rounded),
+                      label: Text(tr.joinAction),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         minimumSize: const Size(double.infinity, 48),

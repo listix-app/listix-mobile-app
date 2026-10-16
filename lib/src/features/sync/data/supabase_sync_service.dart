@@ -201,7 +201,7 @@ class SupabaseSyncService {
         return Collaborator(
           id: row['user_id'] as String,
           name: row['display_name'] as String? ?? 'Usuario',
-          email: row['email'] as String? ?? 'user@supabase.local',
+          email: row['email'] as String? ?? '',
           role: role,
         );
       }).toList();

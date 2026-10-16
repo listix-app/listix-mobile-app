@@ -5,12 +5,14 @@ class ListixLogo extends StatelessWidget {
   final double size;
   final bool showWordmark;
   final double? fontSize;
+  final Color? textColor;
 
   const ListixLogo({
     super.key,
     this.size = 32,
     this.showWordmark = false,
     this.fontSize,
+    this.textColor,
   });
 
   @override
@@ -40,6 +42,11 @@ class ListixLogo extends StatelessWidget {
       child: CustomPaint(painter: _ListixLogoPainter()),
     );
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final resolvedTextColor =
+        textColor ??
+        (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary);
+
     if (!showWordmark) return iconWidget;
 
     return Row(
@@ -55,12 +62,12 @@ class ListixLogo extends StatelessWidget {
               fontSize: fontSize ?? (size * 0.72),
               fontWeight: FontWeight.w800,
               letterSpacing: -0.6,
-              color: AppColors.textPrimary,
+              color: resolvedTextColor,
             ),
             children: [
               TextSpan(
                 text: 'ix',
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w800,
                 ),

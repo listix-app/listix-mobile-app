@@ -968,6 +968,30 @@ abstract class AppLocalizations {
   /// **'Join'**
   String get joinAction;
 
+  /// No description provided for @yourNicknameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Your nickname or name'**
+  String get yourNicknameLabel;
+
+  /// No description provided for @yourNicknameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'E.g., Alex or @alex'**
+  String get yourNicknameHint;
+
+  /// No description provided for @yourNicknamePrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your nickname or name to collaborate in real time.'**
+  String get yourNicknamePrompt;
+
+  /// No description provided for @yourNicknameValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a name or nickname'**
+  String get yourNicknameValidation;
+
   /// No description provided for @listJoined.
   ///
   /// In en, this message translates to:

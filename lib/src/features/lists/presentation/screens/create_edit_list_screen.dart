@@ -153,6 +153,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                           TextFormField(
                             controller: _nameController,
                             autofocus: true,
+                            maxLength: 50,
                             textInputAction: TextInputAction.done,
                             textCapitalization: TextCapitalization.sentences,
                             onFieldSubmitted: (_) => _submit(),

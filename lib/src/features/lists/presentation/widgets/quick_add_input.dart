@@ -97,12 +97,14 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 controller: _controller,
                 focusNode: _focusNode,
                 autofocus: widget.autoFocus,
+                maxLength: 100,
                 textInputAction: TextInputAction.done,
                 textCapitalization: TextCapitalization.sentences,
                 onSubmitted: (_) => _submit(),
                 style: TextStyle(fontSize: 15, color: textTitleColor),
                 decoration: InputDecoration(
                   hintText: widget.hintText ?? 'Agregar item',
+                  counterText: '',
                   isDense: true,
                   prefixIcon: const Icon(
                     Icons.add,

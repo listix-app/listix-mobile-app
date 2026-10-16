@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/storage/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../lists/presentation/controllers/lists_controller.dart';
 import '../../domain/entities/collaboration_exceptions.dart';
@@ -19,12 +20,29 @@ class JoinListDialog extends ConsumerStatefulWidget {
 
 class _JoinListDialogState extends ConsumerState<JoinListDialog> {
   final _controller = TextEditingController();
+  final _nicknameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedNickname();
+  }
+
+  Future<void> _loadSavedNickname() async {
+    try {
+      final saved = await AppDatabase.instance.getSetting('user_nickname');
+      if (saved != null && saved.isNotEmpty && mounted) {
+        _nicknameController.text = saved;
+      }
+    } catch (_) {}
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
+    _nicknameController.dispose();
     super.dispose();
   }
 
@@ -63,10 +81,20 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
 
     setState(() => _isLoading = true);
 
+    final nickname = _nicknameController.text.trim();
+    if (nickname.isNotEmpty) {
+      try {
+        await AppDatabase.instance.setSetting('user_nickname', nickname);
+      } catch (_) {}
+    }
+
     try {
       final joinedList = await ref
           .read(listsControllerProvider.notifier)
-          .joinListByInviteToken(_controller.text);
+          .joinListByInviteToken(
+            _controller.text,
+            displayName: nickname.isNotEmpty ? nickname : null,
+          );
 
       // Join room in websocket if active
       await ref
@@ -213,10 +241,26 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
             ),
             const SizedBox(height: 16),
             TextFormField(
+              key: const Key('join_list_nickname_input'),
+              controller: _nicknameController,
+              textCapitalization: TextCapitalization.words,
+              maxLength: 30,
+              decoration: InputDecoration(
+                labelText: tr.yourNicknameLabel,
+                hintText: tr.yourNicknameHint,
+                prefixIcon: const Icon(Icons.person_outline_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
               key: const Key('join_list_input'),
               controller: _controller,
-              autofocus: true,
+              autofocus: _nicknameController.text.isNotEmpty,
               decoration: InputDecoration(
+                labelText: tr.joinListHint,
                 hintText: tr.joinListHint,
                 prefixIcon: const Icon(Icons.link_rounded),
                 border: OutlineInputBorder(

@@ -170,6 +170,10 @@ void main() {
         expect(tr.joinListPrompt, isNotEmpty);
         expect(tr.joinListHint, isNotEmpty);
         expect(tr.joinAction, isNotEmpty);
+        expect(tr.yourNicknameLabel, isNotEmpty);
+        expect(tr.yourNicknameHint, isNotEmpty);
+        expect(tr.yourNicknamePrompt, isNotEmpty);
+        expect(tr.yourNicknameValidation, isNotEmpty);
         expect(tr.listJoined('Test'), contains('Test'));
         expect(tr.invalidInviteCode, isNotEmpty);
         expect(tr.alreadyJoined, isNotEmpty);

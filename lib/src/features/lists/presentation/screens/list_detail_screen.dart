@@ -1,5 +1,6 @@
 // coverage:ignore-file
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -106,6 +107,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             key: const Key('edit_item_title_input'),
             controller: controller,
             autofocus: true,
+            maxLength: 100,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               labelText: tr.itemTitleLabel,
@@ -463,9 +465,19 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                         vertical: 12,
                       ),
                       itemCount: filteredPending.length,
-                      buildDefaultDragHandles: query.isEmpty,
+                      buildDefaultDragHandles: false,
+                      proxyDecorator: (child, index, animation) {
+                        return Material(
+                          elevation: 4,
+                          shadowColor: Colors.black.withValues(alpha: 0.25),
+                          borderRadius: BorderRadius.circular(12),
+                          color: Colors.transparent,
+                          child: child,
+                        );
+                      },
                       onReorderItem: (oldIndex, newIndex) {
                         if (query.isNotEmpty) return;
+                        HapticFeedback.selectionClick();
                         ref
                             .read(listsControllerProvider.notifier)
                             .reorderItems(list.id, oldIndex, newIndex);
@@ -475,6 +487,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                         return TodoItemTile(
                           key: ValueKey(item.id),
                           item: item,
+                          reorderIndex: query.isEmpty ? index : null,
                           activeColor: listColor,
                           onToggle: () {
                             ref
