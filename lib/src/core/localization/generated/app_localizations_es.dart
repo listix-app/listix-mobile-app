@@ -493,6 +493,19 @@ class AppLocalizationsEs extends AppLocalizations {
   String get joinAction => 'Unirse';
 
   @override
+  String get yourNicknameLabel => 'Tu nombre o apodo';
+
+  @override
+  String get yourNicknameHint => 'Ej: Juan o @juani';
+
+  @override
+  String get yourNicknamePrompt =>
+      'Ingresa tu nombre o apodo para colaborar en tiempo real.';
+
+  @override
+  String get yourNicknameValidation => 'Por favor ingresa tu nombre o apodo';
+
+  @override
   String listJoined(String name) {
     return 'Te has unido a \"$name\"';
   }

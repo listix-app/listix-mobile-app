@@ -256,6 +256,10 @@
   "joinListPrompt": "Enter the invite code or link to collaborate in real time.",
   "joinListHint": "List code or invite link",
   "joinAction": "Join",
+  "yourNicknameLabel": "Your nickname or name",
+  "yourNicknameHint": "E.g., Alex or @alex",
+  "yourNicknamePrompt": "Enter your nickname or name to collaborate in real time.",
+  "yourNicknameValidation": "Please enter a name or nickname",
   "listJoined": "You joined \"{name}\"",
   "@listJoined": {
     "placeholders": {

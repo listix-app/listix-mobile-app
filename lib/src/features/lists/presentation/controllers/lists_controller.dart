@@ -569,18 +569,27 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     final targetList = currentLists.where((l) => l.id == listId).firstOrNull;
     if (targetList == null) return;
 
+    final pending = targetList.items.where((i) => !i.isCompleted).toList();
+    final completed = targetList.items.where((i) => i.isCompleted).toList();
+
     var targetIndex = newIndex;
     if (oldIndex < targetIndex) {
       targetIndex -= 1;
     }
 
-    final updatedItems = List<TodoItem>.from(targetList.items);
-    final movedItem = updatedItems.removeAt(oldIndex);
-    updatedItems.insert(targetIndex, movedItem);
+    if (oldIndex < 0 ||
+        oldIndex >= pending.length ||
+        targetIndex < 0 ||
+        targetIndex >= pending.length) {
+      return;
+    }
+    final movedItem = pending.removeAt(oldIndex);
+    pending.insert(targetIndex, movedItem);
+    final allItems = [...pending, ...completed];
 
     final reordered = <TodoItem>[];
-    for (var i = 0; i < updatedItems.length; i++) {
-      reordered.add(updatedItems[i].copyWith(position: i));
+    for (var i = 0; i < allItems.length; i++) {
+      reordered.add(allItems[i].copyWith(position: i));
     }
 
     final updatedLists = currentLists.map((l) {

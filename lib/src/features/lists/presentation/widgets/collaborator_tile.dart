@@ -79,13 +79,21 @@ class CollaboratorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasValidEmail =
+        collaborator.email.trim().isNotEmpty &&
+        !collaborator.email.endsWith('.local') &&
+        !collaborator.email.toLowerCase().contains('fake');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLight,
+        color: isDark ? AppColors.cardDark : AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderLight),
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.borderLight,
+        ),
       ),
       child: Row(
         children: [
@@ -105,26 +113,34 @@ class CollaboratorTile extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   collaborator.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  collaborator.email,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
+                if (hasValidEmail) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    collaborator.email,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ],
               ],
             ),
           ),

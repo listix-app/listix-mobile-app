@@ -174,6 +174,10 @@ class AppStrings {
   String get joinListPrompt => _l10n.joinListPrompt;
   String get joinListHint => _l10n.joinListHint;
   String get joinAction => _l10n.joinAction;
+  String get yourNicknameLabel => _l10n.yourNicknameLabel;
+  String get yourNicknameHint => _l10n.yourNicknameHint;
+  String get yourNicknamePrompt => _l10n.yourNicknamePrompt;
+  String get yourNicknameValidation => _l10n.yourNicknameValidation;
   String listJoined(String name) => _l10n.listJoined(name);
   String get invalidInviteCode => _l10n.invalidInviteCode;
   String get alreadyJoined => _l10n.alreadyJoined;

@@ -1612,6 +1612,10 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('join_list_button')));
+      await tester.pump();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 200)),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(JoinListDialog), findsOneWidget);

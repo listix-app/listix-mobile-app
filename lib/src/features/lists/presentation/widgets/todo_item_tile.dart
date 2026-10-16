@@ -10,6 +10,7 @@ class TodoItemTile extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
   final Color? activeColor;
+  final int? reorderIndex;
 
   const TodoItemTile({
     super.key,
@@ -18,6 +19,7 @@ class TodoItemTile extends StatelessWidget {
     required this.onDelete,
     this.onEdit,
     this.activeColor,
+    this.reorderIndex,
   });
 
   @override
@@ -73,7 +75,6 @@ class TodoItemTile extends StatelessWidget {
                 HapticFeedback.lightImpact();
                 onToggle();
               },
-              onLongPress: onEdit,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -131,7 +132,7 @@ class TodoItemTile extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (onEdit != null) ...[
+                    if (onEdit != null && !item.isCompleted) ...[
                       const SizedBox(width: 4),
                       IconButton(
                         key: ValueKey('edit_${item.id}'),
@@ -148,7 +149,25 @@ class TodoItemTile extends StatelessWidget {
                         onPressed: onEdit,
                       ),
                     ],
-                    if (!item.isCompleted) ...[
+                    if (reorderIndex != null) ...[
+                      const SizedBox(width: 4),
+                      ReorderableDragStartListener(
+                        index: reorderIndex!,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
+                          child: Icon(
+                            Icons.drag_handle_rounded,
+                            size: 20,
+                            color: isDark
+                                ? AppColors.textMutedDark
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ),
+                    ] else if (!item.isCompleted) ...[
                       const SizedBox(width: 6),
                       Icon(
                         Icons.drag_handle_rounded,

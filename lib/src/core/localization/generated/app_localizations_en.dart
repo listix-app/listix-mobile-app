@@ -492,6 +492,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinAction => 'Join';
 
   @override
+  String get yourNicknameLabel => 'Your nickname or name';
+
+  @override
+  String get yourNicknameHint => 'E.g., Alex or @alex';
+
+  @override
+  String get yourNicknamePrompt =>
+      'Enter your nickname or name to collaborate in real time.';
+
+  @override
+  String get yourNicknameValidation => 'Please enter a name or nickname';
+
+  @override
   String listJoined(String name) {
     return 'You joined \"$name\"';
   }

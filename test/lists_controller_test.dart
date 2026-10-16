@@ -939,6 +939,15 @@ void main() {
         var list = container.read(shoppingListProvider('list_1'))!;
         expect(list.items.first.id, 'item_2');
 
+        await container
+            .read(listsControllerProvider.notifier)
+            .reorderItems('list_1', 5, 0);
+        await container
+            .read(listsControllerProvider.notifier)
+            .reorderItems('list_1', 0, -1);
+        list = container.read(shoppingListProvider('list_1'))!;
+        expect(list.items.first.id, 'item_2');
+
         fakeRepo.internalLists.first = fakeRepo.internalLists.first.copyWith(
           items: [
             TodoItem(
