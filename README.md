@@ -4,7 +4,7 @@
 [![PR Checks](https://github.com/nmenag/listix/actions/workflows/pr_checks.yml/badge.svg)](https://github.com/nmenag/listix/actions/workflows/pr_checks.yml)
 [![Release](https://github.com/nmenag/listix/actions/workflows/release.yml/badge.svg)](https://github.com/nmenag/listix/actions/workflows/release.yml)
 
-A fast, minimalist, **offline-first** shopping and checklist mobile application built with Flutter, Dart 3, Material 3, SQLite local persistence, Riverpod, and real-time collaboration powered by Supabase.
+A fast, minimalist, **offline-first** shopping and checklist mobile application built with Flutter, Dart 3, Material 3, SQLite local persistence, Riverpod, and real-time collaboration through a pluggable backend adapter.
 
 <p align="center">
   <img src="assets/screenshots/screenshot_1_home.jpg" width="18%" />
@@ -21,7 +21,7 @@ A fast, minimalist, **offline-first** shopping and checklist mobile application 
 Listix is engineered for high-speed, everyday grocery and checklist management with an uncompromising commitment to local performance and seamless real-time collaboration:
 - **Offline-First (Local SQLite)**: Instant operations with zero input lag. All lists and items are persisted locally on your device in SQLite. No network connection is needed to organize your private lists.
 - **Offline Backup & Restore**: Export lists to JSON, CSV, or formatted Plain Text. Restore backups safely with overwrite or merge options using Android Storage Access Framework (SAF) and native share sheets.
-- **Real-Time Collaboration**: Share lists with friends and family using a secure invite link or code. Changes sync instantly across all devices using Supabase Realtime synchronization.
+- **Real-Time Collaboration**: Share lists with friends and family using a secure invite link or code. Changes sync instantly across all devices using Socket.IO Realtime synchronization.
 - **Native Sharing & Deeplinks**: Share formatted lists directly through WhatsApp or Native Email, or copy an invite link. Integrated with app deeplinks to join a shared list seamlessly.
 - **Dark Mode, Light Mode & System Default**: Tailored Material 3 themes with an intuitive appearance switcher in Settings.
 - **Bilingual (English & Spanish)**: Full internationalization support with instant in-app language switching and system locale fallback.
@@ -36,7 +36,7 @@ Listix is engineered for high-speed, everyday grocery and checklist management w
 | :--- | :--- |
 | **1. Home / Lists Overview** | Scalable `ListixLogo` header, Settings action shortcut, list cards (with grid/list layout toggle), real-time pending progress badges, pull-to-refresh local reload, and swipe-to-delete. |
 | **2. List Detail (ToDo Style)** | Header with list title, rename shortcut, share sheet trigger, real-time presence indicators, pending/completed counter with progress bar, and instant quick-add bottom bar. |
-| **⚡ Quick Item Add** | Bottom input bar. Type item title and submit to immediately append to SQLite and broadcast via Supabase without leaving the keyboard. |
+| **⚡ Quick Item Add** | Bottom input bar. Type item title and submit to immediately append to SQLite and broadcast via the backend without leaving the keyboard. |
 | **✓ Interactive Items** | Animated custom checkbox, strikethrough typography animation, opacity dimming for finished items, collapsible completed group, and swipe-to-delete. |
 | **3. Create / Edit List** | Minimalist single-input focus screen for creating or renaming lists. |
 | **4. Share List (Modal Sheet)** | One-tap sharing to invite collaborators via a secure link to join and sync the list in real-time. |
@@ -62,19 +62,49 @@ lib/
     │   ├── about/                          # About screen & metadata
     │   ├── ads/                            # Google Mobile Ads integration
     │   ├── backup/                         # Full backup, JSON/CSV export, SAF & restore
-    │   ├── collaboration/                  # Supabase Realtime, presence, and invite tokens
+    │   ├── collaboration/                  # Realtime collaboration, presence, and invite tokens
     │   ├── lists/                          # Core list management domain, SQLite repo & UI
     │   ├── notifications/                  # Local notifications management
     │   ├── settings/                       # Theme mode & app preferences
-    │   └── sync/                           # Supabase background synchronization coordination
+    │   └── sync/                           # Background synchronization coordination
     └── core/                               # Cross-cutting foundational modules
-        ├── config/                         # App environment and Supabase config
+        ├── config/                         # App environment and API config
         ├── localization/                   # Bilingual strings & language switcher
-        ├── services/                       # Third-party service wrappers (Supabase, URL launcher)
+        ├── network/                        # HTTP client and authentication session service
+        ├── services/                       # URL launcher service
         ├── storage/                        # SQLite AppDatabase and table definitions
         ├── theme/                          # Material 3 Teal/Slate palette, dark/light themes & controller
         └── widgets/                        # Reusable core widgets (logo, empty states, sync indicator)
 ```
+
+---
+
+## 🛠️ Running in Development
+
+Requires the Flutter SDK (Dart `^3.9.0`, see `pubspec.yaml`) and a connected device or emulator (`flutter devices`).
+
+```bash
+flutter pub get
+```
+
+Provide the backend URL with `--dart-define=API_BASE_URL=<url>` on every `flutter run` and build. Without it the app runs local-only (no sync or sharing).
+
+> [!NOTE]
+> Android builds define Gradle product flavors (`dev`, `preview`, `prod`). Always pass `--flavor dev` (or your target flavor) when running or debugging on Android; omitting `--flavor` causes Gradle to assemble all flavors without generating the default unflavored `app-debug.apk`.
+
+```bash
+flutter run --flavor dev --dart-define=API_BASE_URL=<backend-url>
+flutter run --flavor dev -d <device-id> --dart-define=API_BASE_URL=<backend-url>   # pick one from `flutter devices`
+```
+
+- **Flavors & Environments**:
+  - `dev` (default for local development): `--flavor dev --dart-define=APP_ENV=dev` (debug suffix `.debug`, app name "Listix Dev")
+  - `preview` (staging/testing): `--flavor preview --dart-define=APP_ENV=preview` (suffix `.preview`, app name "Listix Preview")
+  - `prod` (production): `--flavor prod --dart-define=APP_ENV=prod` (app name "Listix")
+- `APP_ENV` (`dev` default, `preview`, `prod`) controls ads; add `--dart-define=APP_ENV=prod` along with `--flavor prod` to test production behavior.
+- Hot reload: press `r` in the `flutter run` terminal; hot restart: `R`. Run on two devices against the same backend to try sharing and realtime sync.
+- Release builds: see `build-aab.sh`.
+- For a local backend: run it locally and use `--dart-define=API_BASE_URL=http://10.0.2.2:3000` (Android emulator) or `http://localhost:3000` (desktop). Plain `http://` is allowed in debug builds only.
 
 ---
 
@@ -84,10 +114,10 @@ The test suite covers unit, widget, and integration tests across all features wi
 
 ```bash
 # Run all unit and widget tests
-flutter test
+flutter test --dart-define=API_BASE_URL=http://localhost:3000
 
 # Run test suite and generate coverage profile
-flutter test --coverage test/all_tests_coverage.dart
+flutter test --dart-define=API_BASE_URL=http://localhost:3000 --coverage test/all_tests_coverage.dart
 
 # Enforce strict 100% test coverage verification
 dart run tool/verify_coverage.dart
@@ -103,4 +133,4 @@ dart format --output=none --set-exit-if-changed .
 
 ## 📄 License
 
-MIT License. Designed and built with Flutter, SQLite, and Supabase.
+MIT License. Designed and built with Flutter and SQLite.

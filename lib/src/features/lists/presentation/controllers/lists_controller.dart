@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../core/services/supabase_service.dart';
-import '../../../collaboration/data/repositories/supabase_collaboration_repository.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/auth_session_service.dart';
+import '../../../collaboration/data/repositories/api_collaboration_repository.dart';
+import '../../../sync/data/api_sync_service.dart';
 import '../../../collaboration/domain/entities/collaboration_event.dart';
 import '../../../collaboration/domain/services/invite_token_service.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
@@ -53,11 +55,31 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     final repository = ref.read(listsRepositoryProvider);
     await repository.markListInviteCreated(listId);
     await repository.syncList(listId);
-    // coverage:ignore-start
-    if (ref.read(supabaseServiceProvider).isReady) {
-      await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
+    final authSession = ref.read(authSessionServiceProvider);
+    if (!authSession.isReady) {
+      await authSession.ensureInitialized();
     }
-    // coverage:ignore-end
+    if (authSession.isReady) {
+      // coverage:ignore-start
+      try {
+        final lists = await repository.getLists();
+        final currentList = lists.where((l) => l.id == listId).firstOrNull;
+        if (currentList != null) {
+          final apiClient = ref.read(apiClientProvider);
+          await apiClient.put(
+            '/lists/$listId',
+            body: {
+              'name': currentList.name,
+              'isStarred': currentList.isStarred,
+              'position': currentList.position < 0 ? 0 : currentList.position,
+              'updatedAt': DateTime.now().toUtc().toIso8601String(),
+            },
+          );
+        }
+      } catch (_) {}
+      // coverage:ignore-end
+      await ref.read(apiSyncServiceProvider).syncPendingOperations();
+    }
     state = AsyncData(await repository.getLists());
   }
 
@@ -70,11 +92,9 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           .firstOrNull;
       if (currentList != null && currentList.canSyncAndShare) {
         await repository.syncList(listId);
-        // coverage:ignore-start
-        if (ref.read(supabaseServiceProvider).isReady) {
-          await ref.read(supabaseSyncServiceProvider).syncPendingOperations();
+        if (ref.read(authSessionServiceProvider).isReady) {
+          await ref.read(apiSyncServiceProvider).syncPendingOperations();
         }
-        // coverage:ignore-end
       }
     }
     state = AsyncData(await repository.getLists());
@@ -104,19 +124,19 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     return joined;
   }
 
-  /// Joins a shared list using a secure invitation token or URL via Supabase RPC.
-  /// Validates token hash, 5-member limit, downloads list to SQLite, and initializes Realtime.
   Future<ShoppingList> joinListByInviteToken(
     String tokenOrUrl, {
     String? displayName,
     String? email,
   }) async {
-    final supabaseService = ref.read(supabaseServiceProvider);
+    final authSession = ref.read(authSessionServiceProvider);
+    if (!authSession.isReady) {
+      await authSession.ensureInitialized();
+    }
 
-    // coverage:ignore-start
-    if (supabaseService.isReady) {
-      final supabaseCollab = ref.read(supabaseCollaborationRepositoryProvider);
-      final joinResult = await supabaseCollab.joinListByToken(
+    if (authSession.isReady) {
+      final apiCollab = ref.read(apiCollaborationRepositoryProvider);
+      final joinResult = await apiCollab.joinListByToken(
         tokenOrUrl: tokenOrUrl,
         displayName: displayName,
         email: email,
@@ -125,13 +145,10 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
       await repository.saveRemoteList(joinResult.list);
       state = AsyncData(await repository.getLists());
 
-      // Start Realtime channel for this list
-      ref.read(supabaseSyncServiceProvider).subscribeToList(joinResult.list.id);
+      ref.read(apiSyncServiceProvider).subscribeToList(joinResult.list.id);
       return joinResult.list;
     }
-    // coverage:ignore-end
 
-    // Fallback: parse direct token or list id for offline / mock testing
     final cleanId =
         InviteTokenService.extractToken(tokenOrUrl) ?? tokenOrUrl.trim();
     return await joinList(cleanId, 'Lista Compartida');

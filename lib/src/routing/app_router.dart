@@ -27,9 +27,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (isJoinLink) {
         final token = uri.pathSegments.firstWhere(
           (segment) => segment.isNotEmpty && segment.toLowerCase() != 'join',
-          // coverage:ignore-start
           orElse: () => uri.path.replaceAll(RegExp(r'^/+'), '').trim(),
-          // coverage:ignore-end
         );
         if (token.isNotEmpty) {
           final cleanCode = InviteTokenService.extractToken(token) ?? token;

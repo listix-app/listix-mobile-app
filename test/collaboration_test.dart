@@ -1,9 +1,5 @@
 import 'package:listix/src/features/sync/domain/pending_operation.dart';
-import 'package:stream_channel/stream_channel.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -1431,162 +1427,63 @@ void main() {
     );
   });
 
-  group('WebSocketCollaborationRepository Full Socket Coverage', () {
+  group('WebSocketCollaborationRepository Loopback Coverage', () {
     test(
-      'WebSocketCollaborationRepository with custom channelFactory coverage',
+      'loopback hub connect, events, presence, peer action and disconnect',
       () async {
-        final inController = StreamController<dynamic>.broadcast();
+        final repo = WebSocketCollaborationRepository();
+        expect(repo.currentStatus, CollaborationStatus.disconnected);
+        expect(repo.activeCollaboratorsCount, 1);
+        expect(repo.activeListId, isNull);
 
-        final mockChannel = _TestWebSocketChannel(inController);
+        final statusEvents = <CollaborationStatus>[];
+        final sub = repo.statusStream.listen(statusEvents.add);
 
-        final repo = WebSocketCollaborationRepository(
-          serverUrl: 'ws://custom.local/socket',
-          channelFactory: (_) => mockChannel,
-        );
-
-        await repo.connect();
+        await repo.connect(customUrl: 'http://custom.url');
         expect(repo.currentStatus, CollaborationStatus.connected);
 
-        // Send event through real channel
-        final testEvent = CollaborationEvent.join(
-          listId: 'chan_list',
-          userEmail: 'me@listix.local',
-          userName: 'Me',
-        );
-        await repo.sendEvent(testEvent);
+        final events = <CollaborationEvent>[];
+        final eventSub = repo.eventStream.listen(events.add);
 
-        // Trigger stream error to test onError callback
-        inController.addError(Exception('custom socket error'));
-        await Future.delayed(const Duration(milliseconds: 20));
-        expect(repo.currentStatus, CollaborationStatus.connected);
-
-        // Test hub listener when e.senderEmail != _currentUserEmail (lines 164-166)
         await repo.joinList(
-          'hub_room_other',
-          userEmail: 'me@listix.local',
-          userName: 'Me',
+          'list_123',
+          userEmail: 'user1@example.com',
+          userName: 'User One',
         );
-        final otherEvent = CollaborationEvent.presence(
-          listId: 'hub_room_other',
-          onlineCount: 4,
-        );
-        await repo.sendEvent(otherEvent);
-        await Future.delayed(const Duration(milliseconds: 20));
+        expect(repo.activeListId, 'list_123');
 
+        final joinEvent = CollaborationEvent.join(
+          listId: 'list_123',
+          userEmail: 'user2@example.com',
+          userName: 'User Two',
+        );
+        await repo.sendEvent(joinEvent);
+
+        await repo.simulatePeerAction('list_123', actionType: 'toggle');
+        await repo.simulatePeerAction('list_123', actionType: 'delete');
+        await repo.simulatePeerAction('list_123', actionType: 'invite');
+        await repo.simulatePeerAction('list_123');
+
+        await repo.leaveList(
+          'list_123',
+          userEmail: 'user1@example.com',
+          userName: 'User One',
+        );
+        expect(repo.activeListId, isNull);
+
+        await repo.joinList(
+          'list_456',
+          userEmail: 'user1@example.com',
+          userName: 'User One',
+        );
         await repo.disconnect();
         expect(repo.currentStatus, CollaborationStatus.disconnected);
 
-        // Test sendEvent error catch (line 229)
-        final throwingChannel = _TestWebSocketChannel(
-          StreamController<dynamic>.broadcast(),
-          throwOnAdd: true,
-        );
-        final repoThrow = WebSocketCollaborationRepository(
-          serverUrl: 'ws://throw.local/socket',
-          channelFactory: (_) => throwingChannel,
-        );
-        await repoThrow.connect();
-        await repoThrow.sendEvent(testEvent);
-        expect(repoThrow.currentStatus, CollaborationStatus.error);
-        await repoThrow.disconnect();
+        repo.dispose();
+        await sub.cancel();
+        await eventSub.cancel();
       },
     );
-
-    test('fallback on invalid and empty URL', () async {
-      final emptyRepo = WebSocketCollaborationRepository(serverUrl: '');
-      await emptyRepo.connect();
-      expect(emptyRepo.currentStatus, CollaborationStatus.connected);
-      await emptyRepo.disconnect();
-
-      // Malformed URI throws FormatException inside try block immediately
-      final invalidUriRepo = WebSocketCollaborationRepository(
-        serverUrl: 'http://[::1:80',
-      );
-      await invalidUriRepo.connect();
-      expect(invalidUriRepo.currentStatus, CollaborationStatus.connected);
-      await invalidUriRepo.disconnect();
-    });
-
-    test('real local loopback WebSocket server handling', () async {
-      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
-      final port = server.port;
-      WebSocket? serverSocket;
-
-      server.listen((HttpRequest request) async {
-        if (WebSocketTransformer.isUpgradeRequest(request)) {
-          serverSocket = await WebSocketTransformer.upgrade(request);
-          serverSocket!.listen((message) {});
-        }
-      });
-
-      final repo = WebSocketCollaborationRepository(
-        serverUrl: 'ws://127.0.0.1:$port',
-      );
-      await repo.connect();
-      expect(repo.currentStatus, CollaborationStatus.connected);
-
-      // Send event on real channel
-      final event = CollaborationEvent.join(
-        listId: 'ws_list',
-        userEmail: 'test@listix.local',
-        userName: 'Tester',
-      );
-      await repo.sendEvent(event);
-
-      // Emit incoming presence event from server
-      serverSocket?.add(
-        jsonEncode(
-          CollaborationEvent.presence(
-            listId: 'ws_list',
-            onlineCount: 3,
-            onlineUsers: ['u1', 'u2', 'u3'],
-          ).toJson(),
-        ),
-      );
-      await Future.delayed(const Duration(milliseconds: 30));
-      expect(repo.activeCollaboratorsCount, 3);
-
-      // Emit malformed packet
-      serverSocket?.add('not-valid-json-string');
-      await Future.delayed(const Duration(milliseconds: 20));
-
-      // Join room while connected via real socket (lines 158-160, 174)
-      await repo.joinList(
-        'ws_room',
-        userEmail: 'test@listix.local',
-        userName: 'Tester',
-      );
-
-      // Leave room while connected via real socket (lines 211-214)
-      await repo.leaveList(
-        'ws_room',
-        userEmail: 'test@listix.local',
-        userName: 'Tester',
-      );
-
-      // Join another room so activeListId != null
-      await repo.joinList(
-        'ws_room_2',
-        userEmail: 'test@listix.local',
-        userName: 'Tester',
-      );
-
-      // Disconnect when activeListId != null (lines 120-123)
-      await repo.disconnect();
-      expect(repo.currentStatus, CollaborationStatus.disconnected);
-
-      // Reconnect to test closing
-      await repo.connect(customUrl: 'ws://127.0.0.1:$port');
-      expect(repo.currentStatus, CollaborationStatus.connected);
-
-      // Close server socket to trigger onDone
-      await serverSocket?.close();
-      await Future.delayed(const Duration(milliseconds: 30));
-      expect(repo.currentStatus, CollaborationStatus.disconnected);
-
-      await repo.disconnect();
-      await server.close(force: true);
-    });
   });
 
   group('ListsController Remote Callbacks Unit Tests', () {
@@ -1900,54 +1797,6 @@ class _ThrowingSetSharedRepo extends _FakeListsRepoForCollab {
   }) async {
     throw Exception('Error simulado al compartir');
   }
-}
-
-class _TestWebSocketSink implements WebSocketSink {
-  final bool throwOnAdd;
-  _TestWebSocketSink({this.throwOnAdd = false});
-
-  @override
-  void add(dynamic data) {
-    if (throwOnAdd) throw Exception('Simulated sink error');
-  }
-
-  @override
-  void addError(Object error, [StackTrace? stackTrace]) {}
-
-  @override
-  Future addStream(Stream stream) async {}
-
-  @override
-  Future close([int? closeCode, String? closeReason]) async {}
-
-  @override
-  Future get done => Future.value();
-}
-
-class _TestWebSocketChannel extends StreamChannelMixin
-    implements WebSocketChannel {
-  final StreamController _streamCtrl;
-  final bool throwOnAdd;
-
-  _TestWebSocketChannel(this._streamCtrl, {this.throwOnAdd = false});
-
-  @override
-  Stream get stream => _streamCtrl.stream;
-
-  @override
-  WebSocketSink get sink => _TestWebSocketSink(throwOnAdd: throwOnAdd);
-
-  @override
-  Future<void> get ready => Future.value();
-
-  @override
-  int? get closeCode => null;
-
-  @override
-  String? get closeReason => null;
-
-  @override
-  String? get protocol => null;
 }
 
 class _FakeNotificationsControllerForCollab extends NotificationsController {

@@ -80,7 +80,7 @@ abstract interface class ListsRepository {
   /// Retrieves pending offline operations queued for synchronization.
   Future<List<PendingOperation>> getPendingOperations({String? listId});
 
-  /// Deletes a pending operation once successfully sent to Supabase.
+  /// Deletes a pending operation once successfully sent to the remote backend.
   Future<void> removePendingOperation(String id);
 
   /// Clears pending operations for a specific list.

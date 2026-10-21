@@ -5,7 +5,7 @@
 This document outlines the mandatory engineering standards, architectural patterns, and project conventions for all AI agents and contributors working in this codebase.
 
 > [!IMPORTANT]
-> **Mandatory Context Loading**: Before starting any analysis, design, development, or refactoring task, agents MUST read the relevant domain skills in [`.agents/skills/`](.agents/skills/) and consult the architecture documentation in [`docs/`](docs/) (specifically [`docs/architecture.md`](docs/architecture.md), [`docs/database.md`](docs/database.md), and [`docs/supabase.md`](docs/supabase.md)).
+> **Mandatory Context Loading**: Before starting any analysis, design, development, or refactoring task, agents MUST read the relevant domain skills in [`.agents/skills/`](.agents/skills/) and consult the architecture documentation in [`docs/`](docs/) (specifically [`docs/architecture.md`](docs/architecture.md), [`docs/database.md`](docs/database.md), and [`docs/backend.md`](docs/backend.md)).
 
 ---
 
@@ -36,7 +36,7 @@ Listix adheres to **Clean Architecture** organized with a **Feature-First** stru
 │       ┌───────────────────┴───────────────────┐        │
 │       ▼                                       ▼        │
 │ [ Remote Data Source ]             [ Local Data Source ]│
-│ (REST / GraphQL / Supabase)        (SQLite / Hive / Prefs)
+│ (REST / WebSocket / Realtime)      (SQLite / Hive / Prefs)
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -369,7 +369,7 @@ class ItemsScreen extends ConsumerWidget {
    - When the user asks for a **"pull request"** (or writes "pull request"), immediately produce a comprehensive Pull Request description formatted in Markdown following the template in Section 6.
 12. **Mandatory Context Loading — Read `.agents/skills/` and Architecture Docs**:
    - **Read `.agents/skills/`**: Before executing any task, AI agents MUST inspect and read the relevant `SKILL.md` instructions within [`.agents/skills/`](.agents/skills/) (e.g., `flutter`, `mobile-expert`, `frontend-design`, `impeccable`, `aso`).
-   - **Read Architecture Documentation**: AI agents MUST read and strictly adhere to the technical and architectural blueprints located in [`docs/`](docs/) (specifically [`docs/architecture.md`](docs/architecture.md), [`docs/database.md`](docs/database.md), and [`docs/supabase.md`](docs/supabase.md)) before designing or implementing features.
+   - **Read Architecture Documentation**: AI agents MUST read and strictly adhere to the technical and architectural blueprints located in [`docs/`](docs/) (specifically [`docs/architecture.md`](docs/architecture.md), [`docs/database.md`](docs/database.md), and [`docs/backend.md`](docs/backend.md)) before designing or implementing features.
 
 ---
 
@@ -393,7 +393,7 @@ Agents must read and follow the architectural designs and schemas in `docs/` bef
 | :--- | :--- | :--- |
 | **`architecture.md`** | [`docs/architecture.md`](docs/architecture.md) | Complete application architecture, layer contracts, state management patterns, and screen/widget specifications. |
 | **`database.md`** | [`docs/database.md`](docs/database.md) | SQLite schema, table structures, indices, version migrations, and offline persistence guarantees. |
-| **`supabase.md`** | [`docs/supabase.md`](docs/supabase.md) | Supabase schema, realtime channels, broadcast events, RLS policies, and conflict resolution rules. |
+| **`backend.md`** | [`docs/backend.md`](docs/backend.md) | Backend-agnostic adapter architecture, configuration, and the HTTP/Socket.IO adapter protocol with synchronization rules. |
 | **`ASO_COPY_OPTIMIZATION.md`** | [`docs/ASO_COPY_OPTIMIZATION.md`](docs/ASO_COPY_OPTIMIZATION.md) | App Store and Google Play metadata, localized keywords, value propositions, and conversion copy. |
 
 ---

@@ -649,6 +649,15 @@ void main() {
         expect(find.byKey(const Key('share_whatsapp_tile')), findsNothing);
         expect(find.byKey(const Key('share_gmail_tile')), findsNothing);
         expect(find.byKey(const Key('copy_text_tile')), findsNothing);
+        expect(
+          find.byKey(const Key('quick_share_whatsapp_button')),
+          findsNothing,
+        );
+        expect(find.byKey(const Key('quick_share_gmail_button')), findsNothing);
+        expect(
+          find.byKey(const Key('quick_share_copy_list_button')),
+          findsNothing,
+        );
 
         expect(fakeController.syncedListIds, isEmpty);
       },
@@ -697,6 +706,7 @@ void main() {
 
         await tester.tap(find.text('Open Modal'));
         await tester.pumpAndSettle();
+        expect(find.byType(DraggableScrollableSheet), findsOneWidget);
         expect(find.text('Compartir "Lista sola"'), findsOneWidget);
         expect(
           find.byKey(const Key('activate_and_share_button')),
@@ -706,6 +716,14 @@ void main() {
         expect(find.byKey(const Key('share_whatsapp_tile')), findsNothing);
         expect(find.byKey(const Key('share_gmail_tile')), findsNothing);
         expect(find.byKey(const Key('copy_text_tile')), findsNothing);
+
+        // Test dragging the sheet
+        await tester.drag(
+          find.text('Compartir "Lista sola"'),
+          const Offset(0, -100),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(ShareListSheet), findsOneWidget);
       },
     );
 

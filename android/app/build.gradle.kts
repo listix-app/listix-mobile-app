@@ -1,4 +1,6 @@
 import java.io.FileInputStream
+import java.net.URI
+import java.util.Base64
 import java.util.Properties
 
 plugins {
@@ -17,6 +19,15 @@ val basePackageName: String = System.getenv("PACKAGE_NAME")
     ?: (project.findProperty("PACKAGE_NAME") as? String)?.takeIf { it.isNotBlank() }
     ?: "com.nmenag.listix"
 
+val inviteHost: String = (project.findProperty("dart-defines") as? String)
+    ?.split(",")
+    ?.map { String(Base64.getDecoder().decode(it)) }
+    ?.firstOrNull { it.startsWith("API_BASE_URL=") }
+    ?.substringAfter("=")
+    ?.let { runCatching { URI(it).host }.getOrNull() }
+    ?.takeIf { it.isNotBlank() }
+    ?: "invalid.localhost"
+
 android {
     namespace = "com.nmenag.listix"
     compileSdk = flutter.compileSdkVersion
@@ -34,6 +45,7 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["inviteHost"] = inviteHost
     }
 
     flavorDimensions += "default"
@@ -69,13 +81,17 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists()) {
+            val releaseKeystore = keystoreProperties.getProperty("storeFile")?.let { path ->
+                val f = file(path)
+                if (f.exists()) f else rootProject.file(path)
+            }
+            signingConfig = if (keystorePropertiesFile.exists() && releaseKeystore != null && releaseKeystore.exists()) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

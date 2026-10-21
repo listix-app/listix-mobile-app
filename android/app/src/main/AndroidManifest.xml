@@ -46,7 +46,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data
                     android:scheme="https"
-                    android:host="listix-invite-worker.old-dream-f458.workers.dev"
+                    android:host="${inviteHost}"
                     android:pathPrefix="/join" />
             </intent-filter>
 

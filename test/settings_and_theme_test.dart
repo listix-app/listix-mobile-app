@@ -6,6 +6,7 @@ import 'package:listix/src/core/theme/theme_controller.dart';
 import 'package:listix/src/features/notifications/data/services/notification_service.dart';
 import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:listix/src/features/settings/presentation/screens/settings_screen.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class _SettingsTestNotificationService implements NotificationService {
   @override
@@ -35,6 +36,11 @@ class _SettingsTestNotificationService implements NotificationService {
 }
 
 void main() {
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
+
   group('ThemeModeController Unit Tests', () {
     test('starts with system and toggles modes correctly', () {
       final container = ProviderContainer();
@@ -60,6 +66,20 @@ void main() {
   });
 
   group('SettingsScreen Widget Tests', () {
+    test('SettingsScreen constructor non-const coverage', () {
+      final defaultScreen = SettingsScreen(key: UniqueKey());
+      expect(defaultScreen.showBuyCoffee, isFalse);
+      expect(defaultScreen.showRateApp, isFalse);
+
+      final customScreen = SettingsScreen(
+        key: UniqueKey(),
+        showBuyCoffee: true,
+        showRateApp: true,
+      );
+      expect(customScreen.showBuyCoffee, isTrue);
+      expect(customScreen.showRateApp, isTrue);
+    });
+
     testWidgets('renders all sections and interactions work properly', (
       tester,
     ) async {
@@ -149,16 +169,19 @@ void main() {
       );
 
       await tester.tap(find.text('Open Settings'));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
       await tester.pumpAndSettle();
 
       expect(find.byType(SettingsScreen), findsOneWidget);
       await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 300)),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Open Settings'), findsOneWidget);
-      await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)),
-      );
     });
   });
 }

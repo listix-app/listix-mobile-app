@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/storage/app_database.dart';
@@ -7,6 +8,7 @@ import 'package:listix/src/features/sync/data/mock_backend_sync_service.dart';
 import 'package:listix/src/features/sync/domain/sync_status.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
+import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -428,10 +430,9 @@ void main() {
     test(
       'AppDatabase _onOpen dynamically adds missing columns to older databases',
       () async {
-        await AppDatabase.instance.close();
-        const testLegacyDbPath = 'test_legacy_db.db';
         final factory = databaseFactory;
-        await factory.deleteDatabase(testLegacyDbPath);
+        final tempDir = await Directory.systemTemp.createTemp('legacy_test');
+        final testLegacyDbPath = p.join(tempDir.path, 'legacy.db');
 
         final legacyDb = await factory.openDatabase(
           testLegacyDbPath,
@@ -466,34 +467,34 @@ void main() {
             },
           ),
         );
-        await legacyDb.close();
 
-        AppDatabase.overrideDbPath = testLegacyDbPath;
-        final db = await AppDatabase.instance.database;
+        await AppDatabase.onOpenForTest(legacyDb);
 
-        final listsColumns = await db.rawQuery('PRAGMA table_info(lists);');
+        final listsColumns = await legacyDb.rawQuery(
+          'PRAGMA table_info(lists);',
+        );
         expect(listsColumns.any((c) => c['name'] == 'has_invite'), isTrue);
         expect(listsColumns.any((c) => c['name'] == 'is_shared'), isTrue);
 
-        await db.update(
+        await legacyDb.update(
           'lists',
           {'is_shared': 0, 'updated_at': 12345, 'has_invite': 0},
           where: 'id = ?',
           whereArgs: ['dummy_id'],
         );
 
-        final itemsColumns = await db.rawQuery('PRAGMA table_info(items);');
+        final itemsColumns = await legacyDb.rawQuery(
+          'PRAGMA table_info(items);',
+        );
         expect(itemsColumns.any((c) => c['name'] == 'position'), isTrue);
 
-        final collabColumns = await db.rawQuery(
+        final collabColumns = await legacyDb.rawQuery(
           'PRAGMA table_info(collaborators);',
         );
         expect(collabColumns.any((c) => c['name'] == 'role'), isTrue);
 
-        await AppDatabase.instance.close();
-        await factory.deleteDatabase(testLegacyDbPath);
-        AppDatabase.overrideDbPath = inMemoryDatabasePath;
-        await AppDatabase.instance.database;
+        await legacyDb.close();
+        await tempDir.delete(recursive: true);
       },
     );
   });
