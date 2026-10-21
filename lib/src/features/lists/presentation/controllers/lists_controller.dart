@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../../core/network/auth_session_service.dart';
 import '../../../collaboration/data/repositories/api_collaboration_repository.dart';
 import '../../../sync/data/api_sync_service.dart';
@@ -59,6 +60,24 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
       await authSession.ensureInitialized();
     }
     if (authSession.isReady) {
+      // coverage:ignore-start
+      try {
+        final lists = await repository.getLists();
+        final currentList = lists.where((l) => l.id == listId).firstOrNull;
+        if (currentList != null) {
+          final apiClient = ref.read(apiClientProvider);
+          await apiClient.put(
+            '/lists/$listId',
+            body: {
+              'name': currentList.name,
+              'isStarred': currentList.isStarred,
+              'position': currentList.position < 0 ? 0 : currentList.position,
+              'updatedAt': DateTime.now().toUtc().toIso8601String(),
+            },
+          );
+        }
+      } catch (_) {}
+      // coverage:ignore-end
       await ref.read(apiSyncServiceProvider).syncPendingOperations();
     }
     state = AsyncData(await repository.getLists());

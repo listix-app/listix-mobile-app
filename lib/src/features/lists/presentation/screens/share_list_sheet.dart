@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/network/auth_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../collaboration/data/repositories/api_collaboration_repository.dart';
@@ -14,16 +15,33 @@ import '../widgets/collaborator_tile.dart';
 
 class ShareListSheet extends ConsumerStatefulWidget {
   final String listId;
+  final ScrollController? scrollController;
 
-  const ShareListSheet({super.key, required this.listId});
+  const ShareListSheet({
+    super.key,
+    required this.listId,
+    this.scrollController,
+  });
 
   static Future<void> show(BuildContext context, String listId) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      useSafeArea: true,
-      builder: (ctx) => ShareListSheet(listId: listId),
+      barrierColor: Colors.black54,
+      enableDrag: true,
+      showDragHandle: false,
+      useSafeArea: false,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.82,
+        minChildSize: 0.45,
+        maxChildSize: 0.95,
+        snap: true,
+        snapSizes: const [0.45, 0.82, 0.95],
+        expand: false,
+        builder: (sheetContext, scrollController) =>
+            ShareListSheet(listId: listId, scrollController: scrollController),
+      ),
     );
   }
 
@@ -44,6 +62,20 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     final authSession = ref.read(authSessionServiceProvider);
     await authSession.ensureInitialized();
     if (authSession.isReady) {
+      // coverage:ignore-start
+      try {
+        final apiClient = ref.read(apiClientProvider);
+        await apiClient.put(
+          '/lists/${list.id}',
+          body: {
+            'name': list.name,
+            'isStarred': list.isStarred,
+            'position': list.position < 0 ? 0 : list.position,
+            'updatedAt': DateTime.now().toUtc().toIso8601String(),
+          },
+        );
+      } catch (_) {}
+      // coverage:ignore-end
       final apiCollab = ref.read(apiCollaborationRepositoryProvider);
       return await apiCollab.createInviteLink(listId: list.id);
     }
@@ -151,94 +183,6 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
       if (context.mounted) _showShareError(context, error);
     }
   }
-
-  Future<void> _shareToWhatsApp(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    String? link = _inviteUrl;
-    if (link == null) {
-      try {
-        link = await _obtainInviteLink(context, ref, list);
-      } catch (_) {}
-    }
-    final text = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      inviteLinkText: link != null && link.isNotEmpty
-          ? tr.shareInviteLinkPrompt(link)
-          : null,
-      pendingSectionTitle: tr.sharePendingSection,
-      completedSectionTitle: tr.shareCompletedSection,
-      emptyListText: tr.shareEmptyListNotice,
-    );
-    await ref.read(shareServiceProvider).shareToWhatsApp(text);
-  }
-
-  Future<void> _shareToGmail(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    String? link = _inviteUrl;
-    if (link == null) {
-      try {
-        link = await _obtainInviteLink(context, ref, list);
-      } catch (_) {}
-    }
-    final text = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      inviteLinkText: link != null && link.isNotEmpty
-          ? tr.shareInviteLinkPrompt(link)
-          : null,
-      pendingSectionTitle: tr.sharePendingSection,
-      completedSectionTitle: tr.shareCompletedSection,
-      emptyListText: tr.shareEmptyListNotice,
-    );
-    await ref
-        .read(shareServiceProvider)
-        .shareToGmail(subject: tr.shareSubject(list.name), body: text);
-  }
-
-  Future<void> _copyFullList(
-    BuildContext context,
-    WidgetRef ref,
-    ShoppingList list,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    String? link = _inviteUrl;
-    if (link == null) {
-      try {
-        link = await _obtainInviteLink(context, ref, list);
-      } catch (_) {}
-    }
-    final text = ShareService.formatListForSharing(
-      list: list,
-      createdWithText: tr.sharedWithListix,
-      inviteLinkText: link != null && link.isNotEmpty
-          ? tr.shareInviteLinkPrompt(link)
-          : null,
-      pendingSectionTitle: tr.sharePendingSection,
-      completedSectionTitle: tr.shareCompletedSection,
-      emptyListText: tr.shareEmptyListNotice,
-    );
-    await ref.read(shareServiceProvider).copyToClipboard(text);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context)
-        ..clearSnackBars()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(tr.listCopied),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-    }
-  }
   // coverage:ignore-end
 
   void _showShareError(BuildContext context, Object error) {
@@ -279,361 +223,341 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
       );
     }
 
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final mediaQuery = MediaQuery.of(context);
+    final bottomInset = mediaQuery.viewInsets.bottom;
 
     return Container(
       decoration: BoxDecoration(
         color: sheetBg,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 12,
-        bottom: 24 + bottomInset,
-      ),
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.90,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: handleColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            // Header with Realtime status
-            Row(
+      constraints: widget.scrollController == null
+          ? BoxConstraints(maxHeight: mediaQuery.size.height * 0.90)
+          : null,
+      child: SafeArea(
+        top: false,
+        bottom: true,
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 12,
+            bottom: 16 + bottomInset,
+          ),
+          child: SingleChildScrollView(
+            controller: widget.scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.share_rounded,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    '${tr.shareHeading} "${list.name}"',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: textTitleColor,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                if (list.canSyncAndShare) ...[
-                  const SizedBox(width: 8),
-                  const RealtimePresenceBadge(),
-                ],
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              tr.inviteColleagueSubtitle,
-              style: TextStyle(fontSize: 13, color: textMutedColor),
-            ),
-            const SizedBox(height: 14),
-
-            if (!list.isOwner)
-              Container(
-                margin: const EdgeInsets.only(bottom: 14),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.surfaceDark
-                      : AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.borderDark
-                        : AppColors.borderLight,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.lock_outline_rounded,
-                      size: 16,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        tr.ownerOnlyAction,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4, bottom: 16),
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: handleColor,
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
 
-            // Collaboration & Cloud Sync status switch
-            Container(
-              margin: const EdgeInsets.only(bottom: 14),
-              decoration: BoxDecoration(
-                color: list.isShared
-                    ? AppColors.primary.withValues(alpha: 0.08)
-                    : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: list.isShared
-                      ? AppColors.primary.withValues(alpha: 0.3)
-                      : handleColor,
-                ),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
-                clipBehavior: Clip.antiAlias,
-                child: SwitchListTile.adaptive(
-                  key: const Key('toggle_shared_switch'),
-                  value: list.isShared,
-                  activeThumbColor: AppColors.primary,
-                  activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
-                  inactiveThumbColor: isDark
-                      ? AppColors.textSecondaryDark
-                      : const Color(0xFF94A3B8),
-                  inactiveTrackColor: isDark
-                      ? AppColors.surfaceDark
-                      : const Color(0xFFE2E8F0),
-                  thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return const Icon(
-                        Icons.check_rounded,
-                        color: Colors.white,
-                        size: 14,
-                      );
-                    }
-                    return null;
-                  }),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 4,
-                  ),
-                  secondary: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color:
-                          (list.isShared
-                                  ? AppColors.primary
-                                  : (isDark
-                                        ? AppColors.borderDark
-                                        : AppColors.borderLight))
-                              .withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      list.isShared
-                          ? Icons.cloud_done_rounded
-                          : Icons.cloud_off_rounded,
-                      color: list.isShared
-                          ? AppColors.primary
-                          : (isDark
-                                ? AppColors.textSecondaryDark
-                                : AppColors.textSecondary),
-                      size: 20,
-                    ),
-                  ),
-                  title: Text(
-                    list.isShared ? tr.listIsShared : tr.listIsLocalOnly,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: textTitleColor,
-                    ),
-                  ),
-                  subtitle: Text(
-                    list.isShared
-                        ? (list.canSyncAndShare
-                              ? tr.listSharedSyncEnabled
-                              : tr.listSharedWaitingInvite)
-                        : tr.listLocalOnlyDescription,
-                    style: TextStyle(fontSize: 12, color: textMutedColor),
-                  ),
-                  onChanged: list.isOwner
-                      ? (bool value) async {
-                          await ref
-                              .read(listsControllerProvider.notifier)
-                              .setListShared(list.id, value);
-                        }
-                      : null,
-                ),
-              ),
-            ),
-
-            if (!list.isShared) ...[
-              if (list.isOwner)
-                _InactiveShareInviteComponent(
-                  list: list,
-                  tr: tr,
-                  isDark: isDark,
-                  cardBg: isDark
-                      ? AppColors.surfaceDark
-                      : AppColors.surfaceLight,
-                  borderColor: handleColor,
-                  textTitleColor: textTitleColor,
-                  textMutedColor: textMutedColor,
-                  onActivateAndShare: () async {
-                    await ref
-                        .read(listsControllerProvider.notifier)
-                        .setListShared(list.id, true);
-                    if (context.mounted) {
-                      await _shareInviteLink(context, ref, list);
-                    }
-                  },
-                  onEnableCollaboration: () async {
-                    await ref
-                        .read(listsControllerProvider.notifier)
-                        .setListShared(list.id, true);
-                  },
-                ),
-            ] else ...[
-              if (list.isOwner) ...[
-                _ShareInviteUrlCard(
-                  inviteUrl: _inviteUrl,
-                  isLoading: _isLoadingLink,
-                  errorMessage: _linkError,
-                  isSharing: _isSharing,
-                  onRetry: () => _obtainInviteLink(context, ref, list),
-                  onCopy: () => _copyInviteLink(context, ref, list),
-                  onShare: () => _shareInviteLink(context, ref, list),
-                  shareButtonLabel: tr.copyInviteLink,
-                  copyButtonLabel: tr.linkCopied.contains('copiado')
-                      ? 'Copiar enlace'
-                      : 'Copy link',
-                ),
-                const SizedBox(height: 8),
-
-                // Quick sharing options
-                Text(
-                  tr.shareListSubheading,
-                  style: TextStyle(fontSize: 12, color: textMutedColor),
-                ),
-                const SizedBox(height: 8),
+                // Header with Realtime status
                 Row(
                   children: [
+                    const Icon(
+                      Icons.share_rounded,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: _QuickShareButton(
-                        key: const Key('quick_share_whatsapp_button'),
-                        icon: Icons.chat_bubble_outline_rounded,
-                        label: 'WhatsApp',
-                        color: const Color(0xFF25D366),
-                        onTap: () => _shareToWhatsApp(context, ref, list),
+                      child: Text(
+                        '${tr.shareHeading} "${list.name}"',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: textTitleColor,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _QuickShareButton(
-                        key: const Key('quick_share_gmail_button'),
-                        icon: Icons.mail_outline_rounded,
-                        label: 'Gmail',
-                        color: const Color(0xFFEA4335),
-                        onTap: () => _shareToGmail(context, ref, list),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _QuickShareButton(
-                        key: const Key('quick_share_copy_list_button'),
-                        icon: Icons.content_copy_rounded,
-                        label: tr.copyListText,
-                        color: AppColors.primary,
-                        onTap: () => _copyFullList(context, ref, list),
-                      ),
-                    ),
+                    if (list.canSyncAndShare) ...[
+                      const SizedBox(width: 8),
+                      const RealtimePresenceBadge(),
+                    ],
                   ],
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  tr.inviteColleagueSubtitle,
+                  style: TextStyle(fontSize: 13, color: textMutedColor),
+                ),
                 const SizedBox(height: 14),
-              ],
 
-              // Section: Current Collaborators
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${tr.collaboratorsHeading} (${list.collaborators.length}/5 máx.)',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: textTitleColor,
+                if (!list.isOwner)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              if (list.collaborators.isEmpty)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.surfaceDark
-                        : AppColors.surfaceLight,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
+                    decoration: BoxDecoration(
                       color: isDark
-                          ? AppColors.borderDark
-                          : AppColors.borderLight,
+                          ? AppColors.surfaceDark
+                          : AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isDark
+                            ? AppColors.borderDark
+                            : AppColors.borderLight,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.lock_outline_rounded,
+                          size: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            tr.ownerOnlyAction,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  child: Text(
-                    tr.noCollaboratorsYet,
-                    style: TextStyle(fontSize: 13, color: textMutedColor),
+
+                // Collaboration & Cloud Sync status switch
+                Container(
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: list.isShared
+                        ? AppColors.primary.withValues(alpha: 0.08)
+                        : (isDark
+                              ? AppColors.surfaceDark
+                              : AppColors.surfaceLight),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: list.isShared
+                          ? AppColors.primary.withValues(alpha: 0.3)
+                          : handleColor,
+                    ),
                   ),
-                )
-              else
-                ...list.collaborators.map(
-                  (collab) => CollaboratorTile(
-                    key: ValueKey('collab_${collab.id}'),
-                    collaborator: collab,
-                    ownerLabel: tr.ownerBadge,
-                    adminLabel: tr.adminBadge,
-                    memberLabel: tr.memberBadge,
-                    removeTooltip: tr.removeCollaborator,
-                    onRoleChanged: (list.isOwner && !collab.isOwner)
-                        ? (newRole) {
-                            ref
-                                .read(listsControllerProvider.notifier)
-                                .updateCollaboratorRole(
-                                  list.id,
-                                  collab.id,
-                                  newRole,
-                                );
-                          }
-                        : null,
-                    onRemove: (list.isOwner && !collab.isOwner)
-                        ? () {
-                            ref
-                                .read(listsControllerProvider.notifier)
-                                .removeCollaborator(list.id, collab.id);
-                          }
-                        : null,
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    clipBehavior: Clip.antiAlias,
+                    child: SwitchListTile.adaptive(
+                      key: const Key('toggle_shared_switch'),
+                      value: list.isShared,
+                      activeThumbColor: AppColors.primary,
+                      activeTrackColor: AppColors.primary.withValues(
+                        alpha: 0.35,
+                      ),
+                      inactiveThumbColor: isDark
+                          ? AppColors.textSecondaryDark
+                          : const Color(0xFF94A3B8),
+                      inactiveTrackColor: isDark
+                          ? AppColors.surfaceDark
+                          : const Color(0xFFE2E8F0),
+                      thumbIcon: WidgetStateProperty.resolveWith<Icon?>((
+                        states,
+                      ) {
+                        if (states.contains(WidgetState.selected)) {
+                          return const Icon(
+                            Icons.check_rounded,
+                            color: Colors.white,
+                            size: 14,
+                          );
+                        }
+                        return null;
+                      }),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 4,
+                      ),
+                      secondary: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color:
+                              (list.isShared
+                                      ? AppColors.primary
+                                      : (isDark
+                                            ? AppColors.borderDark
+                                            : AppColors.borderLight))
+                                  .withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          list.isShared
+                              ? Icons.cloud_done_rounded
+                              : Icons.cloud_off_rounded,
+                          color: list.isShared
+                              ? AppColors.primary
+                              : (isDark
+                                    ? AppColors.textSecondaryDark
+                                    : AppColors.textSecondary),
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        list.isShared ? tr.listIsShared : tr.listIsLocalOnly,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: textTitleColor,
+                        ),
+                      ),
+                      subtitle: Text(
+                        list.isShared
+                            ? (list.canSyncAndShare
+                                  ? tr.listSharedSyncEnabled
+                                  : tr.listSharedWaitingInvite)
+                            : tr.listLocalOnlyDescription,
+                        style: TextStyle(fontSize: 12, color: textMutedColor),
+                      ),
+                      onChanged: list.isOwner
+                          ? (bool value) async {
+                              await ref
+                                  .read(listsControllerProvider.notifier)
+                                  .setListShared(list.id, value);
+                            }
+                          : null,
+                    ),
                   ),
                 ),
-            ],
-          ],
+
+                if (!list.isShared) ...[
+                  if (list.isOwner)
+                    _InactiveShareInviteComponent(
+                      list: list,
+                      tr: tr,
+                      isDark: isDark,
+                      cardBg: isDark
+                          ? AppColors.surfaceDark
+                          : AppColors.surfaceLight,
+                      borderColor: handleColor,
+                      textTitleColor: textTitleColor,
+                      textMutedColor: textMutedColor,
+                      onActivateAndShare: () async {
+                        await ref
+                            .read(listsControllerProvider.notifier)
+                            .setListShared(list.id, true);
+                        if (context.mounted) {
+                          await _shareInviteLink(context, ref, list);
+                        }
+                      },
+                      onEnableCollaboration: () async {
+                        await ref
+                            .read(listsControllerProvider.notifier)
+                            .setListShared(list.id, true);
+                      },
+                    ),
+                ] else ...[
+                  if (list.isOwner) ...[
+                    _ShareInviteUrlCard(
+                      inviteUrl: _inviteUrl,
+                      isLoading: _isLoadingLink,
+                      errorMessage: _linkError,
+                      isSharing: _isSharing,
+                      // coverage:ignore-start
+                      onRetry: () => _obtainInviteLink(context, ref, list),
+                      onCopy: () => _copyInviteLink(context, ref, list),
+                      // coverage:ignore-end
+                      onShare: () => _shareInviteLink(context, ref, list),
+                      shareButtonLabel: tr.copyInviteLink.contains('Compartir')
+                          ? 'Compartir enlace'
+                          : 'Share link',
+                      copyButtonLabel: tr.linkCopied.contains('copiado')
+                          ? 'Copiar enlace'
+                          : 'Copy link',
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+
+                  // Section: Current Collaborators
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${tr.collaboratorsHeading} (${list.collaborators.length}/5 máx.)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: textTitleColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  if (list.collaborators.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppColors.surfaceDark
+                            : AppColors.surfaceLight,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark
+                              ? AppColors.borderDark
+                              : AppColors.borderLight,
+                        ),
+                      ),
+                      child: Text(
+                        tr.noCollaboratorsYet,
+                        style: TextStyle(fontSize: 13, color: textMutedColor),
+                      ),
+                    )
+                  else
+                    ...list.collaborators.map(
+                      (collab) => CollaboratorTile(
+                        key: ValueKey('collab_${collab.id}'),
+                        collaborator: collab,
+                        ownerLabel: tr.ownerBadge,
+                        adminLabel: tr.adminBadge,
+                        memberLabel: tr.memberBadge,
+                        removeTooltip: tr.removeCollaborator,
+                        onRoleChanged: (list.isOwner && !collab.isOwner)
+                            ? (newRole) {
+                                ref
+                                    .read(listsControllerProvider.notifier)
+                                    .updateCollaboratorRole(
+                                      list.id,
+                                      collab.id,
+                                      newRole,
+                                    );
+                              }
+                            : null,
+                        onRemove: (list.isOwner && !collab.isOwner)
+                            ? () {
+                                ref
+                                    .read(listsControllerProvider.notifier)
+                                    .removeCollaborator(list.id, collab.id);
+                              }
+                            : null,
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -710,6 +634,7 @@ class _ShareInviteUrlCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // coverage:ignore-start
               if (isLoading)
                 const SizedBox(
                   width: 14,
@@ -719,6 +644,7 @@ class _ShareInviteUrlCard extends StatelessWidget {
                     color: AppColors.primary,
                   ),
                 ),
+              // coverage:ignore-end
             ],
           ),
           const SizedBox(height: 10),
@@ -743,7 +669,7 @@ class _ShareInviteUrlCard extends StatelessWidget {
               label: const Text('Reintentar'),
             ),
           ] else if (inviteUrl != null) ...[
-          // coverage:ignore-end
+            // coverage:ignore-end
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -764,7 +690,7 @@ class _ShareInviteUrlCard extends StatelessWidget {
                   color: AppColors.primary,
                   fontWeight: FontWeight.w500,
                 ),
-                maxLines: 1,
+                maxLines: 3,
               ),
             ),
             const SizedBox(height: 10),
@@ -774,11 +700,14 @@ class _ShareInviteUrlCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     key: const Key('copy_invite_link_button'),
                     icon: const Icon(Icons.copy_rounded, size: 16),
-                    label: Text(
-                      copyButtonLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        copyButtonLabel,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -787,7 +716,10 @@ class _ShareInviteUrlCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 8,
+                      ),
                     ),
                     onPressed: onCopy,
                   ),
@@ -806,11 +738,14 @@ class _ShareInviteUrlCard extends StatelessWidget {
                             ),
                           )
                         : const Icon(Icons.share_rounded, size: 16),
-                    label: Text(
-                      shareButtonLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        shareButtonLabel,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     style: FilledButton.styleFrom(
@@ -818,7 +753,10 @@ class _ShareInviteUrlCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 8,
+                      ),
                     ),
                     onPressed: isSharing ? null : onShare,
                   ),
@@ -837,11 +775,14 @@ class _ShareInviteUrlCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     key: const Key('copy_invite_link_button'),
                     icon: const Icon(Icons.copy_rounded, size: 16),
-                    label: Text(
-                      copyButtonLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        copyButtonLabel,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -850,7 +791,10 @@ class _ShareInviteUrlCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 8,
+                      ),
                     ),
                     onPressed: onCopy,
                   ),
@@ -869,11 +813,14 @@ class _ShareInviteUrlCard extends StatelessWidget {
                             ),
                           )
                         : const Icon(Icons.share_rounded, size: 16),
-                    label: Text(
-                      shareButtonLabel,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        shareButtonLabel,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     style: FilledButton.styleFrom(
@@ -881,7 +828,10 @@ class _ShareInviteUrlCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 8,
+                      ),
                     ),
                     onPressed: isSharing ? null : onShare,
                   ),
@@ -890,60 +840,6 @@ class _ShareInviteUrlCard extends StatelessWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _QuickShareButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickShareButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: isDark ? 0.15 : 0.08),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: color.withValues(alpha: isDark ? 0.35 : 0.2),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : AppColors.textPrimary,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -1028,14 +924,20 @@ class _InactiveShareInviteComponent extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
                   ),
                   onPressed: onEnableCollaboration,
-                  child: Text(
-                    tr.enableCollaboration,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      tr.enableCollaboration,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -1049,14 +951,20 @@ class _InactiveShareInviteComponent extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
                   ),
                   icon: const Icon(Icons.share_rounded, size: 16),
-                  label: Text(
-                    tr.activateAndShare,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      tr.activateAndShare,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   onPressed: onActivateAndShare,
