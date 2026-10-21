@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-Listix is a fast, minimalist, **offline-first** checklist and shopping list application. It is engineered around instant responsiveness, zero-lag local SQLite persistence, real-time multi-device collaboration powered by the Listix Worker backend, and full data sovereignty with on-device backup and restore.
+Listix is a fast, minimalist, **offline-first** checklist and shopping list application. It is engineered around instant responsiveness, zero-lag local SQLite persistence, real-time multi-device collaboration through a pluggable backend adapter, and full data sovereignty with on-device backup and restore.
 
 ### Scope Matrix
 
@@ -14,7 +14,7 @@ Listix is a fast, minimalist, **offline-first** checklist and shopping list appl
 | **List Sharing & Collaboration** | ✅ | Socket.IO Realtime synchronization, anonymous token invites, web & deep-link joining (`listix://join/:token`), active presence avatars, 5-member limit enforcement |
 | **Sync Visual States** | ✅ | Realtime presence badge, discrete sync indicator, offline mutation queueing |
 | **Offline Persistence** | ✅ | On-device SQLite database with atomic transactions and WAL mode |
-| **Real-Time Synchronization**| ✅ | Socket.IO realtime channels and transactional PostgreSQL advisory locks on the NestJS backend |
+| **Real-Time Synchronization**| ✅ | Realtime channels and atomic member-limit enforcement through the backend adapter (see [`backend.md`](backend.md)) |
 | **Backup & Restore** | ✅ | Full JSON schema v1 export/import, CSV spreadsheet export, Plain Text checklist summaries, Android Storage Access Framework (SAF) native document picker/creator, share sheets, merge/overwrite conflict resolution |
 | **AdMob Ads (Banner & Interstitial)**| ✅ | Google Mobile Ads integration with anchored adaptive banners, interstitial preloading, and user consent handling |
 | **Notifications & Preferences** | ✅ | Local notifications scheduling, Material 3 appearance switching (Light/Dark/System), bilingual internationalization (EN/ES) |
@@ -157,8 +157,8 @@ lib/
 
 ### C. Real-Time Collaboration & Backend Synchronization
 - **WebSocket Broadcast & Presence**: Shared lists establish Socket.IO connections to the `/realtime` namespace. Realtime updates notify clients when lists or items change.
-- **Secure Token-Based Invites**: Share links encode cryptographically generated tokens managed by the worker backend.
-- **Transactional Member Limit Enforcement**: The backend verifies token validity and enforces a strict 5-collaborator maximum in a PostgreSQL transaction.
+- **Secure Token-Based Invites**: Share links encode cryptographically generated tokens managed by the backend.
+- **Transactional Member Limit Enforcement**: The backend verifies token validity and enforces a strict 5-collaborator maximum atomically.
 - **Deep Linking Integration**: Android App Links and custom URL schemes (`listix://join/:token`) route users straight to `JoinInviteScreen`.
 - **Deterministic Conflict Resolution**: Last-Write-Wins (LWW) conflict resolution handles concurrent multi-device sync safely.
 

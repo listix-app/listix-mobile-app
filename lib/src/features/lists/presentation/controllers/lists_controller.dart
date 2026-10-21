@@ -54,7 +54,11 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     final repository = ref.read(listsRepositoryProvider);
     await repository.markListInviteCreated(listId);
     await repository.syncList(listId);
-    if (ref.read(authSessionServiceProvider).isReady) {
+    final authSession = ref.read(authSessionServiceProvider);
+    if (!authSession.isReady) {
+      await authSession.ensureInitialized();
+    }
+    if (authSession.isReady) {
       await ref.read(apiSyncServiceProvider).syncPendingOperations();
     }
     state = AsyncData(await repository.getLists());
@@ -107,6 +111,9 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     String? email,
   }) async {
     final authSession = ref.read(authSessionServiceProvider);
+    if (!authSession.isReady) {
+      await authSession.ensureInitialized();
+    }
 
     if (authSession.isReady) {
       final apiCollab = ref.read(apiCollaborationRepositoryProvider);

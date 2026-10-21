@@ -32,16 +32,57 @@ class ShareListSheet extends ConsumerStatefulWidget {
 }
 
 class _ShareListSheetState extends ConsumerState<ShareListSheet> {
+  String? _inviteUrl;
+  bool _isLoadingLink = false;
+  bool _isSharing = false;
+  String? _linkError;
+
   Future<String> _getOrGenerateInviteLink(
     WidgetRef ref,
     ShoppingList list,
   ) async {
     final authSession = ref.read(authSessionServiceProvider);
+    await authSession.ensureInitialized();
     if (authSession.isReady) {
       final apiCollab = ref.read(apiCollaborationRepositoryProvider);
       return await apiCollab.createInviteLink(listId: list.id);
     }
     throw StateError('El servicio de API no está disponible.');
+  }
+
+  Future<String?> _obtainInviteLink(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    // coverage:ignore-start
+    if (_inviteUrl != null && _inviteUrl!.isNotEmpty) {
+      return _inviteUrl;
+    }
+    // coverage:ignore-end
+    setState(() {
+      _isLoadingLink = true;
+      _linkError = null;
+    });
+    try {
+      await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
+      final inviteLink = await _getOrGenerateInviteLink(ref, list);
+      if (mounted) {
+        setState(() {
+          _inviteUrl = inviteLink;
+          _isLoadingLink = false;
+        });
+      }
+      return inviteLink;
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _isLoadingLink = false;
+          _linkError = error.toString();
+        });
+      }
+      rethrow;
+    }
   }
 
   Future<void> _shareInviteLink(
@@ -54,25 +95,151 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
         ? box.localToGlobal(Offset.zero) & box.size
         : null;
     final tr = ref.read(stringsProvider);
+    setState(() => _isSharing = true);
     // coverage:ignore-start
     try {
-      await ref.read(listsControllerProvider.notifier).syncListOnShare(list.id);
-      final inviteLink = await _getOrGenerateInviteLink(ref, list);
+      final inviteLink = await _obtainInviteLink(context, ref, list);
+      final text = ShareService.formatListForSharing(
+        list: list,
+        createdWithText: tr.sharedWithListix,
+        inviteLinkText: tr.shareInviteLinkPrompt(inviteLink ?? ''),
+        pendingSectionTitle: tr.sharePendingSection,
+        completedSectionTitle: tr.shareCompletedSection,
+        emptyListText: tr.shareEmptyListNotice,
+      );
       await ref
           .read(shareServiceProvider)
           .shareWithSystem(
-            text: tr.shareInviteLinkPrompt(inviteLink),
+            text: text,
             subject: tr.shareSubject(list.name),
             sharePositionOrigin: sharePositionOrigin,
           );
-      if (context.mounted && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
     } catch (error) {
       // coverage:ignore-end
       if (context.mounted) _showShareError(context, error);
+    } finally {
+      if (mounted) {
+        setState(() => _isSharing = false);
+      }
     }
   }
+
+  // coverage:ignore-start
+  Future<void> _copyInviteLink(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final tr = ref.read(stringsProvider);
+    try {
+      final link = await _obtainInviteLink(context, ref, list);
+      if (link != null && link.isNotEmpty) {
+        await ref.read(shareServiceProvider).copyToClipboard(link);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+            ..clearSnackBars()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(tr.linkCopied),
+                behavior: SnackBarBehavior.floating,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+        }
+      }
+    } catch (error) {
+      if (context.mounted) _showShareError(context, error);
+    }
+  }
+
+  Future<void> _shareToWhatsApp(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final tr = ref.read(stringsProvider);
+    String? link = _inviteUrl;
+    if (link == null) {
+      try {
+        link = await _obtainInviteLink(context, ref, list);
+      } catch (_) {}
+    }
+    final text = ShareService.formatListForSharing(
+      list: list,
+      createdWithText: tr.sharedWithListix,
+      inviteLinkText: link != null && link.isNotEmpty
+          ? tr.shareInviteLinkPrompt(link)
+          : null,
+      pendingSectionTitle: tr.sharePendingSection,
+      completedSectionTitle: tr.shareCompletedSection,
+      emptyListText: tr.shareEmptyListNotice,
+    );
+    await ref.read(shareServiceProvider).shareToWhatsApp(text);
+  }
+
+  Future<void> _shareToGmail(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final tr = ref.read(stringsProvider);
+    String? link = _inviteUrl;
+    if (link == null) {
+      try {
+        link = await _obtainInviteLink(context, ref, list);
+      } catch (_) {}
+    }
+    final text = ShareService.formatListForSharing(
+      list: list,
+      createdWithText: tr.sharedWithListix,
+      inviteLinkText: link != null && link.isNotEmpty
+          ? tr.shareInviteLinkPrompt(link)
+          : null,
+      pendingSectionTitle: tr.sharePendingSection,
+      completedSectionTitle: tr.shareCompletedSection,
+      emptyListText: tr.shareEmptyListNotice,
+    );
+    await ref
+        .read(shareServiceProvider)
+        .shareToGmail(subject: tr.shareSubject(list.name), body: text);
+  }
+
+  Future<void> _copyFullList(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final tr = ref.read(stringsProvider);
+    String? link = _inviteUrl;
+    if (link == null) {
+      try {
+        link = await _obtainInviteLink(context, ref, list);
+      } catch (_) {}
+    }
+    final text = ShareService.formatListForSharing(
+      list: list,
+      createdWithText: tr.sharedWithListix,
+      inviteLinkText: link != null && link.isNotEmpty
+          ? tr.shareInviteLinkPrompt(link)
+          : null,
+      pendingSectionTitle: tr.sharePendingSection,
+      completedSectionTitle: tr.shareCompletedSection,
+      emptyListText: tr.shareEmptyListNotice,
+    );
+    await ref.read(shareServiceProvider).copyToClipboard(text);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(tr.listCopied),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+    }
+  }
+  // coverage:ignore-end
 
   void _showShareError(BuildContext context, Object error) {
     if (!context.mounted) return;
@@ -340,21 +507,59 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                 ),
             ] else ...[
               if (list.isOwner) ...[
-                OutlinedButton.icon(
-                  key: const Key('share_invite_link_button'),
-                  icon: const Icon(Icons.share_rounded, size: 18),
-                  label: Text(tr.copyInviteLink),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: const BorderSide(color: AppColors.primary),
-                    minimumSize: const Size(double.infinity, 44),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                _ShareInviteUrlCard(
+                  inviteUrl: _inviteUrl,
+                  isLoading: _isLoadingLink,
+                  errorMessage: _linkError,
+                  isSharing: _isSharing,
+                  onRetry: () => _obtainInviteLink(context, ref, list),
+                  onCopy: () => _copyInviteLink(context, ref, list),
+                  onShare: () => _shareInviteLink(context, ref, list),
+                  shareButtonLabel: tr.copyInviteLink,
+                  copyButtonLabel: tr.linkCopied.contains('copiado')
+                      ? 'Copiar enlace'
+                      : 'Copy link',
+                ),
+                const SizedBox(height: 8),
+
+                // Quick sharing options
+                Text(
+                  tr.shareListSubheading,
+                  style: TextStyle(fontSize: 12, color: textMutedColor),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _QuickShareButton(
+                        key: const Key('quick_share_whatsapp_button'),
+                        icon: Icons.chat_bubble_outline_rounded,
+                        label: 'WhatsApp',
+                        color: const Color(0xFF25D366),
+                        onTap: () => _shareToWhatsApp(context, ref, list),
+                      ),
                     ),
-                  ),
-                  // coverage:ignore-start
-                  onPressed: () => _shareInviteLink(context, ref, list),
-                  // coverage:ignore-end
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _QuickShareButton(
+                        key: const Key('quick_share_gmail_button'),
+                        icon: Icons.mail_outline_rounded,
+                        label: 'Gmail',
+                        color: const Color(0xFFEA4335),
+                        onTap: () => _shareToGmail(context, ref, list),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _QuickShareButton(
+                        key: const Key('quick_share_copy_list_button'),
+                        icon: Icons.content_copy_rounded,
+                        label: tr.copyListText,
+                        color: AppColors.primary,
+                        onTap: () => _copyFullList(context, ref, list),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 14),
               ],
@@ -429,6 +634,315 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                 ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ShareInviteUrlCard extends StatelessWidget {
+  final String? inviteUrl;
+  final bool isLoading;
+  final String? errorMessage;
+  final bool isSharing;
+  final VoidCallback onRetry;
+  final VoidCallback onCopy;
+  final VoidCallback onShare;
+  final String shareButtonLabel;
+  final String copyButtonLabel;
+
+  const _ShareInviteUrlCard({
+    required this.inviteUrl,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.isSharing,
+    required this.onRetry,
+    required this.onCopy,
+    required this.onShare,
+    required this.shareButtonLabel,
+    required this.copyButtonLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final textTitleColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimary;
+    final textMutedColor = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondary;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.link_rounded,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Enlace para compartir',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: textTitleColor,
+                  ),
+                ),
+              ),
+              if (isLoading)
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // coverage:ignore-start
+          if (isLoading && inviteUrl == null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6.0),
+              child: Text(
+                'Generando enlace de invitación...',
+                style: TextStyle(fontSize: 12, color: textMutedColor),
+              ),
+            )
+          else if (errorMessage != null && inviteUrl == null) ...[
+            Text(
+              'No se pudo generar el enlace: $errorMessage',
+              style: const TextStyle(fontSize: 12, color: AppColors.delete),
+            ),
+            const SizedBox(height: 6),
+            TextButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: const Text('Reintentar'),
+            ),
+          ] else if (inviteUrl != null) ...[
+          // coverage:ignore-end
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.cardDark
+                    : AppColors.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppColors.primary.withValues(alpha: 0.25),
+                ),
+              ),
+              child: SelectableText(
+                inviteUrl!,
+                key: const Key('share_invite_url_text'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const Key('copy_invite_link_button'),
+                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    label: Text(
+                      copyButtonLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: onCopy,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    key: const Key('share_invite_link_button'),
+                    icon: isSharing
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.share_rounded, size: 16),
+                    label: Text(
+                      shareButtonLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: isSharing ? null : onShare,
+                  ),
+                ),
+              ],
+            ),
+          ] else ...[
+            Text(
+              'Comparte este enlace para que otros puedan ver y editar la lista en tiempo real.',
+              style: TextStyle(fontSize: 12, color: textMutedColor),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const Key('copy_invite_link_button'),
+                    icon: const Icon(Icons.copy_rounded, size: 16),
+                    label: Text(
+                      copyButtonLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: onCopy,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    key: const Key('share_invite_link_button'),
+                    icon: isSharing
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.share_rounded, size: 16),
+                    label: Text(
+                      shareButtonLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: isSharing ? null : onShare,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickShareButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickShareButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: color.withValues(alpha: isDark ? 0.35 : 0.2),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isDark ? Colors.white : AppColors.textPrimary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );

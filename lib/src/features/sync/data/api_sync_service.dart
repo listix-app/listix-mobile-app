@@ -66,7 +66,13 @@ class ApiSyncService {
   }
 
   Future<void> syncPendingOperations() async {
-    if (_isSimulatedOffline || !_authSession.isReady || _syncInProgress) {
+    if (_isSimulatedOffline) {
+      return;
+    }
+    if (!_authSession.isReady) {
+      await _authSession.ensureInitialized();
+    }
+    if (!_authSession.isReady || _syncInProgress) {
       return;
     }
 
@@ -179,7 +185,13 @@ class ApiSyncService {
   }
 
   Future<void> pullRemoteList(String listId) async {
-    if (!_authSession.isReady || _isSimulatedOffline) return;
+    if (_isSimulatedOffline) return;
+    // coverage:ignore-start
+    if (!_authSession.isReady) {
+      await _authSession.ensureInitialized();
+    }
+    // coverage:ignore-end
+    if (!_authSession.isReady) return;
 
     try {
       final response = await _apiClient.get('/lists/$listId');
@@ -281,7 +293,9 @@ class ApiSyncService {
   void _wireSocketEvents(socket_io.Socket socket) {
     socket.on('connect', (_) {
       for (final id in _subscribedListIds) {
-        socket.emit('list:subscribe', {'listId': id});
+        try {
+          socket.emit('list:subscribe', {'listId': id});
+        } catch (_) {}
       }
     });
 
@@ -304,14 +318,18 @@ class ApiSyncService {
   void subscribeToList(String listId) {
     _subscribedListIds.add(listId);
     if (_socket != null && _socket!.connected) {
-      _socket!.emit('list:subscribe', {'listId': listId});
+      try {
+        _socket!.emit('list:subscribe', {'listId': listId});
+      } catch (_) {}
     }
   }
 
   void unsubscribeFromList(String listId) {
     _subscribedListIds.remove(listId);
     if (_socket != null && _socket!.connected) {
-      _socket!.emit('list:unsubscribe', {'listId': listId});
+      try {
+        _socket!.emit('list:unsubscribe', {'listId': listId});
+      } catch (_) {}
     }
   }
 

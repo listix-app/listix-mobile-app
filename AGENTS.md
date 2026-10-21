@@ -393,7 +393,7 @@ Agents must read and follow the architectural designs and schemas in `docs/` bef
 | :--- | :--- | :--- |
 | **`architecture.md`** | [`docs/architecture.md`](docs/architecture.md) | Complete application architecture, layer contracts, state management patterns, and screen/widget specifications. |
 | **`database.md`** | [`docs/database.md`](docs/database.md) | SQLite schema, table structures, indices, version migrations, and offline persistence guarantees. |
-| **`backend.md`** | [`docs/backend.md`](docs/backend.md) | Listix Worker backend architecture, REST API, Socket.IO realtime gateway, and synchronization rules. |
+| **`backend.md`** | [`docs/backend.md`](docs/backend.md) | Backend-agnostic adapter architecture, configuration, and the HTTP/Socket.IO adapter protocol with synchronization rules. |
 | **`ASO_COPY_OPTIMIZATION.md`** | [`docs/ASO_COPY_OPTIMIZATION.md`](docs/ASO_COPY_OPTIMIZATION.md) | App Store and Google Play metadata, localized keywords, value propositions, and conversion copy. |
 
 ---

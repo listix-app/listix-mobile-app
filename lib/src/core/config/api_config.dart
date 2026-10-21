@@ -1,8 +1,12 @@
+import 'package:flutter/foundation.dart';
+
 abstract final class ApiConfig {
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://listix-worker.onrender.com',
-  );
+  static const String apiBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  @visibleForTesting
+  static String? testBaseUrl;
+
+  static String get effectiveBaseUrl => testBaseUrl ?? apiBaseUrl;
 
   static String normalizeUrl(String url) {
     final trimmed = url.trim();
@@ -12,12 +16,13 @@ abstract final class ApiConfig {
     return trimmed;
   }
 
-  static String get normalizedBaseUrl => normalizeUrl(apiBaseUrl);
+  static String get normalizedBaseUrl => normalizeUrl(effectiveBaseUrl);
 
   static String get restBaseUrl => '$normalizedBaseUrl/api/v1';
 
   static String get realtimeNamespace => '/realtime';
 
   static bool get isConfigured =>
-      apiBaseUrl.trim().isNotEmpty && !apiBaseUrl.contains('YOUR_API_BASE_URL');
+      effectiveBaseUrl.trim().isNotEmpty &&
+      !effectiveBaseUrl.contains('YOUR_API_BASE_URL');
 }

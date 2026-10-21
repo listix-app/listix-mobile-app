@@ -4,7 +4,7 @@
 [![PR Checks](https://github.com/nmenag/listix/actions/workflows/pr_checks.yml/badge.svg)](https://github.com/nmenag/listix/actions/workflows/pr_checks.yml)
 [![Release](https://github.com/nmenag/listix/actions/workflows/release.yml/badge.svg)](https://github.com/nmenag/listix/actions/workflows/release.yml)
 
-A fast, minimalist, **offline-first** shopping and checklist mobile application built with Flutter, Dart 3, Material 3, SQLite local persistence, Riverpod, and real-time collaboration powered by the Listix Worker backend.
+A fast, minimalist, **offline-first** shopping and checklist mobile application built with Flutter, Dart 3, Material 3, SQLite local persistence, Riverpod, and real-time collaboration through a pluggable backend adapter.
 
 <p align="center">
   <img src="assets/screenshots/screenshot_1_home.jpg" width="18%" />
@@ -87,21 +87,14 @@ Requires the Flutter SDK (Dart `^3.9.0`, see `pubspec.yaml`) and a connected dev
 flutter pub get
 ```
 
-The app talks to the deployed backend by default (`https://listix-worker.onrender.com`; the free tier can take a while to wake up on the first request), on emulators, physical devices and desktop alike.
+Provide the backend URL with `--dart-define=API_BASE_URL=<url>` on every `flutter run` and build. Without it the app runs local-only (no sync or sharing).
 
 > [!NOTE]
 > Android builds define Gradle product flavors (`dev`, `preview`, `prod`). Always pass `--flavor dev` (or your target flavor) when running or debugging on Android; omitting `--flavor` causes Gradle to assemble all flavors without generating the default unflavored `app-debug.apk`.
 
 ```bash
-flutter run --flavor dev                      # default device (dev flavor)
-flutter run --flavor dev -d <device-id>       # pick one from `flutter devices`
-```
-
-To be explicit (or override it), pass the URL with `--dart-define`:
-
-```bash
-flutter run --flavor dev \
-  --dart-define=API_BASE_URL=https://listix-worker.onrender.com
+flutter run --flavor dev --dart-define=API_BASE_URL=<backend-url>
+flutter run --flavor dev -d <device-id> --dart-define=API_BASE_URL=<backend-url>   # pick one from `flutter devices`
 ```
 
 - **Flavors & Environments**:
@@ -111,7 +104,7 @@ flutter run --flavor dev \
 - `APP_ENV` (`dev` default, `preview`, `prod`) controls ads; add `--dart-define=APP_ENV=prod` along with `--flavor prod` to test production behavior.
 - Hot reload: press `r` in the `flutter run` terminal; hot restart: `R`. Run on two devices against the same backend to try sharing and realtime sync.
 - Release builds: see `build-aab.sh`.
-- Optional, for backend work only: run [listix-worker](../listix-worker) locally and use `--dart-define=API_BASE_URL=http://10.0.2.2:3000` (Android emulator) or `http://localhost:3000` (desktop). Plain `http://` is allowed in debug builds only.
+- For a local backend: run it locally and use `--dart-define=API_BASE_URL=http://10.0.2.2:3000` (Android emulator) or `http://localhost:3000` (desktop). Plain `http://` is allowed in debug builds only.
 
 ---
 
@@ -121,10 +114,10 @@ The test suite covers unit, widget, and integration tests across all features wi
 
 ```bash
 # Run all unit and widget tests
-flutter test
+flutter test --dart-define=API_BASE_URL=http://localhost:3000
 
 # Run test suite and generate coverage profile
-flutter test --coverage test/all_tests_coverage.dart
+flutter test --dart-define=API_BASE_URL=http://localhost:3000 --coverage test/all_tests_coverage.dart
 
 # Enforce strict 100% test coverage verification
 dart run tool/verify_coverage.dart
@@ -140,4 +133,4 @@ dart format --output=none --set-exit-if-changed .
 
 ## 📄 License
 
-MIT License. Designed and built with Flutter, SQLite, and the Listix Worker backend.
+MIT License. Designed and built with Flutter and SQLite.

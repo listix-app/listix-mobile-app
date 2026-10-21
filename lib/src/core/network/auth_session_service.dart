@@ -56,15 +56,29 @@ class AuthSessionService {
       _initialized = false;
       return;
     }
-    _initialized = true;
     await _loadFromStorage();
     if (_cachedAccessToken == null || _cachedRefreshToken == null) {
       await authenticateAnonymously();
+      _initialized = true;
       return;
     }
     if (_isExpiringSoon()) {
       await refreshTokens();
     }
+    _initialized = true;
+  }
+
+  Future<void> ensureInitialized() async {
+    if (!_configured) {
+      _initialized = false;
+      return;
+    }
+    if (_initialized) {
+      return;
+    }
+    try {
+      await initialize();
+    } catch (_) {}
   }
 
   Future<String?> getAccessToken() async {

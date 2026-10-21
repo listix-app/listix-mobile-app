@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:share_plus/share_plus.dart';
 import 'package:socket_io_client/socket_io_client.dart' as socket_io;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -21,6 +22,7 @@ import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:listix/src/features/lists/domain/repositories/lists_repository.dart';
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
 import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.dart';
+import 'package:listix/src/features/lists/presentation/services/share_service.dart';
 import 'package:listix/src/features/sync/data/api_sync_service.dart';
 import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:listix/src/features/sync/domain/sync_status.dart';
@@ -301,26 +303,30 @@ class FakeListsRepositoryForSync implements ListsRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(() async {
-    sqfliteFfiInit();
-    try {
-      if (databaseFactory != databaseFactoryFfi) {
+  group('Network and API Sync Tests Suite', () {
+    setUpAll(() async {
+      ApiConfig.testBaseUrl = 'https://listix-worker.onrender.com';
+      sqfliteFfiInit();
+      try {
+        if (databaseFactory != databaseFactoryFfi) {
+          databaseFactory = databaseFactoryFfi;
+        }
+      } catch (_) {
         databaseFactory = databaseFactoryFfi;
       }
-    } catch (_) {
-      databaseFactory = databaseFactoryFfi;
-    }
-    AppDatabase.overrideDbPath = inMemoryDatabasePath;
-    await AppDatabase.instance.database;
-  });
+      AppDatabase.overrideDbPath = inMemoryDatabasePath;
+      await AppDatabase.instance.database;
+    });
 
-  tearDownAll(() {
-    AuthSessionService.instance.testInitialized = false;
-  });
+    tearDownAll(() {
+      ApiConfig.testBaseUrl = null;
+      AuthSessionService.instance.testInitialized = false;
+    });
 
-  group('ApiConfig Tests', () {
+    group('ApiConfig Tests', () {
     test('values and getters', () {
-      expect(ApiConfig.apiBaseUrl, isNotEmpty);
+      expect(ApiConfig.apiBaseUrl, isNotNull);
+      expect(ApiConfig.effectiveBaseUrl, isNotEmpty);
       expect(ApiConfig.normalizedBaseUrl, isNotEmpty);
       expect(ApiConfig.restBaseUrl, contains('/api/v1'));
       expect(ApiConfig.realtimeNamespace, '/realtime');
@@ -1803,6 +1809,10 @@ void main() {
         apiClient: client,
         authSession: auth,
       );
+      final fakeShare = ShareService(
+        systemShare: (text, {subject, sharePositionOrigin}) async =>
+            const ShareResult('success', ShareResultStatus.success),
+      );
 
       await tester.pumpWidget(
         ProviderScope(
@@ -1810,6 +1820,7 @@ void main() {
             listsRepositoryProvider.overrideWithValue(listsRepo),
             authSessionServiceProvider.overrideWithValue(auth),
             apiCollaborationRepositoryProvider.overrideWithValue(collabRepo),
+            shareServiceProvider.overrideWithValue(fakeShare),
           ],
           child: const MaterialApp(
             home: Scaffold(
@@ -1901,4 +1912,5 @@ void main() {
       },
     );
   });
+});
 }

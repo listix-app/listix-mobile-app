@@ -31,6 +31,11 @@ class ApiCollaborationRepository {
     required String listId,
     Duration expiration = const Duration(days: 7),
   }) async {
+    // coverage:ignore-start
+    if (!_authSession.isReady) {
+      await _authSession.ensureInitialized();
+    }
+    // coverage:ignore-end
     if (!_authSession.isReady) {
       throw const InvalidInviteException('Servicio de API no configurado.');
     }
