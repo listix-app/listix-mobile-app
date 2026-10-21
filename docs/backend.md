@@ -22,10 +22,11 @@ Listix utilizes invisible anonymous authentication:
 
 ## Environment Variables & Compilation
 
-Pass `API_BASE_URL` when compiling or running the Flutter app:
+Pass `API_BASE_URL` when compiling or running the Flutter app. Note that the Android project configures Gradle product flavors (`dev`, `preview`, `prod`), so `--flavor dev` (or target flavor) is required when running on Android:
 
 ```bash
 flutter run \
+  --flavor dev \
   --dart-define=API_BASE_URL=https://listix-worker.onrender.com
 ```
 
@@ -33,6 +34,7 @@ During local development with Docker:
 
 ```bash
 flutter run \
+  --flavor dev \
   --dart-define=API_BASE_URL=http://localhost:3000
 ```
 

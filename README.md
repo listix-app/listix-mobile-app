@@ -87,21 +87,28 @@ Requires the Flutter SDK (Dart `^3.9.0`, see `pubspec.yaml`) and a connected dev
 flutter pub get
 ```
 
-The app talks to the deployed backend by default (`https://listix-worker.onrender.com`; the free tier can take a while to wake up on the first request), on emulators, physical devices and desktop alike:
+The app talks to the deployed backend by default (`https://listix-worker.onrender.com`; the free tier can take a while to wake up on the first request), on emulators, physical devices and desktop alike.
+
+> [!NOTE]
+> Android builds define Gradle product flavors (`dev`, `preview`, `prod`). Always pass `--flavor dev` (or your target flavor) when running or debugging on Android; omitting `--flavor` causes Gradle to assemble all flavors without generating the default unflavored `app-debug.apk`.
 
 ```bash
-flutter run                      # default device
-flutter run -d <device-id>       # pick one from `flutter devices`
+flutter run --flavor dev                      # default device (dev flavor)
+flutter run --flavor dev -d <device-id>       # pick one from `flutter devices`
 ```
 
 To be explicit (or override it), pass the URL with `--dart-define`:
 
 ```bash
-flutter run \
+flutter run --flavor dev \
   --dart-define=API_BASE_URL=https://listix-worker.onrender.com
 ```
 
-- `APP_ENV` (`dev` default, `preview`, `prod`) controls ads; add `--dart-define=APP_ENV=prod` to test production behavior.
+- **Flavors & Environments**:
+  - `dev` (default for local development): `--flavor dev --dart-define=APP_ENV=dev` (debug suffix `.debug`, app name "Listix Dev")
+  - `preview` (staging/testing): `--flavor preview --dart-define=APP_ENV=preview` (suffix `.preview`, app name "Listix Preview")
+  - `prod` (production): `--flavor prod --dart-define=APP_ENV=prod` (app name "Listix")
+- `APP_ENV` (`dev` default, `preview`, `prod`) controls ads; add `--dart-define=APP_ENV=prod` along with `--flavor prod` to test production behavior.
 - Hot reload: press `r` in the `flutter run` terminal; hot restart: `R`. Run on two devices against the same backend to try sharing and realtime sync.
 - Release builds: see `build-aab.sh`.
 - Optional, for backend work only: run [listix-worker](../listix-worker) locally and use `--dart-define=API_BASE_URL=http://10.0.2.2:3000` (Android emulator) or `http://localhost:3000` (desktop). Plain `http://` is allowed in debug builds only.
