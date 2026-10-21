@@ -6,7 +6,7 @@ enum PendingEntityType { list, item }
 /// Represents the mutation operation type.
 enum PendingOpType { upsert, delete }
 
-/// Record representing a local mutation queued for synchronization with Supabase.
+/// Record representing a local mutation queued for synchronization with the backend.
 class PendingOperation {
   final String id;
   final String listId;

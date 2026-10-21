@@ -4,8 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'src/app.dart';
+import 'src/core/config/api_config.dart';
 import 'src/core/config/app_environment.dart';
-import 'src/core/services/supabase_service.dart';
+import 'src/core/network/auth_session_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,10 +25,12 @@ void main() async {
       debugPrint('[MobileAds] Initialization failed: $e');
     }
   }
-  try {
-    await SupabaseService.instance.initialize();
-  } catch (e) {
-    debugPrint('[SupabaseService] Initialization failed: $e');
+  if (ApiConfig.isConfigured) {
+    try {
+      await AuthSessionService.instance.initialize();
+    } catch (e) {
+      debugPrint('[AuthSessionService] Initialization failed: $e');
+    }
   }
   runApp(const ProviderScope(child: ListixApp()));
 }

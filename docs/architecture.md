@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-Listix is a fast, minimalist, **offline-first** checklist and shopping list application. It is engineered around instant responsiveness, zero-lag local SQLite persistence, real-time multi-device collaboration powered by Supabase, and full data sovereignty with on-device backup and restore.
+Listix is a fast, minimalist, **offline-first** checklist and shopping list application. It is engineered around instant responsiveness, zero-lag local SQLite persistence, real-time multi-device collaboration powered by the Listix Worker backend, and full data sovereignty with on-device backup and restore.
 
 ### Scope Matrix
 
@@ -11,10 +11,10 @@ Listix is a fast, minimalist, **offline-first** checklist and shopping list appl
 | **List Management** | ✅ | Create, view, edit name, delete, star, sort, grid/list layout toggle |
 | **Friction-Free Item Entry** | ✅ | Fixed bottom input, enter/tap submit, auto-refocus |
 | **Item Interaction** | ✅ | Animated custom checkbox, strikethrough typography animation, opacity dimming, collapsible completed group, swipe-to-delete |
-| **List Sharing & Collaboration** | ✅ | Supabase Realtime synchronization, anonymous token invites, web & deep-link joining (`listix://join/:token`), active presence avatars, 5-member limit enforcement |
+| **List Sharing & Collaboration** | ✅ | Socket.IO Realtime synchronization, anonymous token invites, web & deep-link joining (`listix://join/:token`), active presence avatars, 5-member limit enforcement |
 | **Sync Visual States** | ✅ | Realtime presence badge, discrete sync indicator, offline mutation queueing |
 | **Offline Persistence** | ✅ | On-device SQLite database with atomic transactions and WAL mode |
-| **Real-Time Synchronization**| ✅ | Supabase Realtime channels and transactional advisory lock RPCs (`sync_shared_list`) |
+| **Real-Time Synchronization**| ✅ | Socket.IO realtime channels and transactional PostgreSQL advisory locks on the NestJS backend |
 | **Backup & Restore** | ✅ | Full JSON schema v1 export/import, CSV spreadsheet export, Plain Text checklist summaries, Android Storage Access Framework (SAF) native document picker/creator, share sheets, merge/overwrite conflict resolution |
 | **AdMob Ads (Banner & Interstitial)**| ✅ | Google Mobile Ads integration with anchored adaptive banners, interstitial preloading, and user consent handling |
 | **Notifications & Preferences** | ✅ | Local notifications scheduling, Material 3 appearance switching (Light/Dark/System), bilingual internationalization (EN/ES) |
@@ -62,14 +62,14 @@ lib/
     │   │       │   ├── backup_controller.dart
     │   │       │   └── backup_state.dart
     │   │       └── screens/backup_screen.dart
-    │   ├── collaboration/                  # Supabase Realtime & invite tokens
+    │   ├── collaboration/                  # Realtime & invite tokens
     │   │   ├── domain/                     # Collaboration contracts & invite token service
     │   │   │   ├── entities/               # CollaborationEvent, CollaborationExceptions
     │   │   │   ├── repositories/collaboration_repository.dart
     │   │   │   └── services/invite_token_service.dart
-    │   │   ├── data/                       # Supabase & WebSocket repositories
+    │   │   ├── data/                       # API & WebSocket repositories
     │   │   │   └── repositories/
-    │   │   │       ├── supabase_collaboration_repository.dart
+    │   │   │       ├── api_collaboration_repository.dart
     │   │   │       └── websocket_collaboration_repository.dart
     │   │   └── presentation/               # Presence widgets, join dialog & invite screen
     │   │       ├── controllers/collaboration_controller.dart
@@ -108,22 +108,25 @@ lib/
     │       ├── domain/                     # Sync status & pending operation models
     │       │   ├── pending_operation.dart
     │       │   └── sync_status.dart
-    │       ├── data/                       # Supabase sync & mock engine fallback
+    │       ├── data/                       # REST sync & mock engine fallback
     │       │   ├── mock_backend_sync_service.dart
-    │       │   └── supabase_sync_service.dart
+    │       │   └── api_sync_service.dart
     │       └── presentation/               # Sync controller & status indicator
     │           ├── sync_controller.dart
     │           └── widgets/sync_status_badge.dart
     └── core/                               # Cross-cutting foundational modules
-        ├── config/                         # Environment & Supabase configuration
-        │   ├── app_environment.dart
-        │   └── supabase_config.dart
+        ├── config/                         # Environment & API configuration
+        │   ├── api_config.dart
+        │   └── app_environment.dart
         ├── localization/                   # Bilingual ARB strings & locale controller
         │   ├── app_strings.dart
         │   ├── locale_controller.dart
         │   └── generated/
-        ├── services/                       # Wrappers for Supabase & URL launcher
-        │   ├── supabase_service.dart
+        ├── network/                        # HTTP client & session management
+        │   ├── api_client.dart
+        │   ├── api_exception.dart
+        │   └── auth_session_service.dart
+        ├── services/                       # URL launcher service
         │   └── url_launcher_service.dart
         ├── storage/                        # SQLite AppDatabase and table definitions
         │   └── app_database.dart
@@ -152,12 +155,12 @@ lib/
 - **Foreign Key Cascades**: Database schema enforces `PRAGMA foreign_keys = ON` ensuring cascaded deletion of items and collaborators when a list is removed.
 - **Database Architecture Documentation**: See [docs/database.md](database.md) for full schema definitions, indices, and query optimizations.
 
-### C. Real-Time Collaboration & Supabase Synchronization
-- **WebSocket Broadcast & Presence**: Shared lists establish Supabase Realtime channels. Collaborators broadcast user presence and active edits with sub-second latency.
-- **Secure Token-Based Invites**: Share links encode cryptographically random tokens hashed via SHA-256 before transmission. RPC `create_list_invite` stores the hash without leaking list IDs.
-- **Transactional Member Limit Enforcement**: RPC `join_list_by_token` verifies token validity and enforces a strict 5-collaborator maximum in a PostgreSQL transaction.
+### C. Real-Time Collaboration & Backend Synchronization
+- **WebSocket Broadcast & Presence**: Shared lists establish Socket.IO connections to the `/realtime` namespace. Realtime updates notify clients when lists or items change.
+- **Secure Token-Based Invites**: Share links encode cryptographically generated tokens managed by the worker backend.
+- **Transactional Member Limit Enforcement**: The backend verifies token validity and enforces a strict 5-collaborator maximum in a PostgreSQL transaction.
 - **Deep Linking Integration**: Android App Links and custom URL schemes (`listix://join/:token`) route users straight to `JoinInviteScreen`.
-- **Advisory Lock Sync**: `sync_shared_list` uses PostgreSQL advisory locking to prevent race conditions during concurrent multi-device sync.
+- **Deterministic Conflict Resolution**: Last-Write-Wins (LWW) conflict resolution handles concurrent multi-device sync safely.
 
 ### D. Backup, Data Portability & Android Storage Access Framework (SAF)
 - **Data Sovereignty**: Complete offline backup and restore without mandatory cloud accounts or external lock-in.

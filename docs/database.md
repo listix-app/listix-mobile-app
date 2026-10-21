@@ -119,7 +119,7 @@ Collaborators who have joined or been invited to a shared list.
 | `role` | `TEXT` | `NOT NULL DEFAULT 'member'` | Collaborator role (`owner`, `admin`, `member`) |
 
 ### D. `pending_operations`
-Tracks offline mutations pending remote sync to Supabase.
+Tracks offline mutations pending remote sync to the backend.
 
 | Column | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -173,7 +173,7 @@ CREATE INDEX idx_pending_ops_created ON pending_operations(created_at);
 1. **Client-Generated UUIDs**: All primary keys are UUID v4 values generated on the device. This guarantees that items created offline will never collide with items created by other collaborators or on the server.
 2. **Offline Mutation Queue**:
    - Every offline action records an entry in `pending_operations`.
-   - The queue processor batches pending records, executing transactional RPCs against Supabase when connectivity is restored.
+   - The queue processor batches pending records, synchronizing mutations against the backend when connectivity is restored.
    - Upon successful server acknowledgment, local entities transition to `is_synced = 1` and corresponding pending operations are cleared.
 3. **Conflict Resolution Strategy**:
    - Uses **Last-Write-Wins (LWW)** backed by `updated_at` timestamps for scalar updates (e.g. list name).

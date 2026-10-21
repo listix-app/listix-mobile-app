@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
-import '../../../../core/services/supabase_service.dart';
+import '../../../../core/network/auth_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../collaboration/data/repositories/supabase_collaboration_repository.dart';
+import '../../../collaboration/data/repositories/api_collaboration_repository.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../controllers/lists_controller.dart';
@@ -36,16 +36,12 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     WidgetRef ref,
     ShoppingList list,
   ) async {
-    final supabaseService = ref.read(supabaseServiceProvider);
-    // coverage:ignore-start
-    if (supabaseService.isReady) {
-      final supabaseCollab = ref.read(supabaseCollaborationRepositoryProvider);
-      return await supabaseCollab.createInviteLink(listId: list.id);
+    final authSession = ref.read(authSessionServiceProvider);
+    if (authSession.isReady) {
+      final apiCollab = ref.read(apiCollaborationRepositoryProvider);
+      return await apiCollab.createInviteLink(listId: list.id);
     }
-    // coverage:ignore-end
-    throw StateError(
-      'Supabase no está disponible. Verifica Anonymous Sign-Ins en el proyecto.',
-    );
+    throw StateError('El servicio de API no está disponible.');
   }
 
   Future<void> _shareInviteLink(

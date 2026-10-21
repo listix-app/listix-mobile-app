@@ -80,25 +80,21 @@ void main() {
 
         expect(find.text('Sincronizado'), findsOneWidget);
 
-        // Open dialog
         await tester.tap(find.byType(SyncStatusBadge));
         await tester.pumpAndSettle();
 
         expect(find.text('Estado de Sincronización'), findsOneWidget);
 
-        // Toggle switch in dialog
         await tester.tap(find.byType(SwitchListTile));
         await tester.pumpAndSettle();
         expect(service.simulateOffline, isTrue);
 
-        // Reopen dialog and close it
         await tester.tap(find.byType(SyncStatusBadge));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Cerrar'));
         await tester.pumpAndSettle();
         expect(find.text('Estado de Sincronización'), findsNothing);
 
-        // Reopen dialog and tap Sincronizar ahora
         await tester.tap(find.byType(SyncStatusBadge));
         await tester.pumpAndSettle();
         await tester.tap(find.text('Sincronizar ahora'));

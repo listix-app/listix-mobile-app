@@ -14,6 +14,7 @@ import 'full_coverage_gap_test.dart' as gap_test;
 import 'interstitial_and_layout_test.dart' as interstitial_and_layout_test;
 import 'lists_controller_test.dart' as lists_controller_test;
 import 'mock_sync_service_and_controller_test.dart' as sync_test;
+import 'network_and_api_sync_test.dart' as network_and_api_sync_test;
 import 'notifications_feature_test.dart' as notif_test;
 import 'screens_and_navigation_test.dart' as screens_test;
 import 'settings_and_theme_test.dart' as settings_test;
@@ -61,6 +62,7 @@ void main() {
   domain_test.main();
   lists_controller_test.main();
   sync_test.main();
+  network_and_api_sync_test.main();
   screens_test.main();
   theme_test.main();
   widget_test.main();

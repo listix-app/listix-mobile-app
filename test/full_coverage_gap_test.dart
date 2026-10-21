@@ -1,5 +1,5 @@
 import 'package:listix/src/features/sync/domain/pending_operation.dart';
-import 'package:listix/src/core/config/supabase_config.dart';
+import 'package:listix/src/core/config/api_config.dart';
 import 'package:listix/src/features/collaboration/domain/entities/collaboration_exceptions.dart';
 import 'package:listix/src/features/collaboration/domain/services/invite_token_service.dart';
 import 'package:listix/src/features/collaboration/domain/entities/collaboration_event.dart';
@@ -960,11 +960,12 @@ void runCoverageGaps() {
       op.toString();
     });
 
-    test('SupabaseConfig coverage', () {
-      SupabaseConfig.supabaseUrl;
-      SupabaseConfig.supabaseAnonKey;
-      SupabaseConfig.inviteBaseUrl;
-      SupabaseConfig.isConfigured;
+    test('ApiConfig coverage', () {
+      ApiConfig.apiBaseUrl;
+      ApiConfig.normalizedBaseUrl;
+      ApiConfig.restBaseUrl;
+      ApiConfig.realtimeNamespace;
+      ApiConfig.isConfigured;
     });
 
     test('CollaborationException coverage', () {

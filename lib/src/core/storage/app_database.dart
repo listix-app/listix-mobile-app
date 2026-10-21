@@ -23,6 +23,9 @@ class AppDatabase {
   }
 
   @visibleForTesting
+  static Future<void> onOpenForTest(Database db) => instance._onOpen(db);
+
+  @visibleForTesting
   static Future<String> resolveDatabasePath({
     String? override,
     Future<String> Function()? getDefaultDatabasesPath,

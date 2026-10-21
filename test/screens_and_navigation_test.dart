@@ -1240,7 +1240,7 @@ void main() {
             .didPushRouteInformation(
               RouteInformation(
                 uri: Uri.parse(
-                  'https://listix-invite-worker.old-dream-f458.workers.dev/join/K7M4XP2Q',
+                  'https://listix-worker.onrender.com/join/K7M4XP2Q',
                 ),
               ),
             );
@@ -1250,6 +1250,15 @@ void main() {
           find.byType(JoinInviteScreen),
         );
         expect(httpsScreen.token, 'K7M4XP2Q');
+
+        container
+            .read(appRouterProvider)
+            .routeInformationProvider
+            .didPushRouteInformation(
+              RouteInformation(uri: Uri.parse('https://api.listix.app/join')),
+            );
+        await tester.pumpAndSettle();
+        expect(find.byType(JoinInviteScreen), findsOneWidget);
 
         await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 100)),

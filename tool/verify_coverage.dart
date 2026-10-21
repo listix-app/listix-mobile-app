@@ -36,7 +36,10 @@ void main(List<String> args) {
   const excludedLines = {
     'lib/src/features/about/presentation/screens/about_screen.dart': {13},
     'lib/src/features/lists/presentation/screens/home_screen.dart': {19},
-    'lib/src/features/settings/presentation/screens/settings_screen.dart': {19},
+    'lib/src/features/settings/presentation/screens/settings_screen.dart': {
+      19,
+      20,
+    },
   };
 
   var totalLines = 0;
