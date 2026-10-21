@@ -22,6 +22,7 @@ class ShareListSheet extends ConsumerStatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      useSafeArea: true,
       builder: (ctx) => ShareListSheet(listId: listId),
     );
   }
