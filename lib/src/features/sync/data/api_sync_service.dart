@@ -81,8 +81,22 @@ class ApiSyncService {
 
     try {
       await _authSession.getAccessToken();
+      final allPending = await _listsRepository.getPendingOperations();
+      for (final op in allPending) {
+        if (!_isUuid(op.listId) ||
+            (op.entityType == PendingEntityType.item &&
+                !_isUuid(op.entityId))) {
+          await _listsRepository.removePendingOperation(op.id);
+        }
+      }
+
       final pendingOps = (await _listsRepository.getPendingOperations())
-          .where((op) => _isUuid(op.listId))
+          .where(
+            (op) =>
+                _isUuid(op.listId) &&
+                (op.entityType != PendingEntityType.item ||
+                    _isUuid(op.entityId)),
+          )
           .toList();
 
       for (final op in pendingOps) {
@@ -213,7 +227,7 @@ class ApiSyncService {
       final rawMembers = (data['members'] as List?) ?? [];
 
       final remoteItems = rawItems.map((item) {
-        final m = item as Map<String, dynamic>;
+        final m = Map<String, dynamic>.from(item as Map);
         return TodoItem(
           id: m['id'] as String,
           listId: listId,
@@ -228,7 +242,7 @@ class ApiSyncService {
       }).toList();
 
       final remoteMembers = rawMembers.map((member) {
-        final m = member as Map<String, dynamic>;
+        final m = Map<String, dynamic>.from(member as Map);
         final roleStr = (m['role'] as String?) ?? 'member';
         final role = CollaboratorRole.values.firstWhere(
           (r) => r.name == roleStr,
@@ -246,6 +260,17 @@ class ApiSyncService {
         );
       }).toList();
 
+      final existingList = await _listsRepository.getListById(listId);
+      final currentUserId = _authSession.currentUserId;
+      final isOwner =
+          remoteMembers.any(
+            (m) =>
+                currentUserId != null &&
+                m.id == currentUserId &&
+                m.role == CollaboratorRole.owner,
+          ) ||
+          (existingList?.isOwner ?? false);
+
       final mergedList = ShoppingList(
         id: listId,
         name: (rawList['name'] as String?) ?? 'Lista Compartida',
@@ -257,6 +282,7 @@ class ApiSyncService {
             DateTime.tryParse(rawList['createdAt']?.toString() ?? '') ??
             DateTime.now(),
         isSynced: true,
+        isOwner: isOwner,
         items: remoteItems,
         collaborators: remoteMembers,
       );
@@ -266,16 +292,30 @@ class ApiSyncService {
     } catch (_) {}
   }
 
+  String _cleanToken(String token) {
+    final trimmed = token.trim();
+    if (trimmed.toLowerCase().startsWith('bearer ')) {
+      return trimmed.substring(7).trim();
+    }
+    return trimmed;
+  }
+
   Future<void> _ensureSocketConnected() async {
     if (_socket != null && _socket!.connected) {
       return;
     }
-    final token = await _authSession.getAccessToken();
-    if (token == null) return;
+    final rawToken = await _authSession.getAccessToken();
+    if (rawToken == null) return;
+    final token = _cleanToken(rawToken);
 
     if (_socket == null) {
       final options = socket_io.OptionBuilder()
-          .setTransports(['websocket'])
+          .setTransports(['websocket', 'polling'])
+          .enableReconnection()
+          .setReconnectionAttempts(15)
+          .setReconnectionDelay(2000)
+          .setReconnectionDelayMax(10000)
+          .setTimeout(25000)
           .disableAutoConnect()
           .setAuth({'token': token})
           .build();
@@ -285,6 +325,7 @@ class ApiSyncService {
       );
       _wireSocketEvents(_socket!);
     } else {
+      _socket!.auth = {'token': token};
       _socket!.io.options?['auth'] = {'token': token};
     }
     _socket!.connect();
@@ -295,21 +336,27 @@ class ApiSyncService {
       for (final id in _subscribedListIds) {
         try {
           socket.emit('list:subscribe', {'listId': id});
+          pullRemoteList(id);
         } catch (_) {}
       }
     });
 
-    socket.on('list.changed', (data) {
+    void handleListUpdated(dynamic data) {
       if (data is Map && data.containsKey('listId')) {
-        pullRemoteList(data['listId'] as String);
+        pullRemoteList(data['listId'].toString());
       }
-    });
+    }
+
+    socket.on('list.changed', handleListUpdated);
+    socket.on('list:update', handleListUpdated);
 
     socket.on('session.error', (_) async {
       await _authSession.refreshTokens();
       final newToken = await _authSession.getAccessToken();
       if (newToken != null && _socket != null) {
-        _socket!.io.options?['auth'] = {'token': newToken};
+        final clean = _cleanToken(newToken);
+        _socket!.auth = {'token': clean};
+        _socket!.io.options?['auth'] = {'token': clean};
         _socket!.connect();
       }
     });
@@ -321,6 +368,8 @@ class ApiSyncService {
       try {
         _socket!.emit('list:subscribe', {'listId': listId});
       } catch (_) {}
+    } else {
+      _ensureSocketConnected();
     }
   }
 

@@ -43,6 +43,15 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     } catch (_) {}
   }
 
+  void _syncIfReady() {
+    try {
+      final authSession = ref.read(authSessionServiceProvider);
+      if (authSession.isReady) {
+        ref.read(apiSyncServiceProvider).syncPendingOperations();
+      }
+    } catch (_) {}
+  }
+
   String _getCurrentEmail() {
     return 'user@listix.local';
   }
@@ -173,6 +182,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.updateListName(id, newName, color: color);
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -195,6 +205,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.archiveList(id);
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -217,6 +228,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.unarchiveList(id);
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -233,6 +245,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.deleteList(id);
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -250,6 +263,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.deleteList(id);
+      _syncIfReady();
       return targetList;
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
@@ -272,6 +286,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.restoreList(list);
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -301,6 +316,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.toggleListStar(id);
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -330,6 +346,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     try {
       final repository = ref.read(listsRepositoryProvider);
       await repository.reorderLists(reordered.map((l) => l.id).toList());
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -379,6 +396,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           senderName: _getCurrentName(),
         ),
       );
+      _syncIfReady();
       final list = targetList;
       final isShared =
           (list?.isShared ?? false) || (list?.canSyncAndShare ?? false);
@@ -434,6 +452,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           senderName: _getCurrentName(),
         ),
       );
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -476,6 +495,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           ),
         );
       }
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -507,6 +527,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           senderName: _getCurrentName(),
         ),
       );
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -542,6 +563,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           senderName: _getCurrentName(),
         ),
       );
+      _syncIfReady();
       return targetItem;
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
@@ -573,6 +595,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           senderName: _getCurrentName(),
         ),
       );
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());
@@ -623,6 +646,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
         listId,
         reordered.map((i) => i.id).toList(),
       );
+      _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
       state = AsyncData(await repository.getLists());

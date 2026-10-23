@@ -11,6 +11,7 @@ import '../../../ads/data/interstitial_ad_service.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
+import '../../../sync/data/api_sync_service.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/todo_item.dart';
 import '../controllers/lists_controller.dart';
@@ -49,6 +50,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ref
               .read(collaborationControllerProvider.notifier)
               .joinListRoom(widget.listId);
+          ref.read(apiSyncServiceProvider).subscribeToList(widget.listId);
         }
       }
     });
@@ -60,6 +62,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
       ref
           .read(collaborationControllerProvider.notifier)
           .leaveListRoom(widget.listId);
+      ref.read(apiSyncServiceProvider).unsubscribeFromList(widget.listId);
     } catch (_) {}
     super.deactivate();
   }
@@ -160,10 +163,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         ref
             .read(collaborationControllerProvider.notifier)
             .joinListRoom(widget.listId);
+        ref.read(apiSyncServiceProvider).subscribeToList(widget.listId);
       } else if (prevCan && !nextCan) {
         ref
             .read(collaborationControllerProvider.notifier)
             .leaveListRoom(widget.listId);
+        ref.read(apiSyncServiceProvider).unsubscribeFromList(widget.listId);
       }
     });
 
