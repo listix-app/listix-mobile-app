@@ -282,4 +282,10 @@ class AppStrings {
       _l10n.deleteCompletedItemsMessage(count);
   String completedItemsDeleted(int count) => _l10n.completedItemsDeleted(count);
   String inviteProcessError(String error) => _l10n.inviteProcessError(error);
+  String get shareAsText => _l10n.shareAsText;
+  String get copyListAsText => _l10n.copyListAsText;
+  String get shareTextSubtitle => _l10n.shareTextSubtitle;
+  String get listTextCopied => _l10n.listTextCopied;
+  String get realtimeCollaboration => _l10n.realtimeCollaboration;
+  String get itemActions => _l10n.itemActions;
 }

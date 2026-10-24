@@ -247,6 +247,12 @@ void main() {
         expect(tr.confirmArchiveTitle, isNotEmpty);
         expect(tr.confirmArchiveMessage('Lista'), contains('Lista'));
         expect(tr.inviteProcessError('err'), contains('err'));
+        expect(tr.shareAsText, isNotEmpty);
+        expect(tr.copyListAsText, isNotEmpty);
+        expect(tr.shareTextSubtitle, isNotEmpty);
+        expect(tr.listTextCopied, isNotEmpty);
+        expect(tr.realtimeCollaboration, isNotEmpty);
+        expect(tr.itemActions, isNotEmpty);
       }
     });
 

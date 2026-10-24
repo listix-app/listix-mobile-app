@@ -1879,6 +1879,13 @@ void main() {
               const ShareResult('success', ShareResultStatus.success),
         );
 
+        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        });
+
         await tester.pumpWidget(
           ProviderScope(
             overrides: [

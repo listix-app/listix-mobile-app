@@ -9,6 +9,7 @@ class TodoItemTile extends StatelessWidget {
   final VoidCallback onToggle;
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
+  final VoidCallback? onLongPress;
   final Color? activeColor;
   final int? reorderIndex;
 
@@ -18,6 +19,7 @@ class TodoItemTile extends StatelessWidget {
     required this.onToggle,
     required this.onDelete,
     this.onEdit,
+    this.onLongPress,
     this.activeColor,
     this.reorderIndex,
   });
@@ -58,6 +60,20 @@ class TodoItemTile extends StatelessWidget {
           size: 22,
         ),
       ),
+      secondaryBackground: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        decoration: BoxDecoration(
+          color: AppColors.deleteBackground,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Icon(
+          Icons.delete_outline,
+          color: AppColors.delete,
+          size: 22,
+        ),
+      ),
       child: AnimatedOpacity(
         opacity: item.isCompleted ? 0.45 : 1.0,
         duration: const Duration(milliseconds: 200),
@@ -75,6 +91,12 @@ class TodoItemTile extends StatelessWidget {
                 HapticFeedback.lightImpact();
                 onToggle();
               },
+              onLongPress: onLongPress != null
+                  ? () {
+                      HapticFeedback.mediumImpact();
+                      onLongPress!();
+                    }
+                  : null,
               borderRadius: BorderRadius.circular(12),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -136,6 +158,26 @@ class TodoItemTile extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (item.isCompleted) ...[
+                      const SizedBox(width: 2),
+                      IconButton(
+                        key: ValueKey('delete_${item.id}'),
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 19,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
+                        ),
+                        tooltip: 'Eliminar',
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        onPressed: onDelete,
+                      ),
+                    ],
                     if (onEdit != null && !item.isCompleted) ...[
                       const SizedBox(width: 2),
                       IconButton(

@@ -823,4 +823,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String inviteProcessError(String error) {
     return 'Could not process invite: $error';
   }
+
+  @override
+  String get shareAsText => 'Share as text';
+
+  @override
+  String get copyListAsText => 'Copy list text';
+
+  @override
+  String get shareTextSubtitle =>
+      'Share or copy list items as text without real-time sync';
+
+  @override
+  String get listTextCopied => 'List text copied to clipboard';
+
+  @override
+  String get realtimeCollaboration => 'Real-time collaboration';
+
+  @override
+  String get itemActions => 'Item actions';
 }

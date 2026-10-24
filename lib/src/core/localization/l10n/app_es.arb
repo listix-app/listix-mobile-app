@@ -443,5 +443,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shareAsText": "Compartir como texto",
+  "copyListAsText": "Copiar texto de la lista",
+  "shareTextSubtitle": "Comparte o copia los items de la lista como texto sin sincronización en tiempo real",
+  "listTextCopied": "Texto de la lista copiado al portapapeles",
+  "realtimeCollaboration": "Colaboración en tiempo real",
+  "itemActions": "Acciones del item"
 }

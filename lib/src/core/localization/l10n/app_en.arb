@@ -443,6 +443,12 @@
         "type": "String"
       }
     }
-  }
+  },
+  "shareAsText": "Share as text",
+  "copyListAsText": "Copy list text",
+  "shareTextSubtitle": "Share or copy list items as text without real-time sync",
+  "listTextCopied": "List text copied to clipboard",
+  "realtimeCollaboration": "Real-time collaboration",
+  "itemActions": "Item actions"
 }
 

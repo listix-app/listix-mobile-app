@@ -829,4 +829,23 @@ class AppLocalizationsEs extends AppLocalizations {
   String inviteProcessError(String error) {
     return 'No se pudo procesar la invitación: $error';
   }
+
+  @override
+  String get shareAsText => 'Compartir como texto';
+
+  @override
+  String get copyListAsText => 'Copiar texto de la lista';
+
+  @override
+  String get shareTextSubtitle =>
+      'Comparte o copia los items de la lista como texto sin sincronización en tiempo real';
+
+  @override
+  String get listTextCopied => 'Texto de la lista copiado al portapapeles';
+
+  @override
+  String get realtimeCollaboration => 'Colaboración en tiempo real';
+
+  @override
+  String get itemActions => 'Acciones del item';
 }

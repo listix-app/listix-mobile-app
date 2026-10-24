@@ -185,6 +185,61 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
   }
   // coverage:ignore-end
 
+  Future<void> _copyListAsText(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final tr = ref.read(stringsProvider);
+    final text = ShareService.formatListForSharing(
+      list: list,
+      createdWithText: tr.sharedWithListix,
+      pendingSectionTitle: tr.sharePendingSection,
+      completedSectionTitle: tr.shareCompletedSection,
+      emptyListText: tr.shareEmptyListNotice,
+    );
+    await ref.read(shareServiceProvider).copyToClipboard(text);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(tr.listTextCopied),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+    }
+  }
+
+  Future<void> _shareListAsText(
+    BuildContext context,
+    WidgetRef ref,
+    ShoppingList list,
+  ) async {
+    final box = context.findRenderObject() as RenderBox?;
+    final sharePositionOrigin = box != null
+        ? box.localToGlobal(Offset.zero) & box.size
+        : null;
+    final tr = ref.read(stringsProvider);
+    final text = ShareService.formatListForSharing(
+      list: list,
+      createdWithText: tr.sharedWithListix,
+      pendingSectionTitle: tr.sharePendingSection,
+      completedSectionTitle: tr.shareCompletedSection,
+      emptyListText: tr.shareEmptyListNotice,
+    );
+    try {
+      await ref
+          .read(shareServiceProvider)
+          .shareWithSystem(
+            text: text,
+            subject: tr.shareSubject(list.name),
+            sharePositionOrigin: sharePositionOrigin,
+          );
+    } catch (_) {}
+  }
+
   void _showShareError(BuildContext context, Object error) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
@@ -265,7 +320,6 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                   ),
                 ),
 
-                // Header with Realtime status
                 Row(
                   children: [
                     const Icon(
@@ -290,12 +344,53 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       const SizedBox(width: 8),
                       const RealtimePresenceBadge(),
                     ],
+                    const SizedBox(width: 4),
+                    IconButton(
+                      key: const Key('close_share_sheet_button'),
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      tooltip: tr.cancel,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Text(
                   tr.inviteColleagueSubtitle,
                   style: TextStyle(fontSize: 13, color: textMutedColor),
+                ),
+                const SizedBox(height: 14),
+
+                _PlainTextShareCard(
+                  onCopyText: () => _copyListAsText(context, ref, list),
+                  onShareText: () => _shareListAsText(context, ref, list),
+                  title: tr.shareAsText,
+                  subtitle: tr.shareTextSubtitle,
+                  copyButtonLabel: tr.copyListAsText,
+                  shareButtonLabel: tr.shareAsText,
+                  cardBg: isDark
+                      ? AppColors.surfaceDark
+                      : AppColors.surfaceLight,
+                  borderColor: handleColor,
+                  textTitleColor: textTitleColor,
+                  textMutedColor: textMutedColor,
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: handleColor)),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        tr.realtimeCollaboration,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: textMutedColor,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: handleColor)),
+                  ],
                 ),
                 const SizedBox(height: 14),
 
@@ -968,6 +1063,139 @@ class _InactiveShareInviteComponent extends StatelessWidget {
                     ),
                   ),
                   onPressed: onActivateAndShare,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlainTextShareCard extends StatelessWidget {
+  final VoidCallback onCopyText;
+  final VoidCallback onShareText;
+  final String title;
+  final String subtitle;
+  final String copyButtonLabel;
+  final String shareButtonLabel;
+  final Color cardBg;
+  final Color borderColor;
+  final Color textTitleColor;
+  final Color textMutedColor;
+
+  const _PlainTextShareCard({
+    required this.onCopyText,
+    required this.onShareText,
+    required this.title,
+    required this.subtitle,
+    required this.copyButtonLabel,
+    required this.shareButtonLabel,
+    required this.cardBg,
+    required this.borderColor,
+    required this.textTitleColor,
+    required this.textMutedColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.text_snippet_outlined,
+                  color: AppColors.primary,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: textTitleColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(subtitle, style: TextStyle(fontSize: 12, color: textMutedColor)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  key: const Key('copy_list_text_button'),
+                  icon: const Icon(Icons.copy_rounded, size: 16),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      copyButtonLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(color: AppColors.primary),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
+                  ),
+                  onPressed: onCopyText,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  key: const Key('share_list_text_button'),
+                  icon: const Icon(Icons.share_rounded, size: 16),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      shareButtonLabel,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
+                  ),
+                  onPressed: onShareText,
                 ),
               ),
             ],

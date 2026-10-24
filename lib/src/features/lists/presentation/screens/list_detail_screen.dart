@@ -68,6 +68,120 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     super.deactivate();
   }
 
+  void _handleBackNavigation(BuildContext context) {
+    try {
+      ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
+    } catch (_) {}
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/');
+    }
+  }
+
+  Future<void> _showItemActionsSheet(
+    BuildContext context,
+    TodoItem item,
+  ) async {
+    final tr = ref.read(stringsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  item.title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: Icon(
+                  item.isCompleted
+                      ? Icons.radio_button_unchecked_rounded
+                      : Icons.check_circle_outline_rounded,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  item.isCompleted
+                      ? 'Marcar como pendiente'
+                      : 'Marcar como completado',
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                onTap: () {
+                  ctx.pop();
+                  ref
+                      .read(listsControllerProvider.notifier)
+                      .toggleItem(widget.listId, item.id);
+                },
+              ),
+              if (!item.isCompleted)
+                ListTile(
+                  leading: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                  title: Text(
+                    tr.rename,
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    ctx.pop();
+                    _showEditItemDialog(context, item);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.delete,
+                ),
+                title: Text(
+                  tr.delete,
+                  style: const TextStyle(
+                    color: AppColors.delete,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () {
+                  ctx.pop();
+                  _handleDeleteItem(widget.listId, item.id);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleDeleteItem(String listId, String itemId) async {
     final tr = ref.read(stringsProvider);
     final deleted = await ref
@@ -189,6 +303,22 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ),
         actions: [
+          TextButton.icon(
+            key: const Key('delete_item_from_dialog_button'),
+            onPressed: () {
+              ctx.pop();
+              _handleDeleteItem(widget.listId, item.id);
+            },
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.delete,
+              size: 18,
+            ),
+            label: Text(
+              tr.delete,
+              style: const TextStyle(color: AppColors.delete),
+            ),
+          ),
           TextButton(onPressed: () => ctx.pop(), child: Text(tr.cancel)),
           FilledButton(
             key: const Key('save_edit_item_button'),
@@ -290,10 +420,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: tr.back,
-          onPressed: () {
-            ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
-            context.pop();
-          },
+          onPressed: () => _handleBackNavigation(context),
         ),
         title: _isSearching
             ? TextField(
@@ -565,6 +692,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                           },
                           onDelete: () => _handleDeleteItem(list.id, item.id),
                           onEdit: () => _showEditItemDialog(context, item),
+                          onLongPress: () =>
+                              _showItemActionsSheet(context, item),
                         );
                       },
                       footer: filteredCompleted.isEmpty
@@ -655,6 +784,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                                           _handleDeleteItem(list.id, item.id),
                                       onEdit: () =>
                                           _showEditItemDialog(context, item),
+                                      onLongPress: () =>
+                                          _showItemActionsSheet(context, item),
                                     ),
                                   ),
                               ],
