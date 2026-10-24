@@ -1501,6 +1501,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Are you sure you want to archive \"{name}\"?'**
   String confirmArchiveMessage(String name);
+
+  /// No description provided for @deleteAllArchivedLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all archived'**
+  String get deleteAllArchivedLists;
+
+  /// No description provided for @deleteArchivedListsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all archived lists?'**
+  String get deleteArchivedListsTitle;
+
+  /// No description provided for @deleteArchivedListsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} archived lists and their items will be permanently deleted.'**
+  String deleteArchivedListsMessage(int count);
+
+  /// No description provided for @archivedListsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} archived lists deleted'**
+  String archivedListsDeleted(int count);
+
+  /// No description provided for @deleteCompletedItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete completed'**
+  String get deleteCompletedItems;
+
+  /// No description provided for @deleteCompletedItemsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete completed items?'**
+  String get deleteCompletedItemsTitle;
+
+  /// No description provided for @deleteCompletedItemsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All {count} completed items will be permanently deleted.'**
+  String deleteCompletedItemsMessage(int count);
+
+  /// No description provided for @completedItemsDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} completed items deleted'**
+  String completedItemsDeleted(int count);
+
+  /// No description provided for @inviteProcessError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not process invite: {error}'**
+  String inviteProcessError(String error);
+
+  /// No description provided for @shareAsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Share as text'**
+  String get shareAsText;
+
+  /// No description provided for @copyListAsText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy list text'**
+  String get copyListAsText;
+
+  /// No description provided for @shareTextSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share or copy list items as text without real-time sync'**
+  String get shareTextSubtitle;
+
+  /// No description provided for @listTextCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'List text copied to clipboard'**
+  String get listTextCopied;
+
+  /// No description provided for @realtimeCollaboration.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time collaboration'**
+  String get realtimeCollaboration;
+
+  /// No description provided for @itemActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Item actions'**
+  String get itemActions;
 }
 
 class _AppLocalizationsDelegate

@@ -35,6 +35,8 @@ abstract final class AppColors {
   static const Color offlineSubtle = Color(0xFFF1F5F9); // Slate 100
   static const Color delete = Color(0xFFDC2626);
   static const Color deleteBackground = Color(0xFFFEE2E2);
+  static const Color star = Color(0xFFFFB800);
+  static const Color coffee = Color(0xFFFF813F);
 
   static const List<Color> listColors = [
     Color(0xFF0D9488),

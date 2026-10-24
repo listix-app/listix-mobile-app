@@ -90,6 +90,13 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
   @override
   Widget build(BuildContext context) {
     final tr = ref.watch(stringsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final headingColor = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimary;
+    final subheadingColor = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondary;
     final title = widget.isEditing ? tr.renameListTitle : tr.newListTitle;
     final actionButtonText = widget.isEditing
         ? tr.saveChanges
@@ -131,10 +138,10 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                             widget.isEditing
                                 ? tr.editListHeading
                                 : tr.createListHeading,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: headingColor,
                               letterSpacing: -0.4,
                             ),
                           ),
@@ -143,9 +150,9 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                             widget.isEditing
                                 ? tr.editListSubheading
                                 : tr.createListSubheading,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: AppColors.textSecondary,
+                              color: subheadingColor,
                               height: 1.4,
                             ),
                           ),
@@ -175,9 +182,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
+                              color: isDark
                                   ? AppColors.textSecondaryDark
                                   : AppColors.textSecondary,
                             ),
@@ -189,42 +194,46 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                             children: AppColors.listColors.map((color) {
                               final colorValue = color.toARGB32();
                               final isSelected = _selectedColor == colorValue;
-                              return InkWell(
-                                key: Key(
-                                  'color_picker_${colorValue.toRadixString(16)}',
-                                ),
-                                onTap: () {
-                                  setState(() {
-                                    _selectedColor = isSelected
-                                        ? null
-                                        : colorValue;
-                                  });
-                                },
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  width: 40,
-                                  height: 40,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                    border: isSelected
-                                        ? Border.all(
-                                            color:
-                                                Theme.of(context).brightness ==
-                                                    Brightness.dark
-                                                ? Colors.white
-                                                : Colors.black87,
-                                            width: 3,
+                              return Semantics(
+                                label:
+                                    '${tr.pickColor} #${colorValue.toRadixString(16).padLeft(8, '0').toUpperCase()}',
+                                selected: isSelected,
+                                button: true,
+                                child: InkWell(
+                                  key: Key(
+                                    'color_picker_${colorValue.toRadixString(16)}',
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedColor = isSelected
+                                          ? null
+                                          : colorValue;
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(22),
+                                  child: Container(
+                                    width: 44,
+                                    height: 44,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                      border: isSelected
+                                          ? Border.all(
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : Colors.black87,
+                                              width: 3,
+                                            )
+                                          : null,
+                                    ),
+                                    child: isSelected
+                                        ? const Icon(
+                                            Icons.check_rounded,
+                                            color: Colors.white,
+                                            size: 24,
                                           )
                                         : null,
                                   ),
-                                  child: isSelected
-                                      ? const Icon(
-                                          Icons.check_rounded,
-                                          color: Colors.white,
-                                          size: 22,
-                                        )
-                                      : null,
                                 ),
                               );
                             }).toList(),

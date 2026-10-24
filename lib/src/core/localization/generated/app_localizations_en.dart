@@ -786,4 +786,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String confirmArchiveMessage(String name) {
     return 'Are you sure you want to archive \"$name\"?';
   }
+
+  @override
+  String get deleteAllArchivedLists => 'Delete all archived';
+
+  @override
+  String get deleteArchivedListsTitle => 'Delete all archived lists?';
+
+  @override
+  String deleteArchivedListsMessage(int count) {
+    return 'All $count archived lists and their items will be permanently deleted.';
+  }
+
+  @override
+  String archivedListsDeleted(int count) {
+    return '$count archived lists deleted';
+  }
+
+  @override
+  String get deleteCompletedItems => 'Delete completed';
+
+  @override
+  String get deleteCompletedItemsTitle => 'Delete completed items?';
+
+  @override
+  String deleteCompletedItemsMessage(int count) {
+    return 'All $count completed items will be permanently deleted.';
+  }
+
+  @override
+  String completedItemsDeleted(int count) {
+    return '$count completed items deleted';
+  }
+
+  @override
+  String inviteProcessError(String error) {
+    return 'Could not process invite: $error';
+  }
+
+  @override
+  String get shareAsText => 'Share as text';
+
+  @override
+  String get copyListAsText => 'Copy list text';
+
+  @override
+  String get shareTextSubtitle =>
+      'Share or copy list items as text without real-time sync';
+
+  @override
+  String get listTextCopied => 'List text copied to clipboard';
+
+  @override
+  String get realtimeCollaboration => 'Real-time collaboration';
+
+  @override
+  String get itemActions => 'Item actions';
 }

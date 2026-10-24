@@ -1,3 +1,5 @@
+import 'package:listix/src/core/network/auth_session_service.dart';
+import 'package:listix/src/features/sync/data/api_sync_service.dart';
 import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,6 +63,16 @@ class FakeFailingListsRepository implements ListsRepository {
       throw Exception('Simulated delete error');
     }
     internalLists.removeWhere((l) => l.id == id);
+  }
+
+  @override
+  Future<List<ShoppingList>> deleteArchivedLists() async {
+    final archived = internalLists.where((l) => l.isArchived).toList();
+    if (archived.any((l) => l.name.contains('FAIL'))) {
+      throw Exception('Simulated bulk delete archived error');
+    }
+    internalLists.removeWhere((l) => l.isArchived);
+    return archived;
   }
 
   @override
@@ -184,6 +196,37 @@ class FakeFailingListsRepository implements ListsRepository {
       internalLists[listIndex] = internalLists[listIndex].copyWith(
         items: items,
       );
+    }
+  }
+
+  @override
+  Future<List<TodoItem>> deleteCompletedItems(String listId) async {
+    final listIndex = internalLists.indexWhere((l) => l.id == listId);
+    if (listIndex == -1) return const [];
+    final currentList = internalLists[listIndex];
+    final completed = currentList.items.where((i) => i.isCompleted).toList();
+    if (completed.any((i) => i.title.contains('FAIL'))) {
+      throw Exception('Simulated bulk delete completed error');
+    }
+    internalLists[listIndex] = currentList.copyWith(
+      items: currentList.items.where((i) => !i.isCompleted).toList(),
+    );
+    return completed;
+  }
+
+  @override
+  Future<void> restoreItems(List<TodoItem> items) async {
+    if (items.any((i) => i.title.contains('FAIL'))) {
+      throw Exception('Simulated restore items error');
+    }
+    for (final item in items) {
+      final listIndex = internalLists.indexWhere((l) => l.id == item.listId);
+      if (listIndex != -1) {
+        final currentList = internalLists[listIndex];
+        internalLists[listIndex] = currentList.copyWith(
+          items: [...currentList.items.where((i) => i.id != item.id), item],
+        );
+      }
     }
   }
 
@@ -1296,5 +1339,247 @@ void main() {
           .addItem('shared_list_inactive', 'Manzana');
       expect(fakeNotif.showCallCount, 0);
     });
+
+    test(
+      'deleteArchivedListsWithUndo deletes archived lists and restores them',
+      () async {
+        final activeList = ShoppingList(
+          id: 'active_1',
+          name: 'Active List',
+          isArchived: false,
+          createdAt: DateTime(2026, 1, 1),
+        );
+        final archived1 = ShoppingList(
+          id: 'arch_1',
+          name: 'Archived 1',
+          isArchived: true,
+          createdAt: DateTime(2026, 1, 2),
+        );
+        final archived2 = ShoppingList(
+          id: 'arch_2',
+          name: 'Archived 2',
+          isArchived: true,
+          createdAt: DateTime(2026, 1, 3),
+        );
+
+        final repo = FakeFailingListsRepository(
+          initial: [activeList, archived1, archived2],
+        );
+        final container = ProviderContainer(
+          overrides: [listsRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(container.dispose);
+        await container.read(listsControllerProvider.future);
+
+        final deleted = await container
+            .read(listsControllerProvider.notifier)
+            .deleteArchivedListsWithUndo();
+        expect(deleted.length, 2);
+        expect(container.read(listsControllerProvider).value!.length, 1);
+        expect(
+          container.read(listsControllerProvider).value!.first.id,
+          'active_1',
+        );
+
+        final emptyCall = await container
+            .read(listsControllerProvider.notifier)
+            .deleteArchivedListsWithUndo();
+        expect(emptyCall, isEmpty);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .restoreLists(deleted);
+        expect(container.read(listsControllerProvider).value!.length, 3);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .restoreLists(const []);
+      },
+    );
+
+    test(
+      'deleteArchivedListsWithUndo and restoreLists rethrow on failure',
+      () async {
+        final failingArchived = ShoppingList(
+          id: 'fail_arch',
+          name: 'FAIL Archived',
+          isArchived: true,
+          createdAt: DateTime(2026, 1, 1),
+        );
+        final repo = FakeFailingListsRepository(initial: [failingArchived]);
+        final container = ProviderContainer(
+          overrides: [listsRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(container.dispose);
+        await container.read(listsControllerProvider.future);
+
+        expect(
+          () => container
+              .read(listsControllerProvider.notifier)
+              .deleteArchivedListsWithUndo(),
+          throwsException,
+        );
+
+        final failingToRestore = ShoppingList(
+          id: 'FAIL_restore',
+          name: 'FAIL To Restore',
+          createdAt: DateTime(2026, 1, 1),
+        );
+        expect(
+          () => container.read(listsControllerProvider.notifier).restoreLists([
+            failingToRestore,
+          ]),
+          throwsException,
+        );
+      },
+    );
+
+    test(
+      'deleteCompletedItemsWithUndo and restoreItems delete and restore completed items',
+      () async {
+        final item1 = TodoItem(
+          id: 'i1',
+          listId: 'list_c',
+          title: 'Pending item',
+          isCompleted: false,
+          createdAt: DateTime(2026, 1, 1),
+        );
+        final item2 = TodoItem(
+          id: 'i2',
+          listId: 'list_c',
+          title: 'Completed 1',
+          isCompleted: true,
+          createdAt: DateTime(2026, 1, 2),
+        );
+        final item3 = TodoItem(
+          id: 'i3',
+          listId: 'list_c',
+          title: 'Completed 2',
+          isCompleted: true,
+          createdAt: DateTime(2026, 1, 3),
+        );
+        final list = ShoppingList(
+          id: 'list_c',
+          name: 'List with completed',
+          items: [item1, item2, item3],
+          createdAt: DateTime(2026, 1, 1),
+        );
+
+        final repo = FakeFailingListsRepository(initial: [list]);
+        final container = ProviderContainer(
+          overrides: [listsRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(container.dispose);
+        await container.read(listsControllerProvider.future);
+
+        final notFound = await container
+            .read(listsControllerProvider.notifier)
+            .deleteCompletedItemsWithUndo('non_existent');
+        expect(notFound, isEmpty);
+
+        final deleted = await container
+            .read(listsControllerProvider.notifier)
+            .deleteCompletedItemsWithUndo('list_c');
+        expect(deleted.length, 2);
+        final updatedList = container
+            .read(listsControllerProvider)
+            .value!
+            .firstWhere((l) => l.id == 'list_c');
+        expect(updatedList.items.length, 1);
+        expect(updatedList.items.first.id, 'i1');
+
+        final emptyCompleted = await container
+            .read(listsControllerProvider.notifier)
+            .deleteCompletedItemsWithUndo('list_c');
+        expect(emptyCompleted, isEmpty);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .restoreItems('list_c', deleted);
+        final restoredList = container
+            .read(listsControllerProvider)
+            .value!
+            .firstWhere((l) => l.id == 'list_c');
+        expect(restoredList.items.length, 3);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .restoreItems('list_c', const []);
+      },
+    );
+
+    test(
+      'deleteCompletedItemsWithUndo and restoreItems rethrow on failure',
+      () async {
+        final failItem = TodoItem(
+          id: 'fail_it',
+          listId: 'list_fail',
+          title: 'FAIL Item',
+          isCompleted: true,
+          createdAt: DateTime(2026, 1, 1),
+        );
+        final list = ShoppingList(
+          id: 'list_fail',
+          name: 'List Fail',
+          items: [failItem],
+          createdAt: DateTime(2026, 1, 1),
+        );
+
+        final repo = FakeFailingListsRepository(initial: [list]);
+        final container = ProviderContainer(
+          overrides: [listsRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(container.dispose);
+        await container.read(listsControllerProvider.future);
+
+        expect(
+          () => container
+              .read(listsControllerProvider.notifier)
+              .deleteCompletedItemsWithUndo('list_fail'),
+          throwsException,
+        );
+
+        expect(
+          () => container.read(listsControllerProvider.notifier).restoreItems(
+            'list_fail',
+            [failItem],
+          ),
+          throwsException,
+        );
+      },
+    );
+
+    test(
+      'ListsController calls syncPendingOperations when authSession is ready',
+      () async {
+        final repo = FakeFailingListsRepository();
+        final auth = AuthSessionService(
+          initialized: true,
+          isConfigured: () => true,
+        );
+        final apiSync = ApiSyncService(
+          authSession: auth,
+          listsRepository: repo,
+        );
+
+        final container = ProviderContainer(
+          overrides: [
+            listsRepositoryProvider.overrideWithValue(repo),
+            authSessionServiceProvider.overrideWithValue(auth),
+            apiSyncServiceProvider.overrideWithValue(apiSync),
+          ],
+        );
+        addTearDown(container.dispose);
+        await container.read(listsControllerProvider.future);
+
+        await container
+            .read(listsControllerProvider.notifier)
+            .createList('Sync Test');
+        expect(
+          container.read(listsControllerProvider).value!.isNotEmpty,
+          isTrue,
+        );
+      },
+    );
   });
 }

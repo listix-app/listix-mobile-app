@@ -8,6 +8,7 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../ads/data/interstitial_ad_service.dart';
+import '../../../ads/presentation/controllers/banner_ad_controller.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
@@ -67,6 +68,120 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     super.deactivate();
   }
 
+  void _handleBackNavigation(BuildContext context) {
+    try {
+      ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
+    } catch (_) {}
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/');
+    }
+  }
+
+  Future<void> _showItemActionsSheet(
+    BuildContext context,
+    TodoItem item,
+  ) async {
+    final tr = ref.read(stringsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  item.title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                leading: Icon(
+                  item.isCompleted
+                      ? Icons.radio_button_unchecked_rounded
+                      : Icons.check_circle_outline_rounded,
+                  color: AppColors.primary,
+                ),
+                title: Text(
+                  item.isCompleted
+                      ? 'Marcar como pendiente'
+                      : 'Marcar como completado',
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
+                  ),
+                ),
+                onTap: () {
+                  ctx.pop();
+                  ref
+                      .read(listsControllerProvider.notifier)
+                      .toggleItem(widget.listId, item.id);
+                },
+              ),
+              if (!item.isCompleted)
+                ListTile(
+                  leading: const Icon(
+                    Icons.edit_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                  title: Text(
+                    tr.rename,
+                    style: TextStyle(
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimary,
+                    ),
+                  ),
+                  onTap: () {
+                    ctx.pop();
+                    _showEditItemDialog(context, item);
+                  },
+                ),
+              ListTile(
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.delete,
+                ),
+                title: Text(
+                  tr.delete,
+                  style: const TextStyle(
+                    color: AppColors.delete,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                onTap: () {
+                  ctx.pop();
+                  _handleDeleteItem(widget.listId, item.id);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _handleDeleteItem(String listId, String itemId) async {
     final tr = ref.read(stringsProvider);
     final deleted = await ref
@@ -87,6 +202,61 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             onPressed: () {
               messenger.hideCurrentSnackBar();
               ref.read(listsControllerProvider.notifier).restoreItem(deleted);
+            },
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDeleteCompletedItems(String listId, int count) async {
+    final tr = ref.read(stringsProvider);
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(tr.deleteCompletedItemsTitle),
+            content: Text(tr.deleteCompletedItemsMessage(count)),
+            actions: [
+              TextButton(
+                onPressed: () => ctx.pop(false),
+                child: Text(tr.cancel),
+              ),
+              FilledButton(
+                onPressed: () => ctx.pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.delete,
+                ),
+                child: Text(tr.delete),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed || !mounted) return;
+
+    final deleted = await ref
+        .read(listsControllerProvider.notifier)
+        .deleteCompletedItemsWithUndo(listId);
+    if (deleted.isNotEmpty && mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.clearSnackBars();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(tr.completedItemsDeleted(deleted.length)),
+          behavior: SnackBarBehavior.floating,
+          showCloseIcon: true,
+          dismissDirection: DismissDirection.horizontal,
+          action: SnackBarAction(
+            label: tr.undo,
+            textColor: AppColors.primaryLight,
+            onPressed: () {
+              messenger.hideCurrentSnackBar();
+              ref
+                  .read(listsControllerProvider.notifier)
+                  .restoreItems(listId, deleted);
             },
           ),
           duration: const Duration(seconds: 4),
@@ -133,6 +303,22 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ),
         actions: [
+          TextButton.icon(
+            key: const Key('delete_item_from_dialog_button'),
+            onPressed: () {
+              ctx.pop();
+              _handleDeleteItem(widget.listId, item.id);
+            },
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: AppColors.delete,
+              size: 18,
+            ),
+            label: Text(
+              tr.delete,
+              style: const TextStyle(color: AppColors.delete),
+            ),
+          ),
           TextButton(onPressed: () => ctx.pop(), child: Text(tr.cancel)),
           FilledButton(
             key: const Key('save_edit_item_button'),
@@ -234,10 +420,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           tooltip: tr.back,
-          onPressed: () {
-            ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
-            context.pop();
-          },
+          onPressed: () => _handleBackNavigation(context),
         ),
         title: _isSearching
             ? TextField(
@@ -297,6 +480,14 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             },
           ),
           if (!_isSearching) ...[
+            if (completedItems.isNotEmpty)
+              IconButton(
+                key: const Key('delete_completed_items_app_bar_button'),
+                icon: const Icon(Icons.delete_sweep_outlined, size: 21),
+                tooltip: tr.deleteCompletedItems,
+                onPressed: () =>
+                    _handleDeleteCompletedItems(list.id, completedItems.length),
+              ),
             if (list.canSyncAndShare)
               Center(
                 child: RealtimePresenceBadge(
@@ -501,6 +692,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                           },
                           onDelete: () => _handleDeleteItem(list.id, item.id),
                           onEdit: () => _showEditItemDialog(context, item),
+                          onLongPress: () =>
+                              _showItemActionsSheet(context, item),
                         );
                       },
                       footer: filteredCompleted.isEmpty
@@ -546,6 +739,30 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                                                 : AppColors.textMuted,
                                           ),
                                         ),
+                                        const Spacer(),
+                                        TextButton.icon(
+                                          key: const Key(
+                                            'delete_completed_items_button',
+                                          ),
+                                          onPressed: () =>
+                                              _handleDeleteCompletedItems(
+                                                list.id,
+                                                filteredCompleted.length,
+                                              ),
+                                          icon: const Icon(
+                                            Icons.delete_sweep_outlined,
+                                            size: 16,
+                                            color: AppColors.delete,
+                                          ),
+                                          label: Text(
+                                            tr.deleteCompletedItems,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.delete,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -567,6 +784,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                                           _handleDeleteItem(list.id, item.id),
                                       onEdit: () =>
                                           _showEditItemDialog(context, item),
+                                      onLongPress: () =>
+                                          _showItemActionsSheet(context, item),
                                     ),
                                   ),
                               ],
@@ -587,7 +806,11 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const BannerAdWidget(isDetail: true),
+      bottomNavigationBar: switch (ref.watch(detailBannerAdProvider)) {
+        BannerAdStatus.loaded ||
+        BannerAdStatus.loading => const BannerAdWidget(isDetail: true),
+        BannerAdStatus.disabled || BannerAdStatus.failed => null,
+      },
     );
   }
 }

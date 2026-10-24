@@ -271,4 +271,21 @@ class AppStrings {
   String get confirmArchiveTitle => _l10n.confirmArchiveTitle;
   String confirmArchiveMessage(String name) =>
       _l10n.confirmArchiveMessage(name);
+  String get deleteAllArchivedLists => _l10n.deleteAllArchivedLists;
+  String get deleteArchivedListsTitle => _l10n.deleteArchivedListsTitle;
+  String deleteArchivedListsMessage(int count) =>
+      _l10n.deleteArchivedListsMessage(count);
+  String archivedListsDeleted(int count) => _l10n.archivedListsDeleted(count);
+  String get deleteCompletedItems => _l10n.deleteCompletedItems;
+  String get deleteCompletedItemsTitle => _l10n.deleteCompletedItemsTitle;
+  String deleteCompletedItemsMessage(int count) =>
+      _l10n.deleteCompletedItemsMessage(count);
+  String completedItemsDeleted(int count) => _l10n.completedItemsDeleted(count);
+  String inviteProcessError(String error) => _l10n.inviteProcessError(error);
+  String get shareAsText => _l10n.shareAsText;
+  String get copyListAsText => _l10n.copyListAsText;
+  String get shareTextSubtitle => _l10n.shareTextSubtitle;
+  String get listTextCopied => _l10n.listTextCopied;
+  String get realtimeCollaboration => _l10n.realtimeCollaboration;
+  String get itemActions => _l10n.itemActions;
 }

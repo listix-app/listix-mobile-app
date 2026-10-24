@@ -496,6 +496,66 @@ void main() {
         await legacyDb.close();
         await tempDir.delete(recursive: true);
       },
+      timeout: const Timeout(Duration(minutes: 1)),
+    );
+
+    test(
+      'deleteArchivedLists deletes all archived lists and queues operations if shared',
+      () async {
+        final activeList = await repository.createList('Active List');
+        final archivedList1 = await repository.createList('Archived 1');
+        final archivedList2 = await repository.createList('Archived 2');
+
+        await repository.archiveList(archivedList1.id);
+        await repository.archiveList(archivedList2.id);
+        await repository.setListShared(archivedList2.id, true);
+
+        final deleted = await repository.deleteArchivedLists();
+        expect(deleted.length, 2);
+        expect(
+          deleted.map((l) => l.id),
+          containsAll([archivedList1.id, archivedList2.id]),
+        );
+
+        final remaining = await repository.getLists();
+        expect(remaining.length, 1);
+        expect(remaining.first.id, activeList.id);
+
+        final secondCall = await repository.deleteArchivedLists();
+        expect(secondCall, isEmpty);
+      },
+    );
+
+    test(
+      'deleteCompletedItems deletes completed items and restoreItems restores them',
+      () async {
+        final list = await repository.createList('Shopping');
+        await repository.setListShared(list.id, true);
+
+        final item1 = await repository.addItem(list.id, 'Milk');
+        final item2 = await repository.addItem(list.id, 'Eggs');
+        final item3 = await repository.addItem(list.id, 'Bread');
+
+        await repository.toggleItemCompletion(list.id, item1.id);
+        await repository.toggleItemCompletion(list.id, item3.id);
+
+        final deleted = await repository.deleteCompletedItems(list.id);
+        expect(deleted.length, 2);
+        expect(deleted.map((i) => i.id), containsAll([item1.id, item3.id]));
+
+        final current = await repository.getListById(list.id);
+        expect(current!.items.length, 1);
+        expect(current.items.first.id, item2.id);
+
+        final emptyCall = await repository.deleteCompletedItems(list.id);
+        expect(emptyCall, isEmpty);
+
+        await repository.restoreItems(deleted);
+        final restored = await repository.getListById(list.id);
+        expect(restored!.items.length, 3);
+
+        await repository.restoreItems(const []);
+      },
     );
   });
 }

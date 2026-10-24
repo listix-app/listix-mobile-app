@@ -304,6 +304,36 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
+  Future<List<ShoppingList>> deleteArchivedLists() async {
+    final allLists = await getLists();
+    final archived = allLists.where((l) => l.isArchived).toList();
+    if (archived.isEmpty) return const [];
+
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      for (final list in archived) {
+        final isShared = await _isListShared(txn, list.id);
+        if (isShared) {
+          await txn.insert('pending_operations', {
+            'id': _uuid.v4(),
+            'list_id': list.id,
+            'entity_type': PendingEntityType.list.name,
+            'entity_id': list.id,
+            'op_type': PendingOpType.delete.name,
+            'payload': null,
+            'created_at': now,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+        await txn.delete('lists', where: 'id = ?', whereArgs: [list.id]);
+      }
+    });
+
+    return archived;
+  }
+
+  @override
   Future<void> toggleListStar(String listId) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -649,6 +679,67 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
+  Future<List<TodoItem>> deleteCompletedItems(String listId) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final deleted = <TodoItem>[];
+
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'items',
+        where: 'list_id = ? AND is_completed = 1',
+        whereArgs: [listId],
+      );
+      for (final row in rows) {
+        deleted.add(
+          TodoItem(
+            id: row['id'] as String,
+            listId: row['list_id'] as String,
+            title: row['title'] as String,
+            isCompleted: (row['is_completed'] as int) == 1,
+            isSynced: (row['is_synced'] as int) == 1,
+            position: (row['position'] as int?) ?? 0,
+            createdAt: DateTime.fromMillisecondsSinceEpoch(
+              row['created_at'] as int,
+            ),
+          ),
+        );
+      }
+      if (deleted.isEmpty) return;
+
+      await txn.delete(
+        'items',
+        where: 'list_id = ? AND is_completed = 1',
+        whereArgs: [listId],
+      );
+
+      final isShared = await _isListShared(txn, listId);
+      await txn.update(
+        'lists',
+        {'is_synced': 0, 'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+
+      if (isShared) {
+        for (final item in deleted) {
+          await txn.insert('pending_operations', {
+            'id': _uuid.v4(),
+            'list_id': listId,
+            'entity_type': PendingEntityType.item.name,
+            'entity_id': item.id,
+            'op_type': PendingOpType.delete.name,
+            'payload': null,
+            'created_at': now,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+      }
+    });
+
+    return deleted;
+  }
+
+  @override
   Future<void> reorderItems(String listId, List<String> orderedItemIds) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -733,6 +824,58 @@ class SqliteListsRepository implements ListsRepository {
           }),
           'created_at': now,
         }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
+  @override
+  Future<void> restoreItems(List<TodoItem> items) async {
+    if (items.isEmpty) return;
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      for (final item in items) {
+        await txn.insert('items', {
+          'id': item.id,
+          'list_id': item.listId,
+          'title': item.title,
+          'is_completed': item.isCompleted ? 1 : 0,
+          'is_synced': 0,
+          'position': item.position,
+          'created_at': item.createdAt.millisecondsSinceEpoch,
+          'updated_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+        final isShared = await _isListShared(txn, item.listId);
+        if (isShared) {
+          await txn.insert('pending_operations', {
+            'id': _uuid.v4(),
+            'list_id': item.listId,
+            'entity_type': PendingEntityType.item.name,
+            'entity_id': item.id,
+            'op_type': PendingOpType.upsert.name,
+            'payload': jsonEncode({
+              'id': item.id,
+              'list_id': item.listId,
+              'title': item.title,
+              'is_completed': item.isCompleted ? 1 : 0,
+              'position': item.position,
+              'created_at': item.createdAt.millisecondsSinceEpoch,
+              'updated_at': now,
+            }),
+            'created_at': now,
+          }, conflictAlgorithm: ConflictAlgorithm.replace);
+        }
+      }
+
+      final listIds = items.map((i) => i.listId).toSet();
+      for (final listId in listIds) {
+        await txn.update(
+          'lists',
+          {'is_synced': 0, 'updated_at': now},
+          where: 'id = ?',
+          whereArgs: [listId],
+        );
       }
     });
   }

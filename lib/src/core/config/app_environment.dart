@@ -17,7 +17,8 @@ abstract final class AppEnvironmentConfig {
         _ => AppEnvironment.dev,
       };
 
-  static bool get adsEnabled => current != AppEnvironment.prod;
+  // static bool get adsEnabled => current != AppEnvironment.prod;
+  static bool get adsEnabled => false;
 }
 
 final adsEnabledProvider = Provider<bool>(

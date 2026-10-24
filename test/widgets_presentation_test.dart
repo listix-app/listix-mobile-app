@@ -14,6 +14,7 @@ import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.
 import 'package:listix/src/features/lists/presentation/services/share_service.dart';
 import 'package:listix/src/features/lists/presentation/widgets/collaborator_tile.dart';
 import 'package:listix/src/features/lists/presentation/widgets/list_card.dart';
+import 'package:listix/src/features/lists/presentation/widgets/quick_add_input.dart';
 import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
 
 class _FakeListsController extends ListsController {
@@ -36,6 +37,8 @@ class _FakeShareService extends ShareService {
   bool gmailShared = false;
   bool copied = false;
   bool systemShared = false;
+  String? lastSharedText;
+  String? lastCopiedText;
 
   @override
   Future<ShareResult> shareWithSystem({
@@ -44,6 +47,7 @@ class _FakeShareService extends ShareService {
     Rect? sharePositionOrigin,
   }) async {
     systemShared = true;
+    lastSharedText = text;
     return const ShareResult('success', ShareResultStatus.success);
   }
 
@@ -65,6 +69,7 @@ class _FakeShareService extends ShareService {
   @override
   Future<void> copyToClipboard(String text) async {
     copied = true;
+    lastCopiedText = text;
   }
 }
 
@@ -340,6 +345,65 @@ void main() {
       final decoration = container.decoration as BoxDecoration;
       expect(decoration.color, const Color(0xFFEF4444));
     });
+
+    testWidgets('completed item renders delete button and calls onDelete', (
+      tester,
+    ) async {
+      var deleteCalled = false;
+      final item = TodoItem(
+        id: 'completed_item_1',
+        listId: 'list_1',
+        title: 'Manzanas',
+        isCompleted: true,
+        createdAt: now,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TodoItemTile(
+              item: item,
+              onToggle: () {},
+              onDelete: () => deleteCalled = true,
+            ),
+          ),
+        ),
+      );
+
+      final deleteBtn = find.byKey(const ValueKey('delete_completed_item_1'));
+      expect(deleteBtn, findsOneWidget);
+      await tester.tap(deleteBtn);
+      await tester.pumpAndSettle();
+      expect(deleteCalled, isTrue);
+    });
+
+    testWidgets('long press triggers onLongPress callback', (tester) async {
+      var longPressed = false;
+      final item = TodoItem(
+        id: 'item_lp',
+        listId: 'list_1',
+        title: 'Item Long Press',
+        isCompleted: false,
+        createdAt: now,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: TodoItemTile(
+              item: item,
+              onToggle: () {},
+              onDelete: () {},
+              onLongPress: () => longPressed = true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.longPress(find.text('Item Long Press'));
+      await tester.pumpAndSettle();
+      expect(longPressed, isTrue);
+    });
   });
 
   group('ListCard Tests', () {
@@ -561,14 +625,17 @@ void main() {
     testWidgets(
       'renders synced, pending with tooltip, and pending without tooltip',
       (tester) async {
+        final key1 = UniqueKey();
+        final key2 = UniqueKey();
+        final key3 = UniqueKey();
         await tester.pumpWidget(
-          const MaterialApp(
+          MaterialApp(
             home: Scaffold(
               body: Column(
                 children: [
-                  SyncIndicator(isSynced: true),
-                  SyncIndicator(isSynced: false, showTooltip: true),
-                  SyncIndicator(isSynced: false, showTooltip: false),
+                  SyncIndicator(key: key1, isSynced: true),
+                  SyncIndicator(key: key2, isSynced: false, showTooltip: true),
+                  SyncIndicator(key: key3, isSynced: false, showTooltip: false),
                 ],
               ),
             ),
@@ -763,6 +830,253 @@ void main() {
         find.text('Solo el dueño puede modificar esta lista'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('copy list as text copies formatted text and shows snackbar', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      final list = ShoppingList(
+        id: 'share_list_plain',
+        name: 'Compras de fin de semana',
+        items: [
+          TodoItem(
+            id: 'i1',
+            listId: 'share_list_plain',
+            title: 'Café',
+            isCompleted: false,
+            createdAt: now,
+          ),
+          TodoItem(
+            id: 'i2',
+            listId: 'share_list_plain',
+            title: 'Azúcar',
+            isCompleted: true,
+            createdAt: now,
+          ),
+        ],
+        createdAt: now,
+      );
+
+      final fakeShare = _FakeShareService();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            shoppingListProvider('share_list_plain').overrideWithValue(list),
+            shareServiceProvider.overrideWithValue(fakeShare),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ShareListSheet(listId: 'share_list_plain')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('copy_list_text_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('copy_list_text_button')));
+      await tester.pump();
+
+      expect(fakeShare.copied, isTrue);
+      expect(fakeShare.lastCopiedText, contains('Compras de fin de semana'));
+      expect(fakeShare.lastCopiedText, contains('Café'));
+      expect(fakeShare.lastCopiedText, contains('Azúcar'));
+      expect(
+        find.text('Texto de la lista copiado al portapapeles'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('share list as text shares formatted plain text', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      final list = ShoppingList(
+        id: 'share_list_plain2',
+        name: 'Lista Texto',
+        items: [
+          TodoItem(
+            id: 'i1',
+            listId: 'share_list_plain2',
+            title: 'Manzanas',
+            isCompleted: false,
+            createdAt: now,
+          ),
+        ],
+        createdAt: now,
+      );
+
+      final fakeShare = _FakeShareService();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            shoppingListProvider('share_list_plain2').overrideWithValue(list),
+            shareServiceProvider.overrideWithValue(fakeShare),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: ShareListSheet(listId: 'share_list_plain2')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('share_list_text_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('share_list_text_button')));
+      await tester.pumpAndSettle();
+
+      expect(fakeShare.systemShared, isTrue);
+      expect(fakeShare.lastSharedText, contains('Lista Texto'));
+      expect(fakeShare.lastSharedText, contains('Manzanas'));
+    });
+
+    testWidgets('close button in header pops the sheet', (tester) async {
+      final list = ShoppingList(
+        id: 'sheet_close',
+        name: 'Para Cerrar',
+        items: const [],
+        createdAt: now,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            shoppingListProvider('sheet_close').overrideWithValue(list),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Builder(
+              builder: (ctx) => Scaffold(
+                body: ElevatedButton(
+                  onPressed: () => ShareListSheet.show(ctx, 'sheet_close'),
+                  child: const Text('Open'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('close_share_sheet_button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('close_share_sheet_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ShareListSheet), findsNothing);
+    });
+  });
+
+  group('QuickAddInput widget tests', () {
+    testWidgets('renders, submits via button and keyboard, and trims input', (
+      tester,
+    ) async {
+      String? added;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: QuickAddInput(
+              onAdd: (val) => added = val,
+              hintText: 'Custom Hint',
+              tooltip: 'Custom Tooltip',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Custom Hint'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), '  Manzanas verdes  ');
+      await tester.pump();
+
+      await tester.tap(find.byType(IconButton));
+      await tester.pumpAndSettle();
+
+      expect(added, 'Manzanas verdes');
+
+      await tester.enterText(find.byType(TextField), 'Naranjas');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(added, 'Naranjas');
+    });
+
+    testWidgets('insets bottom padding correctly with safe area and keyboard', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              padding: EdgeInsets.only(bottom: 34.0),
+              viewPadding: EdgeInsets.only(bottom: 34.0),
+              viewInsets: EdgeInsets.zero,
+            ),
+            child: Scaffold(body: QuickAddInput(onAdd: (_) {})),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final containerWithSafeArea = tester.widget<Container>(
+        find.ancestor(
+          of: find.byType(SafeArea),
+          matching: find.byType(Container),
+        ),
+      );
+      final padding = containerWithSafeArea.padding as EdgeInsets;
+      expect(padding.bottom, 8.0 + 34.0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              padding: EdgeInsets.zero,
+              viewPadding: EdgeInsets.only(bottom: 34.0),
+              viewInsets: EdgeInsets.only(bottom: 280.0),
+            ),
+            child: Scaffold(body: QuickAddInput(onAdd: (_) {})),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final containerWithKeyboard = tester.widget<Container>(
+        find.ancestor(
+          of: find.byType(SafeArea),
+          matching: find.byType(Container),
+        ),
+      );
+      final keyboardPadding = containerWithKeyboard.padding as EdgeInsets;
+      expect(keyboardPadding.bottom, 8.0);
+    });
+
+    testWidgets('renders in dark mode', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(body: QuickAddInput(onAdd: (_) {})),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
     });
   });
 }

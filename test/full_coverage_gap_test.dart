@@ -1,3 +1,9 @@
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'package:listix/src/core/network/api_client.dart';
+import 'package:listix/src/core/network/auth_session_service.dart';
+import 'package:listix/src/features/sync/data/api_sync_service.dart';
+import 'package:listix/src/features/lists/data/repositories/sqlite_lists_repository.dart';
 import 'package:listix/src/features/sync/domain/pending_operation.dart';
 import 'package:listix/src/core/config/api_config.dart';
 import 'package:listix/src/features/collaboration/domain/entities/collaboration_exceptions.dart';
@@ -5,7 +11,6 @@ import 'package:listix/src/features/collaboration/domain/services/invite_token_s
 import 'package:listix/src/features/collaboration/domain/entities/collaboration_event.dart';
 import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -241,6 +246,13 @@ void main() {
         expect(tr.leave, isNotEmpty);
         expect(tr.confirmArchiveTitle, isNotEmpty);
         expect(tr.confirmArchiveMessage('Lista'), contains('Lista'));
+        expect(tr.inviteProcessError('err'), contains('err'));
+        expect(tr.shareAsText, isNotEmpty);
+        expect(tr.copyListAsText, isNotEmpty);
+        expect(tr.shareTextSubtitle, isNotEmpty);
+        expect(tr.listTextCopied, isNotEmpty);
+        expect(tr.realtimeCollaboration, isNotEmpty);
+        expect(tr.itemActions, isNotEmpty);
       }
     });
 
@@ -718,6 +730,11 @@ void main() {
     testWidgets('AboutScreen and TodoItemTile dark mode coverage', (
       tester,
     ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(
@@ -1005,5 +1022,107 @@ void runCoverageGaps() {
         await AppDatabase.instance.getSetting('k');
       } catch (_) {}
     });
+
+    test('ListsController restoreLists sorts starred lists first', () async {
+      final repo = SqliteListsRepository();
+      final starredList = ShoppingList(
+        id: 'star_1',
+        name: 'Starred List',
+        isStarred: true,
+        createdAt: DateTime(2026, 1, 1),
+      );
+      final unstarredList = ShoppingList(
+        id: 'unstar_1',
+        name: 'Unstarred List',
+        isStarred: false,
+        createdAt: DateTime(2026, 1, 2),
+      );
+
+      final container = ProviderContainer(
+        overrides: [listsRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(container.dispose);
+      await container.read(listsControllerProvider.future);
+
+      await container.read(listsControllerProvider.notifier).restoreLists([
+        unstarredList,
+        starredList,
+      ]);
+
+      final lists = container.read(listsControllerProvider).value!;
+      expect(lists.first.id, 'star_1');
+    });
+
+    test(
+      'ListsController _syncIfReady calls apiSyncService when authSession is ready',
+      () async {
+        final repo = SqliteListsRepository();
+        final auth = AuthSessionService(
+          initialized: true,
+          isConfigured: () => true,
+        );
+        final apiSync = ApiSyncService(
+          authSession: auth,
+          listsRepository: repo,
+        );
+
+        final container = ProviderContainer(
+          overrides: [
+            listsRepositoryProvider.overrideWithValue(repo),
+            authSessionServiceProvider.overrideWithValue(auth),
+            apiSyncServiceProvider.overrideWithValue(apiSync),
+          ],
+        );
+        addTearDown(container.dispose);
+        await container.read(listsControllerProvider.future);
+
+        final created = await repo.createList('Test List');
+        await container
+            .read(listsControllerProvider.notifier)
+            .archiveList(created.id);
+      },
+    );
+
+    test(
+      'ApiSyncService cleans non-uuid pending operations and handles remote owner and Bearer token',
+      () async {
+        final repo = SqliteListsRepository();
+        final db = await AppDatabase.instance.database;
+
+        await db.insert('pending_operations', {
+          'id': 'invalid_op',
+          'list_id': 'not-a-uuid',
+          'entity_type': 'list',
+          'entity_id': 'not-a-uuid',
+          'op_type': 'delete',
+          'payload': null,
+          'created_at': DateTime.now().millisecondsSinceEpoch,
+        });
+
+        final mockClient = ApiClient(
+          httpClient: http.Client(),
+          authSession: AuthSessionService(
+            initialized: true,
+            isConfigured: () => true,
+          ),
+        );
+
+        final auth = AuthSessionService(
+          initialized: true,
+          isConfigured: () => true,
+        );
+
+        final apiSync = ApiSyncService(
+          apiClient: mockClient,
+          authSession: auth,
+          listsRepository: repo,
+        );
+
+        await apiSync.syncPendingOperations();
+
+        final pendingAfter = await repo.getPendingOperations();
+        expect(pendingAfter.any((op) => op.id == 'invalid_op'), isFalse);
+      },
+    );
   });
 }

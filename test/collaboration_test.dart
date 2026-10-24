@@ -188,6 +188,9 @@ class _FakeListsRepoForCollab implements ListsRepository {
   Future<void> deleteList(String id) async {}
 
   @override
+  Future<List<ShoppingList>> deleteArchivedLists() async => const [];
+
+  @override
   Future<void> restoreList(ShoppingList list) async {}
 
   @override
@@ -215,7 +218,13 @@ class _FakeListsRepoForCollab implements ListsRepository {
   Future<void> deleteItem(String listId, String itemId) async {}
 
   @override
+  Future<List<TodoItem>> deleteCompletedItems(String listId) async => const [];
+
+  @override
   Future<void> restoreItem(TodoItem item) async {}
+
+  @override
+  Future<void> restoreItems(List<TodoItem> items) async {}
 
   @override
   Future<void> reorderItems(String listId, List<String> orderedItemIds) async {}

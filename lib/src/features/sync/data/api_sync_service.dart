@@ -81,7 +81,9 @@ class ApiSyncService {
 
     try {
       await _authSession.getAccessToken();
-      final allPending = await _listsRepository.getPendingOperations();
+      final allPending = List<PendingOperation>.from(
+        await _listsRepository.getPendingOperations(),
+      );
       for (final op in allPending) {
         if (!_isUuid(op.listId) ||
             (op.entityType == PendingEntityType.item &&

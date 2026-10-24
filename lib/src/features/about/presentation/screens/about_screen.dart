@@ -97,7 +97,7 @@ class AboutScreen extends ConsumerWidget {
           _ActionCard(
             key: const Key('buy_coffee_card'),
             icon: Icons.coffee_rounded,
-            iconColor: const Color(0xFFFF813F),
+            iconColor: AppColors.coffee,
             title: tr.buyMeACoffee,
             subtitle: tr.buyMeACoffeeSubtitle,
             onTap: () {

@@ -36,7 +36,7 @@ class ListCard extends StatelessWidget {
 
     final cardBg = isDark ? AppColors.cardDark : AppColors.cardLight;
     final borderColor = list.isStarred
-        ? const Color(0xFFFFB800).withValues(alpha: 0.5)
+        ? AppColors.star.withValues(alpha: 0.5)
         : (isDark ? AppColors.borderDark : AppColors.borderLight);
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
@@ -96,16 +96,22 @@ class ListCard extends StatelessWidget {
                       icon: const Icon(Icons.archive_outlined, size: 20),
                       tooltip: tr.archiveListAction,
                       onPressed: onArchive,
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
                     ),
                   if (onUnarchive != null)
                     IconButton(
                       icon: const Icon(Icons.unarchive_outlined, size: 20),
                       tooltip: tr.unarchiveListAction,
                       onPressed: onUnarchive,
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
                     ),
                   if (onToggleStar != null)
                     IconButton(
@@ -114,15 +120,18 @@ class ListCard extends StatelessWidget {
                             ? Icons.star_rounded
                             : Icons.star_outline_rounded,
                         color: list.isStarred
-                            ? const Color(0xFFFFB800)
+                            ? AppColors.star
                             : (isDark
                                   ? AppColors.textMutedDark
                                   : AppColors.textMuted),
                       ),
                       tooltip: list.isStarred ? tr.unstarList : tr.starList,
                       onPressed: onToggleStar,
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
                     ),
                   const SizedBox(width: 4),
                   Icon(
