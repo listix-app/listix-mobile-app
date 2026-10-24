@@ -122,6 +122,23 @@ void main() {
       expect(directEs.listSharedWaitingInvite, isNotEmpty);
       expect(directEn.listSharedWaitingInvite, isNotEmpty);
 
+      expect(es.deleteAllArchivedLists, isNotEmpty);
+      expect(en.deleteAllArchivedLists, isNotEmpty);
+      expect(es.deleteArchivedListsTitle, isNotEmpty);
+      expect(en.deleteArchivedListsTitle, isNotEmpty);
+      expect(es.deleteArchivedListsMessage(3), contains('3'));
+      expect(en.deleteArchivedListsMessage(3), contains('3'));
+      expect(es.archivedListsDeleted(2), contains('2'));
+      expect(en.archivedListsDeleted(2), contains('2'));
+      expect(es.deleteCompletedItems, isNotEmpty);
+      expect(en.deleteCompletedItems, isNotEmpty);
+      expect(es.deleteCompletedItemsTitle, isNotEmpty);
+      expect(en.deleteCompletedItemsTitle, isNotEmpty);
+      expect(es.deleteCompletedItemsMessage(5), contains('5'));
+      expect(en.deleteCompletedItemsMessage(5), contains('5'));
+      expect(es.completedItemsDeleted(4), contains('4'));
+      expect(en.completedItemsDeleted(4), contains('4'));
+
       expect(
         () => lookupAppLocalizations(const Locale('fr')),
         throwsA(isA<FlutterError>()),

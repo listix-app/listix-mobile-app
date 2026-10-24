@@ -792,4 +792,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String confirmArchiveMessage(String name) {
     return '¿Deseas archivar la lista \"$name\"?';
   }
+
+  @override
+  String get deleteAllArchivedLists => 'Eliminar archivadas';
+
+  @override
+  String get deleteArchivedListsTitle => '¿Eliminar listas archivadas?';
+
+  @override
+  String deleteArchivedListsMessage(int count) {
+    return 'Se eliminarán permanentemente las $count listas archivadas y todos sus items.';
+  }
+
+  @override
+  String archivedListsDeleted(int count) {
+    return '$count listas archivadas eliminadas';
+  }
+
+  @override
+  String get deleteCompletedItems => 'Eliminar completados';
+
+  @override
+  String get deleteCompletedItemsTitle => '¿Eliminar items completados?';
+
+  @override
+  String deleteCompletedItemsMessage(int count) {
+    return 'Se eliminarán permanentemente los $count items completados de esta lista.';
+  }
+
+  @override
+  String completedItemsDeleted(int count) {
+    return '$count items completados eliminados';
+  }
 }

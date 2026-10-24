@@ -399,5 +399,41 @@
         "type": "String"
       }
     }
+  },
+  "deleteAllArchivedLists": "Eliminar archivadas",
+  "deleteArchivedListsTitle": "¿Eliminar listas archivadas?",
+  "deleteArchivedListsMessage": "Se eliminarán permanentemente las {count} listas archivadas y todos sus items.",
+  "@deleteArchivedListsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "archivedListsDeleted": "{count} listas archivadas eliminadas",
+  "@archivedListsDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteCompletedItems": "Eliminar completados",
+  "deleteCompletedItemsTitle": "¿Eliminar items completados?",
+  "deleteCompletedItemsMessage": "Se eliminarán permanentemente los {count} items completados de esta lista.",
+  "@deleteCompletedItemsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "completedItemsDeleted": "{count} items completados eliminados",
+  "@completedItemsDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

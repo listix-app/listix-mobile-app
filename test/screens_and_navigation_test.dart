@@ -739,6 +739,89 @@ void main() {
         expect(fakeController.deletedListIds, contains('l_shared'));
       },
     );
+
+    testWidgets('HomeScreen bulk delete archived lists confirms and undoes', (
+      tester,
+    ) async {
+      final archivedList1 = ShoppingList(
+        id: 'arc1',
+        name: 'Archived 1',
+        isArchived: true,
+        createdAt: now,
+      );
+      final archivedList2 = ShoppingList(
+        id: 'arc2',
+        name: 'Archived 2',
+        isArchived: true,
+        createdAt: now,
+      );
+      final fakeController = _ScreensTestListsController([
+        archivedList1,
+        archivedList2,
+      ]);
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Archivadas (2)'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('delete_all_archived_lists_button')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('delete_all_archived_lists_app_bar_button')),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const Key('delete_all_archived_lists_app_bar_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Eliminar listas archivadas?'), findsOneWidget);
+      expect(find.text('Cancelar'), findsOneWidget);
+
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(fakeController.deleteArchivedListsCalled, isFalse);
+
+      await tester.tap(
+        find.byKey(const Key('delete_all_archived_lists_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('¿Eliminar listas archivadas?'), findsOneWidget);
+      await tester.tap(find.text('Eliminar'));
+      await tester.pumpAndSettle();
+
+      expect(fakeController.deleteArchivedListsCalled, isTrue);
+      expect(find.text('2 listas archivadas eliminadas'), findsOneWidget);
+      expect(find.text('Deshacer'), findsOneWidget);
+
+      await tester.tap(find.text('Deshacer'));
+      await tester.pumpAndSettle();
+      expect(fakeController.bulkRestoredLists.length, 2);
+    });
   });
 
   group('ListDetailScreen widget tests', () {
@@ -1062,6 +1145,97 @@ void main() {
         'Queso Mozzarella',
       );
     });
+
+    testWidgets(
+      'ListDetailScreen bulk delete completed items confirms and undoes',
+      (tester) async {
+        final item1 = TodoItem(
+          id: 'i1',
+          listId: 'list_bulk',
+          title: 'Vino Blanco',
+          isCompleted: true,
+          createdAt: now,
+        );
+        final item2 = TodoItem(
+          id: 'i2',
+          listId: 'list_bulk',
+          title: 'Pan',
+          isCompleted: true,
+          createdAt: now,
+        );
+        final list = ShoppingList(
+          id: 'list_bulk',
+          name: 'Lista con completados',
+          items: [item1, item2],
+          createdAt: now,
+        );
+        final fakeController = _ScreensTestListsController([list]);
+
+        final router = GoRouter(
+          initialLocation: '/list/list_bulk',
+          routes: [
+            GoRoute(
+              path: '/list/:id',
+              builder: (ctx, state) =>
+                  ListDetailScreen(listId: state.pathParameters['id']!),
+            ),
+          ],
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              shoppingListProvider('list_bulk').overrideWithValue(list),
+              listsControllerProvider.overrideWith(() => fakeController),
+            ],
+            child: MaterialApp.router(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              routerConfig: router,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          find.byKey(const Key('delete_completed_items_button')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('delete_completed_items_app_bar_button')),
+          findsOneWidget,
+        );
+
+        await tester.tap(
+          find.byKey(const Key('delete_completed_items_app_bar_button')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('¿Eliminar items completados?'), findsOneWidget);
+        expect(find.text('Cancelar'), findsOneWidget);
+
+        await tester.tap(find.text('Cancelar'));
+        await tester.pumpAndSettle();
+        expect(fakeController.deleteCompletedItemsCalled, isFalse);
+
+        await tester.tap(
+          find.byKey(const Key('delete_completed_items_button')),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('¿Eliminar items completados?'), findsOneWidget);
+        await tester.tap(find.text('Eliminar'));
+        await tester.pumpAndSettle();
+
+        expect(fakeController.deleteCompletedItemsCalled, isTrue);
+        expect(find.text('2 items completados eliminados'), findsOneWidget);
+        expect(find.text('Deshacer'), findsOneWidget);
+
+        await tester.tap(find.text('Deshacer'));
+        await tester.pumpAndSettle();
+        expect(fakeController.bulkRestoredItems.length, 2);
+      },
+    );
   });
 
   group('App Router integration tests', () {
@@ -1438,5 +1612,33 @@ class _ScreensTestListsController extends ListsController {
   @override
   Future<void> manualSync() async {
     manualSyncCalled = true;
+  }
+
+  bool deleteArchivedListsCalled = false;
+  final List<ShoppingList> bulkRestoredLists = [];
+  bool deleteCompletedItemsCalled = false;
+  final List<TodoItem> bulkRestoredItems = [];
+
+  @override
+  Future<List<ShoppingList>> deleteArchivedListsWithUndo() async {
+    deleteArchivedListsCalled = true;
+    return _lists.where((l) => l.isArchived).toList();
+  }
+
+  @override
+  Future<void> restoreLists(List<ShoppingList> lists) async {
+    bulkRestoredLists.addAll(lists);
+  }
+
+  @override
+  Future<List<TodoItem>> deleteCompletedItemsWithUndo(String listId) async {
+    deleteCompletedItemsCalled = true;
+    final list = _lists.where((l) => l.id == listId).firstOrNull;
+    return list?.items.where((i) => i.isCompleted).toList() ?? const [];
+  }
+
+  @override
+  Future<void> restoreItems(String listId, List<TodoItem> items) async {
+    bulkRestoredItems.addAll(items);
   }
 }

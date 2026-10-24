@@ -75,8 +75,16 @@ class _QuickAddInputState extends State<QuickAddInput> {
         ? AppColors.textMutedDark
         : AppColors.textMuted;
 
+    final mediaQuery = MediaQuery.of(context);
+    final bottomInset = mediaQuery.viewInsets.bottom;
+    final systemBottomPadding = bottomInset > 0
+        ? 0.0
+        : (mediaQuery.padding.bottom > 0
+              ? mediaQuery.padding.bottom
+              : mediaQuery.viewPadding.bottom);
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.fromLTRB(16, 8, 16, 8 + systemBottomPadding),
       decoration: BoxDecoration(
         color: barBg,
         border: Border(top: BorderSide(color: borderColor, width: 1)),
@@ -90,6 +98,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
       ),
       child: SafeArea(
         top: false,
+        bottom: false,
         child: Row(
           children: [
             Expanded(

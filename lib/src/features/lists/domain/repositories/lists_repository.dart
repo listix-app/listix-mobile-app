@@ -11,6 +11,7 @@ abstract interface class ListsRepository {
   Future<void> archiveList(String listId);
   Future<void> unarchiveList(String listId);
   Future<void> deleteList(String id);
+  Future<List<ShoppingList>> deleteArchivedLists();
   Future<void> toggleListStar(String listId);
   Future<void> reorderLists(List<String> orderedListIds);
   Future<void> restoreList(ShoppingList list);
@@ -23,8 +24,10 @@ abstract interface class ListsRepository {
   );
   Future<TodoItem> toggleItemCompletion(String listId, String itemId);
   Future<void> deleteItem(String listId, String itemId);
+  Future<List<TodoItem>> deleteCompletedItems(String listId);
   Future<void> reorderItems(String listId, List<String> orderedItemIds);
   Future<void> restoreItem(TodoItem item);
+  Future<void> restoreItems(List<TodoItem> items);
 
   Future<void> addCollaborator(
     String listId,

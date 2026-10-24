@@ -176,6 +176,9 @@ class FakeListsRepositoryForSync implements ListsRepository {
   }
 
   @override
+  Future<List<ShoppingList>> deleteArchivedLists() async => const [];
+
+  @override
   Future<void> restoreList(ShoppingList list) async {}
 
   @override
@@ -201,7 +204,13 @@ class FakeListsRepositoryForSync implements ListsRepository {
   Future<void> deleteItem(String listId, String itemId) async {}
 
   @override
+  Future<List<TodoItem>> deleteCompletedItems(String listId) async => const [];
+
+  @override
   Future<void> restoreItem(TodoItem item) async {}
+
+  @override
+  Future<void> restoreItems(List<TodoItem> items) async {}
 
   @override
   Future<void> reorderItems(String listId, List<String> orderedItemIds) async {}
@@ -288,7 +297,7 @@ class FakeListsRepositoryForSync implements ListsRepository {
 
   @override
   Future<List<PendingOperation>> getPendingOperations({String? listId}) async =>
-      pending;
+      List<PendingOperation>.from(pending);
 
   @override
   Future<void> removePendingOperation(String id) async {
@@ -1406,7 +1415,8 @@ void main() {
       });
 
       test('socket events wiring and list subscribe/unsubscribe', () async {
-        await storage.write(key: 'listix_access_token', value: 'token');
+        await storage.write(key: 'listix_access_token', value: 'Bearer token');
+        await storage.write(key: 'listix_user_id', value: 'u1');
         final fakeHttp = FakeHttpClient((request) async {
           if (request.url.path.contains('/auth/')) {
             return http.Response(
@@ -1426,7 +1436,9 @@ void main() {
                 'name': 'Updated',
               },
               'items': [],
-              'members': [],
+              'members': [
+                {'id': 'u1', 'role': 'owner', 'displayName': 'Owner User'},
+              ],
             }),
             200,
           );
@@ -1436,6 +1448,7 @@ void main() {
           httpClient: fakeHttp,
           initialized: true,
         );
+        await auth.getUserId();
         final client = ApiClient(httpClient: fakeHttp, authSession: auth);
         final socket = socket_io.io(
           'http://localhost',
@@ -1482,6 +1495,14 @@ void main() {
 
           listsRepo.pending = [
             PendingOperation(
+              id: 'op_invalid_uuid',
+              listId: 'not-a-uuid',
+              entityType: PendingEntityType.item,
+              opType: PendingOpType.upsert,
+              entityId: 'item-not-uuid',
+              createdAt: DateTime.now().millisecondsSinceEpoch,
+            ),
+            PendingOperation(
               id: 'op_del_list_404',
               listId: 'c2b988f4-6f02-474c-83b5-31296bf3ee20',
               entityType: PendingEntityType.list,
@@ -1500,6 +1521,7 @@ void main() {
             listsRepository: listsRepo,
           );
           await syncService.syncPendingOperations();
+          expect(listsRepo.removedPendingIds, contains('op_invalid_uuid'));
           expect(listsRepo.removedPendingIds, contains('op_del_list_404'));
           syncService.dispose();
 

@@ -294,6 +294,50 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     }
   }
 
+  Future<List<ShoppingList>> deleteArchivedListsWithUndo() async {
+    final currentLists = state.value;
+    final archived = currentLists?.where((l) => l.isArchived).toList() ?? [];
+    if (archived.isEmpty) return const [];
+
+    state = AsyncData(currentLists!.where((l) => !l.isArchived).toList());
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.deleteArchivedLists();
+      _syncIfReady();
+      return archived;
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<void> restoreLists(List<ShoppingList> lists) async {
+    if (lists.isEmpty) return;
+    final currentLists = state.value ?? [];
+    final updatedLists = [...currentLists, ...lists];
+    updatedLists.sort((a, b) {
+      if (a.isStarred != b.isStarred) {
+        return a.isStarred ? -1 : 1;
+      }
+      return a.position.compareTo(b.position);
+    });
+    state = AsyncData(updatedLists);
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      for (final list in lists) {
+        await repository.restoreList(list);
+      }
+      _syncIfReady();
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
   Future<void> toggleStar(String id) async {
     final currentLists = state.value;
     if (currentLists != null) {
@@ -595,6 +639,80 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           senderName: _getCurrentName(),
         ),
       );
+      _syncIfReady();
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<List<TodoItem>> deleteCompletedItemsWithUndo(String listId) async {
+    final currentLists = state.value;
+    final targetList = currentLists?.where((l) => l.id == listId).firstOrNull;
+    if (targetList == null) return const [];
+    final completedItems = targetList.items
+        .where((i) => i.isCompleted)
+        .toList();
+    if (completedItems.isEmpty) return const [];
+
+    final updatedLists = currentLists!.map((l) {
+      if (l.id == listId) {
+        final remaining = l.items.where((i) => !i.isCompleted).toList();
+        return l.copyWith(isSynced: false, items: remaining);
+      }
+      return l;
+    }).toList();
+    state = AsyncData(updatedLists);
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.deleteCompletedItems(listId);
+      for (final item in completedItems) {
+        _broadcastEvent(
+          CollaborationEvent.itemDeleted(
+            listId: listId,
+            itemId: item.id,
+            senderEmail: _getCurrentEmail(),
+            senderName: _getCurrentName(),
+          ),
+        );
+      }
+      _syncIfReady();
+      return completedItems;
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<void> restoreItems(String listId, List<TodoItem> items) async {
+    if (items.isEmpty) return;
+    final currentLists = state.value ?? [];
+    final updatedLists = currentLists.map((l) {
+      if (l.id == listId) {
+        final merged = [...l.items, ...items];
+        merged.sort((a, b) => a.position.compareTo(b.position));
+        return l.copyWith(isSynced: false, items: merged);
+      }
+      return l;
+    }).toList();
+    state = AsyncData(updatedLists);
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.restoreItems(items);
+      for (final item in items) {
+        _broadcastEvent(
+          CollaborationEvent.itemAdded(
+            listId: listId,
+            item: item,
+            senderEmail: _getCurrentEmail(),
+            senderName: _getCurrentName(),
+          ),
+        );
+      }
       _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);

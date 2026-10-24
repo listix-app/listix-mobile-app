@@ -8,6 +8,7 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../ads/data/interstitial_ad_service.dart';
+import '../../../ads/presentation/controllers/banner_ad_controller.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
@@ -87,6 +88,61 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             onPressed: () {
               messenger.hideCurrentSnackBar();
               ref.read(listsControllerProvider.notifier).restoreItem(deleted);
+            },
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleDeleteCompletedItems(String listId, int count) async {
+    final tr = ref.read(stringsProvider);
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(tr.deleteCompletedItemsTitle),
+            content: Text(tr.deleteCompletedItemsMessage(count)),
+            actions: [
+              TextButton(
+                onPressed: () => ctx.pop(false),
+                child: Text(tr.cancel),
+              ),
+              FilledButton(
+                onPressed: () => ctx.pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.delete,
+                ),
+                child: Text(tr.delete),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (!confirmed || !mounted) return;
+
+    final deleted = await ref
+        .read(listsControllerProvider.notifier)
+        .deleteCompletedItemsWithUndo(listId);
+    if (deleted.isNotEmpty && mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.clearSnackBars();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(tr.completedItemsDeleted(deleted.length)),
+          behavior: SnackBarBehavior.floating,
+          showCloseIcon: true,
+          dismissDirection: DismissDirection.horizontal,
+          action: SnackBarAction(
+            label: tr.undo,
+            textColor: AppColors.primaryLight,
+            onPressed: () {
+              messenger.hideCurrentSnackBar();
+              ref
+                  .read(listsControllerProvider.notifier)
+                  .restoreItems(listId, deleted);
             },
           ),
           duration: const Duration(seconds: 4),
@@ -297,6 +353,14 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             },
           ),
           if (!_isSearching) ...[
+            if (completedItems.isNotEmpty)
+              IconButton(
+                key: const Key('delete_completed_items_app_bar_button'),
+                icon: const Icon(Icons.delete_sweep_outlined, size: 21),
+                tooltip: tr.deleteCompletedItems,
+                onPressed: () =>
+                    _handleDeleteCompletedItems(list.id, completedItems.length),
+              ),
             if (list.canSyncAndShare)
               Center(
                 child: RealtimePresenceBadge(
@@ -546,6 +610,30 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                                                 : AppColors.textMuted,
                                           ),
                                         ),
+                                        const Spacer(),
+                                        TextButton.icon(
+                                          key: const Key(
+                                            'delete_completed_items_button',
+                                          ),
+                                          onPressed: () =>
+                                              _handleDeleteCompletedItems(
+                                                list.id,
+                                                filteredCompleted.length,
+                                              ),
+                                          icon: const Icon(
+                                            Icons.delete_sweep_outlined,
+                                            size: 16,
+                                            color: AppColors.delete,
+                                          ),
+                                          label: Text(
+                                            tr.deleteCompletedItems,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.delete,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -587,7 +675,11 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: const BannerAdWidget(isDetail: true),
+      bottomNavigationBar: switch (ref.watch(detailBannerAdProvider)) {
+        BannerAdStatus.loaded ||
+        BannerAdStatus.loading => const BannerAdWidget(isDetail: true),
+        BannerAdStatus.disabled || BannerAdStatus.failed => null,
+      },
     );
   }
 }

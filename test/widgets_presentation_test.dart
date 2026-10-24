@@ -14,6 +14,7 @@ import 'package:listix/src/features/lists/presentation/screens/share_list_sheet.
 import 'package:listix/src/features/lists/presentation/services/share_service.dart';
 import 'package:listix/src/features/lists/presentation/widgets/collaborator_tile.dart';
 import 'package:listix/src/features/lists/presentation/widgets/list_card.dart';
+import 'package:listix/src/features/lists/presentation/widgets/quick_add_input.dart';
 import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
 
 class _FakeListsController extends ListsController {
@@ -763,6 +764,103 @@ void main() {
         find.text('Solo el dueño puede modificar esta lista'),
         findsOneWidget,
       );
+    });
+  });
+
+  group('QuickAddInput widget tests', () {
+    testWidgets('renders, submits via button and keyboard, and trims input', (
+      tester,
+    ) async {
+      String? added;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: QuickAddInput(
+              onAdd: (val) => added = val,
+              hintText: 'Custom Hint',
+              tooltip: 'Custom Tooltip',
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Custom Hint'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), '  Manzanas verdes  ');
+      await tester.pump();
+
+      await tester.tap(find.byType(IconButton));
+      await tester.pumpAndSettle();
+
+      expect(added, 'Manzanas verdes');
+
+      await tester.enterText(find.byType(TextField), 'Naranjas');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(added, 'Naranjas');
+    });
+
+    testWidgets('insets bottom padding correctly with safe area and keyboard', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              padding: EdgeInsets.only(bottom: 34.0),
+              viewPadding: EdgeInsets.only(bottom: 34.0),
+              viewInsets: EdgeInsets.zero,
+            ),
+            child: Scaffold(body: QuickAddInput(onAdd: (_) {})),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final containerWithSafeArea = tester.widget<Container>(
+        find.ancestor(
+          of: find.byType(SafeArea),
+          matching: find.byType(Container),
+        ),
+      );
+      final padding = containerWithSafeArea.padding as EdgeInsets;
+      expect(padding.bottom, 8.0 + 34.0);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              padding: EdgeInsets.zero,
+              viewPadding: EdgeInsets.only(bottom: 34.0),
+              viewInsets: EdgeInsets.only(bottom: 280.0),
+            ),
+            child: Scaffold(body: QuickAddInput(onAdd: (_) {})),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final containerWithKeyboard = tester.widget<Container>(
+        find.ancestor(
+          of: find.byType(SafeArea),
+          matching: find.byType(Container),
+        ),
+      );
+      final keyboardPadding = containerWithKeyboard.padding as EdgeInsets;
+      expect(keyboardPadding.bottom, 8.0);
+    });
+
+    testWidgets('renders in dark mode', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(body: QuickAddInput(onAdd: (_) {})),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(TextField), findsOneWidget);
     });
   });
 }

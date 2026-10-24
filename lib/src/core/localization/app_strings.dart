@@ -271,4 +271,14 @@ class AppStrings {
   String get confirmArchiveTitle => _l10n.confirmArchiveTitle;
   String confirmArchiveMessage(String name) =>
       _l10n.confirmArchiveMessage(name);
+  String get deleteAllArchivedLists => _l10n.deleteAllArchivedLists;
+  String get deleteArchivedListsTitle => _l10n.deleteArchivedListsTitle;
+  String deleteArchivedListsMessage(int count) =>
+      _l10n.deleteArchivedListsMessage(count);
+  String archivedListsDeleted(int count) => _l10n.archivedListsDeleted(count);
+  String get deleteCompletedItems => _l10n.deleteCompletedItems;
+  String get deleteCompletedItemsTitle => _l10n.deleteCompletedItemsTitle;
+  String deleteCompletedItemsMessage(int count) =>
+      _l10n.deleteCompletedItemsMessage(count);
+  String completedItemsDeleted(int count) => _l10n.completedItemsDeleted(count);
 }

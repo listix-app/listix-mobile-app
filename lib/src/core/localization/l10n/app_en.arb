@@ -399,6 +399,42 @@
         "type": "String"
       }
     }
+  },
+  "deleteAllArchivedLists": "Delete all archived",
+  "deleteArchivedListsTitle": "Delete all archived lists?",
+  "deleteArchivedListsMessage": "All {count} archived lists and their items will be permanently deleted.",
+  "@deleteArchivedListsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "archivedListsDeleted": "{count} archived lists deleted",
+  "@archivedListsDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deleteCompletedItems": "Delete completed",
+  "deleteCompletedItemsTitle": "Delete completed items?",
+  "deleteCompletedItemsMessage": "All {count} completed items will be permanently deleted.",
+  "@deleteCompletedItemsMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "completedItemsDeleted": "{count} completed items deleted",
+  "@completedItemsDeleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }
 

@@ -7,6 +7,7 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/listix_logo.dart';
+import '../../../ads/presentation/controllers/banner_ad_controller.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/widgets/join_list_dialog.dart';
 import '../../domain/entities/shopping_list.dart';
@@ -174,12 +175,72 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  Future<void> _handleDeleteAllArchivedLists(
+    BuildContext context,
+    List<ShoppingList> archivedLists,
+    AppStrings tr,
+  ) async {
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(tr.deleteArchivedListsTitle),
+            content: Text(tr.deleteArchivedListsMessage(archivedLists.length)),
+            actions: [
+              TextButton(
+                onPressed: () => ctx.pop(false),
+                child: Text(tr.cancel),
+              ),
+              FilledButton(
+                onPressed: () => ctx.pop(true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.delete,
+                ),
+                child: Text(tr.delete),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+
+    if (confirmed && context.mounted) {
+      final deleted = await ref
+          .read(listsControllerProvider.notifier)
+          .deleteArchivedListsWithUndo();
+      if (deleted.isNotEmpty && context.mounted) {
+        final messenger = ScaffoldMessenger.of(context);
+        messenger.clearSnackBars();
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(tr.archivedListsDeleted(deleted.length)),
+            behavior: SnackBarBehavior.floating,
+            showCloseIcon: true,
+            dismissDirection: DismissDirection.horizontal,
+            action: SnackBarAction(
+              label: tr.undo,
+              textColor: AppColors.primaryLight,
+              onPressed: () {
+                messenger.hideCurrentSnackBar();
+                ref
+                    .read(listsControllerProvider.notifier)
+                    .restoreLists(deleted);
+              },
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final listsAsync = ref.watch(listsControllerProvider);
     final tr = ref.watch(stringsProvider);
     final layoutMode = ref.watch(listLayoutControllerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final allArchivedLists =
+        listsAsync.value?.where((l) => l.isArchived).toList() ?? const [];
 
     return Scaffold(
       appBar: AppBar(
@@ -230,6 +291,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             },
           ),
           if (!_isSearching) ...[
+            if (_selectedTab == 1 && allArchivedLists.isNotEmpty)
+              IconButton(
+                key: const Key('delete_all_archived_lists_app_bar_button'),
+                icon: const Icon(Icons.delete_sweep_outlined, size: 22),
+                tooltip: tr.deleteAllArchivedLists,
+                onPressed: () => _handleDeleteAllArchivedLists(
+                  context,
+                  allArchivedLists,
+                  tr,
+                ),
+              ),
             IconButton(
               key: const Key('join_list_button'),
               icon: const Icon(Icons.group_add_outlined, size: 22),
@@ -354,6 +426,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
+                const Spacer(),
+                if (_selectedTab == 1 && archivedLists.isNotEmpty)
+                  TextButton.icon(
+                    key: const Key('delete_all_archived_lists_button'),
+                    icon: const Icon(
+                      Icons.delete_sweep_outlined,
+                      size: 18,
+                      color: AppColors.delete,
+                    ),
+                    label: Text(
+                      tr.deleteAllArchivedLists,
+                      style: const TextStyle(
+                        color: AppColors.delete,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    onPressed: () => _handleDeleteAllArchivedLists(
+                      context,
+                      archivedLists,
+                      tr,
+                    ),
+                  ),
               ],
             ),
           );
@@ -590,7 +685,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: const BannerAdWidget(),
+      bottomNavigationBar: switch (ref.watch(bannerAdProvider)) {
+        BannerAdStatus.loaded ||
+        BannerAdStatus.loading => const BannerAdWidget(),
+        BannerAdStatus.disabled || BannerAdStatus.failed => null,
+      },
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/lists/new'),
         icon: const Icon(Icons.add_rounded),
