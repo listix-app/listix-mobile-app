@@ -31,7 +31,7 @@ class ListGridCard extends StatelessWidget {
 
     final cardBg = isDark ? AppColors.cardDark : AppColors.cardLight;
     final borderColor = list.isStarred
-        ? const Color(0xFFFFB800).withValues(alpha: 0.5)
+        ? AppColors.star.withValues(alpha: 0.5)
         : (isDark ? AppColors.borderDark : AppColors.borderLight);
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
@@ -106,15 +106,18 @@ class ListGridCard extends StatelessWidget {
                             : Icons.star_outline_rounded,
                         size: 20,
                         color: list.isStarred
-                            ? const Color(0xFFFFB800)
+                            ? AppColors.star
                             : (isDark
                                   ? AppColors.textMutedDark
                                   : AppColors.textMuted),
                       ),
                       tooltip: list.isStarred ? tr.unstarList : tr.starList,
                       onPressed: onToggleStar,
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(4),
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
+                      ),
+                      padding: const EdgeInsets.all(8),
                     ),
                 ],
               ),

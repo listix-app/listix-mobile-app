@@ -281,4 +281,5 @@ class AppStrings {
   String deleteCompletedItemsMessage(int count) =>
       _l10n.deleteCompletedItemsMessage(count);
   String completedItemsDeleted(int count) => _l10n.completedItemsDeleted(count);
+  String inviteProcessError(String error) => _l10n.inviteProcessError(error);
 }

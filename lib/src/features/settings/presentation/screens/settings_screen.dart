@@ -217,10 +217,10 @@ class SettingsScreen extends ConsumerWidget {
               activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
               inactiveThumbColor: isDark
                   ? AppColors.textSecondaryDark
-                  : const Color(0xFF94A3B8),
+                  : AppColors.textSecondaryDark,
               inactiveTrackColor: isDark
                   ? AppColors.surfaceDark
-                  : const Color(0xFFE2E8F0),
+                  : AppColors.borderLight,
               thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
                 if (states.contains(WidgetState.selected)) {
                   return const Icon(
@@ -288,10 +288,10 @@ class SettingsScreen extends ConsumerWidget {
               activeTrackColor: AppColors.primary.withValues(alpha: 0.35),
               inactiveThumbColor: isDark
                   ? AppColors.textSecondaryDark
-                  : const Color(0xFF94A3B8),
+                  : AppColors.textSecondaryDark,
               inactiveTrackColor: isDark
                   ? AppColors.surfaceDark
-                  : const Color(0xFFE2E8F0),
+                  : AppColors.borderLight,
               thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
                 if (states.contains(WidgetState.selected)) {
                   return const Icon(

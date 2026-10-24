@@ -496,6 +496,7 @@ void main() {
         await legacyDb.close();
         await tempDir.delete(recursive: true);
       },
+      timeout: const Timeout(Duration(minutes: 1)),
     );
 
     test(

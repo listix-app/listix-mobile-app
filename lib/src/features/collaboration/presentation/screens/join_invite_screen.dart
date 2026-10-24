@@ -96,7 +96,9 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _errorMessage = 'No se pudo procesar la invitación: ${e.toString()}';
+        _errorMessage = ref
+            .read(stringsProvider)
+            .inviteProcessError(e.toString());
       });
     }
   }

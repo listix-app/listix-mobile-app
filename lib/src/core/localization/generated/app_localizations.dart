@@ -1549,6 +1549,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} completed items deleted'**
   String completedItemsDeleted(int count);
+
+  /// No description provided for @inviteProcessError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not process invite: {error}'**
+  String inviteProcessError(String error);
 }
 
 class _AppLocalizationsDelegate

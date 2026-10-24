@@ -246,6 +246,7 @@ void main() {
         expect(tr.leave, isNotEmpty);
         expect(tr.confirmArchiveTitle, isNotEmpty);
         expect(tr.confirmArchiveMessage('Lista'), contains('Lista'));
+        expect(tr.inviteProcessError('err'), contains('err'));
       }
     });
 
@@ -723,6 +724,11 @@ void main() {
     testWidgets('AboutScreen and TodoItemTile dark mode coverage', (
       tester,
     ) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(
         ProviderScope(
           child: MaterialApp(

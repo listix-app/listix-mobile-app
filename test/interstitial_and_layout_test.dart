@@ -806,10 +806,14 @@ void main() {
         await tester.tap(find.byKey(const Key('layout_toggle_button')));
         await tester.pumpAndSettle();
 
-        expect(find.byType(GridView), findsOneWidget);
+        expect(find.byType(SliverGrid), findsOneWidget);
         expect(find.byKey(const ValueKey('grid_card_g1')), findsOneWidget);
 
-        await tester.fling(find.byType(GridView), const Offset(0, 300), 1000);
+        await tester.fling(
+          find.byType(CustomScrollView),
+          const Offset(0, 300),
+          1000,
+        );
         await tester.pump();
         await tester.pump(const Duration(seconds: 1));
         await tester.pumpAndSettle();

@@ -83,31 +83,35 @@ class TodoItemTile extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: item.isCompleted
-                            ? checkboxColor
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
+                    Semantics(
+                      checked: item.isCompleted,
+                      label: item.title,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
                           color: item.isCompleted
                               ? checkboxColor
-                              : (isDark
-                                    ? AppColors.textMutedDark
-                                    : AppColors.textMuted),
-                          width: 1.8,
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: item.isCompleted
+                                ? checkboxColor
+                                : (isDark
+                                      ? AppColors.textMutedDark
+                                      : AppColors.textMuted),
+                            width: 1.8,
+                          ),
                         ),
+                        child: item.isCompleted
+                            ? const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Colors.white,
+                              )
+                            : null,
                       ),
-                      child: item.isCompleted
-                          ? const Icon(
-                              Icons.check,
-                              size: 16,
-                              color: Colors.white,
-                            )
-                          : null,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -133,31 +137,31 @@ class TodoItemTile extends StatelessWidget {
                       ),
                     ),
                     if (onEdit != null && !item.isCompleted) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 2),
                       IconButton(
                         key: ValueKey('edit_${item.id}'),
                         icon: Icon(
                           Icons.edit_outlined,
-                          size: 16,
+                          size: 18,
                           color: isDark
                               ? AppColors.textMutedDark
                               : AppColors.textMuted,
                         ),
-                        splashRadius: 16,
-                        constraints: const BoxConstraints(),
-                        padding: const EdgeInsets.all(4),
+                        tooltip: 'Editar',
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        padding: const EdgeInsets.all(8),
                         onPressed: onEdit,
                       ),
                     ],
                     if (reorderIndex != null) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 2),
                       ReorderableDragStartListener(
                         index: reorderIndex!,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.all(8.0),
                           child: Icon(
                             Icons.drag_handle_rounded,
                             size: 20,
@@ -168,13 +172,16 @@ class TodoItemTile extends StatelessWidget {
                         ),
                       ),
                     ] else if (!item.isCompleted) ...[
-                      const SizedBox(width: 6),
-                      Icon(
-                        Icons.drag_handle_rounded,
-                        size: 18,
-                        color: isDark
-                            ? AppColors.textMutedDark.withValues(alpha: 0.4)
-                            : AppColors.textMuted.withValues(alpha: 0.5),
+                      const SizedBox(width: 4),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Icon(
+                          Icons.drag_handle_rounded,
+                          size: 18,
+                          color: isDark
+                              ? AppColors.textMutedDark.withValues(alpha: 0.4)
+                              : AppColors.textMuted.withValues(alpha: 0.5),
+                        ),
                       ),
                     ],
                   ],

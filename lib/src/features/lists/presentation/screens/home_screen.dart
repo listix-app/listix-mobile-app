@@ -511,47 +511,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 await ref.read(listsControllerProvider.notifier).manualSync();
               },
               color: AppColors.primary,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                children: [
-                  topSection,
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.95,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                    itemCount: displayedLists.length,
-                    itemBuilder: (context, index) {
-                      final list = displayedLists[index];
-                      return ListGridCard(
-                        key: ValueKey('grid_card_${list.id}'),
-                        list: list,
-                        strings: tr,
-                        onTap: () => context.push('/list/${list.id}'),
-                        onToggleStar: _selectedTab == 0
-                            ? () {
-                                ref
-                                    .read(listsControllerProvider.notifier)
-                                    .toggleStar(list.id);
-                              }
-                            : null,
-                        onArchive: (_selectedTab == 0 && list.isOwner)
-                            ? () => _handleArchiveList(context, list, tr)
-                            : null,
-                        onUnarchive: _selectedTab == 1
-                            ? () => _handleUnarchiveList(context, list, tr)
-                            : null,
-                        onDelete: () => _handleDeleteList(context, list, tr),
-                      );
-                    },
+              child: CustomScrollView(
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                    sliver: SliverToBoxAdapter(child: topSection),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    sliver: SliverGrid(
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 260,
+                            childAspectRatio: 0.95,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final list = displayedLists[index];
+                        return ListGridCard(
+                          key: ValueKey('grid_card_${list.id}'),
+                          list: list,
+                          strings: tr,
+                          onTap: () => context.push('/list/${list.id}'),
+                          onToggleStar: _selectedTab == 0
+                              ? () {
+                                  ref
+                                      .read(listsControllerProvider.notifier)
+                                      .toggleStar(list.id);
+                                }
+                              : null,
+                          onArchive: (_selectedTab == 0 && list.isOwner)
+                              ? () => _handleArchiveList(context, list, tr)
+                              : null,
+                          onUnarchive: _selectedTab == 1
+                              ? () => _handleUnarchiveList(context, list, tr)
+                              : null,
+                          onDelete: () => _handleDeleteList(context, list, tr),
+                        );
+                      }, childCount: displayedLists.length),
+                    ),
                   ),
                 ],
               ),

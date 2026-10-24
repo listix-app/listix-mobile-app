@@ -824,4 +824,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String completedItemsDeleted(int count) {
     return '$count items completados eliminados';
   }
+
+  @override
+  String inviteProcessError(String error) {
+    return 'No se pudo procesar la invitación: $error';
+  }
 }

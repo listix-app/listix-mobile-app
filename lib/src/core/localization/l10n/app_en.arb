@@ -435,6 +435,14 @@
         "type": "int"
       }
     }
+  },
+  "inviteProcessError": "Could not process invite: {error}",
+  "@inviteProcessError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }
 
