@@ -81,14 +81,14 @@ void main() {
       expect(AppEnvironmentConfig.parse('unknown'), AppEnvironment.dev);
     });
 
-    test('ads are only enabled outside production', () {
+    test('ads are temporarily disabled', () {
       expect(AppEnvironmentConfig.rawName, isNotEmpty);
       expect(AppEnvironmentConfig.current, AppEnvironment.dev);
-      expect(AppEnvironmentConfig.adsEnabled, isTrue);
+      expect(AppEnvironmentConfig.adsEnabled, isFalse);
 
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(adsEnabledProvider), isTrue);
+      expect(container.read(adsEnabledProvider), isFalse);
     });
 
     test('interstitialAdServiceProvider mirrors the ads enabled flag', () {
@@ -304,6 +304,7 @@ void main() {
       final service = InterstitialAdService(
         db: db,
         clock: () => now,
+        adsEnabled: true,
         adLauncher: (id) async {
           adShown = true;
           return true;
@@ -324,6 +325,7 @@ void main() {
       final failingService = InterstitialAdService(
         db: db,
         clock: () => DateTime(2026, 5, 2),
+        adsEnabled: true,
         adLauncher: (id) async => false,
       );
       final failed = await failingService.showInterstitialIfAllowed();
@@ -336,6 +338,7 @@ void main() {
         final service = InterstitialAdService(
           db: db,
           clock: () => DateTime(2026, 6, 1),
+          adsEnabled: true,
         );
         await db.setSetting(
           InterstitialAdService.lastShownKey,
@@ -383,6 +386,7 @@ void main() {
         final service = InterstitialAdService(
           db: db,
           clock: () => DateTime(2026, 8, 1),
+          adsEnabled: true,
         );
         await db.setSetting(
           InterstitialAdService.lastShownKey,
@@ -433,6 +437,7 @@ void main() {
       final service = InterstitialAdService(
         db: db,
         clock: () => DateTime(2026, 8, 2),
+        adsEnabled: true,
       );
       await db.setSetting(
         InterstitialAdService.lastShownKey,
@@ -475,6 +480,7 @@ void main() {
       final service = InterstitialAdService(
         db: db,
         clock: () => DateTime(2026, 8, 3),
+        adsEnabled: true,
       );
       await db.setSetting(
         InterstitialAdService.lastShownKey,
@@ -499,6 +505,7 @@ void main() {
       final service = InterstitialAdService(
         db: db,
         clock: () => DateTime(2026, 7, 1),
+        adsEnabled: true,
       );
       await db.setSetting(
         InterstitialAdService.lastShownKey,

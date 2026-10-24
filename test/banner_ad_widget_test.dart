@@ -44,7 +44,8 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(
+        ProviderScope(
+          overrides: [adsEnabledProvider.overrideWithValue(true)],
           child: MaterialApp(
             home: Scaffold(bottomNavigationBar: BannerAdWidget()),
           ),
@@ -62,6 +63,7 @@ void main() {
 
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [adsEnabledProvider.overrideWithValue(true)],
             child: Consumer(
               builder: (context, ref, _) {
                 container = ProviderScope.containerOf(context);
@@ -103,6 +105,7 @@ void main() {
 
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [adsEnabledProvider.overrideWithValue(true)],
             child: Consumer(
               builder: (context, ref, _) {
                 container = ProviderScope.containerOf(context);
@@ -159,7 +162,9 @@ void main() {
               return null;
             });
 
-        final container = ProviderContainer();
+        final container = ProviderContainer(
+          overrides: [adsEnabledProvider.overrideWithValue(true)],
+        );
         addTearDown(container.dispose);
 
         final status = container.read(bannerAdProvider);
@@ -193,6 +198,7 @@ void main() {
 
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [adsEnabledProvider.overrideWithValue(true)],
             child: Consumer(
               builder: (context, ref, _) {
                 container = ProviderScope.containerOf(context);
@@ -236,6 +242,7 @@ void main() {
 
         await tester.pumpWidget(
           ProviderScope(
+            overrides: [adsEnabledProvider.overrideWithValue(true)],
             child: Consumer(
               builder: (context, ref, _) {
                 container = ProviderScope.containerOf(context);
@@ -294,7 +301,9 @@ void main() {
               return null;
             });
 
-        final container = ProviderContainer();
+        final container = ProviderContainer(
+          overrides: [adsEnabledProvider.overrideWithValue(true)],
+        );
         addTearDown(container.dispose);
 
         final status = container.read(detailBannerAdProvider);
@@ -325,7 +334,8 @@ void main() {
       'HomeScreen and ListDetailScreen simultaneous banners do not collide',
       (tester) async {
         await tester.pumpWidget(
-          const ProviderScope(
+          ProviderScope(
+            overrides: [adsEnabledProvider.overrideWithValue(true)],
             child: MaterialApp(
               home: Column(
                 children: [
