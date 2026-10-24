@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT_DIR"
+
+dart format --output=none --set-exit-if-changed .
+flutter analyze
+flutter test --coverage test/all_tests_coverage.dart
+dart run tool/verify_coverage.dart
