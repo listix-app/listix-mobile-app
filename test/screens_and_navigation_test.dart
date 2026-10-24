@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:listix/src/core/config/app_environment.dart';
+import 'package:listix/src/features/ads/presentation/widgets/banner_ad_widget.dart';
 import 'package:listix/src/features/backup/presentation/screens/backup_screen.dart';
 import 'package:listix/src/features/collaboration/presentation/screens/join_invite_screen.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
@@ -313,6 +315,33 @@ void main() {
         expect(find.text('New List Screen'), findsOneWidget);
       },
     );
+
+    testWidgets('renders no bottom banner when ads are disabled', (
+      tester,
+    ) async {
+      final fakeController = _ScreensTestListsController([]);
+
+      final router = GoRouter(
+        initialLocation: '/',
+        routes: [
+          GoRoute(path: '/', builder: (ctx, state) => const HomeScreen()),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            adsEnabledProvider.overrideWithValue(false),
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BannerAdWidget), findsNothing);
+    });
 
     testWidgets(
       'renders lists, handles pull-to-refresh and dismissal dialog cancel/confirm',
