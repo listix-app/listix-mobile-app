@@ -52,4 +52,19 @@ extension ListTypeStrings on AppStrings {
     ItemEvaluation.evaluated => evaluationEvaluated,
     ItemEvaluation.discarded => evaluationDiscarded,
   };
+
+  String sortName(ItemSort sort) => switch (sort) {
+    ItemSort.manual => sortManual,
+    ItemSort.price => sortPrice,
+    ItemSort.priority => sortPriority,
+    ItemSort.dueDate => sortDueDate,
+  };
+
+  String emptyItemsMessageFor(ListType type) => switch (type) {
+    ListType.market => emptyMarketMessage,
+    ListType.shopping => emptyShoppingMessage,
+    ListType.options => emptyOptionsMessage,
+    ListType.tasks => emptyTasksMessage,
+    ListType.custom => emptyItemsMessage,
+  };
 }

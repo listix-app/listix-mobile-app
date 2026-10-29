@@ -1059,4 +1059,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get optionColumn => 'Option';
+
+  @override
+  String get sortItems => 'Sort';
+
+  @override
+  String get sortManual => 'Manual order';
+
+  @override
+  String get sortPrice => 'Price';
+
+  @override
+  String get sortPriority => 'Priority';
+
+  @override
+  String get sortDueDate => 'Due date';
+
+  @override
+  String get favoritesOnly => 'Favorites only';
+
+  @override
+  String get emptyMarketMessage =>
+      'Add your first product below. Set quantity, unit and category with the details button.';
+
+  @override
+  String get emptyShoppingMessage =>
+      'Add your first item below. Track its price, store and link with the details button.';
+
+  @override
+  String get emptyOptionsMessage =>
+      'Add your first option below, then add notes and attributes to compare alternatives.';
+
+  @override
+  String get emptyTasksMessage =>
+      'Add your first task below. Set a due date and priority with the details button.';
 }

@@ -13,6 +13,7 @@ import 'domain_entities_test.dart' as domain_test;
 import 'full_coverage_gap_test.dart' as gap_test;
 import 'interstitial_and_layout_test.dart' as interstitial_and_layout_test;
 import 'list_types_test.dart' as list_types_test;
+import 'item_sort_test.dart' as item_sort_test;
 import 'lists_controller_test.dart' as lists_controller_test;
 import 'mock_sync_service_and_controller_test.dart' as sync_test;
 import 'network_and_api_sync_test.dart' as network_and_api_sync_test;
@@ -75,4 +76,5 @@ void main() {
   notif_test.main();
   interstitial_and_layout_test.main();
   list_types_test.main();
+  item_sort_test.main();
 }

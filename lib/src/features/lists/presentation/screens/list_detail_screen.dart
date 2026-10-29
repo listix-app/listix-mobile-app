@@ -39,6 +39,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   bool _isCompletedExpanded = true;
   bool _isSearching = false;
   String _itemSearchQuery = '';
+  ItemSort _sort = ItemSort.manual;
+  bool _favoritesOnly = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -191,6 +193,49 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSortMenu(
+    ShoppingList list,
+    AppStrings tr,
+    ItemSort sort,
+    bool favoritesOnly,
+  ) {
+    return PopupMenuButton<Object>(
+      key: const Key('item_sort_menu_button'),
+      icon: Icon(
+        Icons.sort_rounded,
+        size: 21,
+        color: (sort != ItemSort.manual || favoritesOnly)
+            ? AppColors.primary
+            : null,
+      ),
+      tooltip: tr.sortItems,
+      onSelected: (value) => setState(() {
+        if (value is ItemSort) {
+          _sort = value;
+        } else {
+          _favoritesOnly = !_favoritesOnly;
+        }
+      }),
+      itemBuilder: (_) => [
+        if (list.type.sortOptions.length > 1)
+          for (final option in list.type.sortOptions)
+            CheckedPopupMenuItem<Object>(
+              key: Key('sort_${option.name}'),
+              value: option,
+              checked: option == sort,
+              child: Text(tr.sortName(option)),
+            ),
+        if (list.type.supportsFavoritesFilter)
+          CheckedPopupMenuItem<Object>(
+            key: const Key('filter_favorites'),
+            value: 'favorites',
+            checked: favoritesOnly,
+            child: Text(tr.favoritesOnly),
+          ),
+      ],
     );
   }
 
@@ -441,11 +486,21 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     final query = _itemSearchQuery.trim().toLowerCase();
     final pendingItems = list.items.where((i) => !i.isCompleted).toList();
     final completedItems = list.items.where((i) => i.isCompleted).toList();
-    final filteredPending = query.isEmpty
-        ? pendingItems
-        : pendingItems
-              .where((i) => i.title.toLowerCase().contains(query))
-              .toList();
+    final favoritesOnly = list.type.supportsFavoritesFilter && _favoritesOnly;
+    final sort = list.type.sortOptions.contains(_sort)
+        ? _sort
+        : ItemSort.manual;
+    final canReorder =
+        query.isEmpty && sort == ItemSort.manual && !favoritesOnly;
+    final filteredPending = sort.apply(
+      pendingItems
+          .where(
+            (i) =>
+                (query.isEmpty || i.title.toLowerCase().contains(query)) &&
+                (!favoritesOnly || i.isFavorite),
+          )
+          .toList(),
+    );
     final filteredCompleted = query.isEmpty
         ? completedItems
         : completedItems
@@ -596,6 +651,9 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             },
           ),
           if (!_isSearching) ...[
+            if (list.type.sortOptions.length > 1 ||
+                list.type.supportsFavoritesFilter)
+              _buildSortMenu(list, tr, sort, favoritesOnly),
             if (completedItems.isNotEmpty)
               IconButton(
                 key: const Key('delete_completed_items_app_bar_button'),
@@ -777,9 +835,9 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           Expanded(
             child: list.items.isEmpty
                 ? EmptyStateWidget(
-                    icon: Icons.add_task_rounded,
+                    icon: list.type.icon,
                     title: tr.emptyItemsTitle,
-                    message: tr.emptyItemsMessage,
+                    message: tr.emptyItemsMessageFor(list.type),
                   )
                 : (query.isNotEmpty &&
                       filteredPending.isEmpty &&
@@ -832,7 +890,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                               );
                             },
                             onReorderItem: (oldIndex, newIndex) {
-                              if (query.isNotEmpty) return;
+                              if (!canReorder) return;
                               HapticFeedback.selectionClick();
                               ref
                                   .read(listsControllerProvider.notifier)
@@ -843,7 +901,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                                 list,
                                 filteredPending[index],
                                 listColor,
-                                reorderIndex: query.isEmpty ? index : null,
+                                reorderIndex: canReorder ? index : null,
                               );
                             },
                             footer: completedFooter,
@@ -852,7 +910,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           ),
 
           QuickAddInput(
-            autoFocus: false,
+            autoFocus: list.items.isEmpty,
             hintText: tr.quickAddHint,
             tooltip: tr.quickAddTooltip,
             onAdd: (title) {

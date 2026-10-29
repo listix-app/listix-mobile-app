@@ -357,4 +357,14 @@ class AppStrings {
   String get compareOptions => _l10n.compareOptions;
   String get compareNeedsTwo => _l10n.compareNeedsTwo;
   String get optionColumn => _l10n.optionColumn;
+  String get sortItems => _l10n.sortItems;
+  String get sortManual => _l10n.sortManual;
+  String get sortPrice => _l10n.sortPrice;
+  String get sortPriority => _l10n.sortPriority;
+  String get sortDueDate => _l10n.sortDueDate;
+  String get favoritesOnly => _l10n.favoritesOnly;
+  String get emptyMarketMessage => _l10n.emptyMarketMessage;
+  String get emptyShoppingMessage => _l10n.emptyShoppingMessage;
+  String get emptyOptionsMessage => _l10n.emptyOptionsMessage;
+  String get emptyTasksMessage => _l10n.emptyTasksMessage;
 }

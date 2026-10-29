@@ -1993,6 +1993,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Option'**
   String get optionColumn;
+
+  /// No description provided for @sortItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sortItems;
+
+  /// No description provided for @sortManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual order'**
+  String get sortManual;
+
+  /// No description provided for @sortPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get sortPrice;
+
+  /// No description provided for @sortPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get sortPriority;
+
+  /// No description provided for @sortDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get sortDueDate;
+
+  /// No description provided for @favoritesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites only'**
+  String get favoritesOnly;
+
+  /// No description provided for @emptyMarketMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first product below. Set quantity, unit and category with the details button.'**
+  String get emptyMarketMessage;
+
+  /// No description provided for @emptyShoppingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first item below. Track its price, store and link with the details button.'**
+  String get emptyShoppingMessage;
+
+  /// No description provided for @emptyOptionsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first option below, then add notes and attributes to compare alternatives.'**
+  String get emptyOptionsMessage;
+
+  /// No description provided for @emptyTasksMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first task below. Set a due date and priority with the details button.'**
+  String get emptyTasksMessage;
 }
 
 class _AppLocalizationsDelegate

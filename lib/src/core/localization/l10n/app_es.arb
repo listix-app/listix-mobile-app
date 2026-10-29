@@ -530,5 +530,15 @@
   "attributesEmpty": "Aún no hay atributos. Agrega las características que quieras comparar.",
   "compareOptions": "Comparar opciones",
   "compareNeedsTwo": "Agrega al menos dos opciones para compararlas.",
-  "optionColumn": "Opción"
+  "optionColumn": "Opción",
+  "sortItems": "Ordenar",
+  "sortManual": "Orden manual",
+  "sortPrice": "Precio",
+  "sortPriority": "Prioridad",
+  "sortDueDate": "Fecha límite",
+  "favoritesOnly": "Solo favoritos",
+  "emptyMarketMessage": "Agrega tu primer producto abajo. Define cantidad, unidad y categoría con el botón de detalles.",
+  "emptyShoppingMessage": "Agrega tu primer artículo abajo. Registra precio, tienda y enlace con el botón de detalles.",
+  "emptyOptionsMessage": "Agrega tu primera opción abajo y luego añade notas y atributos para comparar alternativas.",
+  "emptyTasksMessage": "Agrega tu primera tarea abajo. Define fecha límite y prioridad con el botón de detalles."
 }

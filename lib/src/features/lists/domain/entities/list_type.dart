@@ -1,3 +1,5 @@
+import 'todo_item.dart';
+
 enum ListType {
   market,
   shopping,
@@ -55,4 +57,61 @@ abstract final class MarketCatalog {
   ];
 
   static const List<String> units = ['un', 'kg', 'g', 'l', 'ml', 'pack'];
+}
+
+enum ItemSort {
+  manual,
+  price,
+  priority,
+  dueDate;
+
+  List<TodoItem> apply(List<TodoItem> items) => switch (this) {
+    ItemSort.manual => items,
+    ItemSort.price => _sorted(
+      items,
+      (a, b) => _nullsLast(a.price, b.price, (x, y) => x.compareTo(y)),
+    ),
+    ItemSort.priority => _sorted(
+      items,
+      (a, b) => _nullsLast(
+        a.priority,
+        b.priority,
+        (x, y) => y.index.compareTo(x.index),
+      ),
+    ),
+    ItemSort.dueDate => _sorted(
+      items,
+      (a, b) => _nullsLast(a.dueDate, b.dueDate, (x, y) => x.compareTo(y)),
+    ),
+  };
+
+  static List<TodoItem> _sorted(
+    List<TodoItem> items,
+    int Function(TodoItem, TodoItem) compare,
+  ) => [...items]..sort(compare);
+
+  static int _nullsLast<T>(T? a, T? b, int Function(T, T) compare) {
+    if (a == null && b == null) return 0;
+    if (a == null) return 1;
+    if (b == null) return -1;
+    return compare(a, b);
+  }
+}
+
+extension ListTypeSorting on ListType {
+  List<ItemSort> get sortOptions => switch (this) {
+    ListType.shopping => const [
+      ItemSort.manual,
+      ItemSort.price,
+      ItemSort.priority,
+    ],
+    ListType.tasks => const [
+      ItemSort.manual,
+      ItemSort.dueDate,
+      ItemSort.priority,
+    ],
+    _ => const [ItemSort.manual],
+  };
+
+  bool get supportsFavoritesFilter => this == ListType.options;
 }
