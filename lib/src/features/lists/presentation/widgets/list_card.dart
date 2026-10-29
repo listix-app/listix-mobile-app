@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/collaborator.dart';
+import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
+import 'list_type_presentation.dart';
 
 class ListCard extends StatelessWidget {
   final ShoppingList list;
@@ -12,6 +14,7 @@ class ListCard extends StatelessWidget {
   final VoidCallback? onUnarchive;
   final VoidCallback? onToggleStar;
   final AppStrings? strings;
+  final int? reorderIndex;
 
   const ListCard({
     super.key,
@@ -21,6 +24,7 @@ class ListCard extends StatelessWidget {
     this.onUnarchive,
     this.onToggleStar,
     this.strings,
+    this.reorderIndex,
   });
 
   @override
@@ -30,6 +34,8 @@ class ListCard extends StatelessWidget {
 
     final badgeText = list.totalCount == 0
         ? tr.noItemsBadge
+        : list.type == ListType.options
+        ? tr.optionsCount(list.totalCount)
         : list.pendingCount == 0
         ? tr.allDoneBadge
         : tr.pendingBadge(list.progressText);
@@ -48,7 +54,7 @@ class ListCard extends StatelessWidget {
         ? listColor.withValues(alpha: 0.16)
         : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight);
 
-    return Card(
+    final card = Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
       color: cardBg,
@@ -134,16 +140,36 @@ class ListCard extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                     ),
                   const SizedBox(width: 4),
-                  Icon(
-                    Icons.drag_handle_rounded,
-                    size: 20,
-                    color: isDark
-                        ? AppColors.textMutedDark.withValues(alpha: 0.5)
-                        : AppColors.textMuted.withValues(alpha: 0.6),
-                  ),
+                  if (reorderIndex != null)
+                    ReorderableDragStartListener(
+                      index: reorderIndex!,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.drag_handle_rounded,
+                          size: 20,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
+                        ),
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.drag_handle_rounded,
+                        size: 18,
+                        color:
+                            (isDark
+                                    ? AppColors.textMutedDark
+                                    : AppColors.textMuted)
+                                .withValues(alpha: 0.45),
+                      ),
+                    ),
                 ],
               ),
-              if (list.totalCount > 0) ...[
+              if (list.totalCount > 0 && list.type.tracksCompletion) ...[
                 const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
@@ -160,6 +186,15 @@ class ListCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
+                  if (list.type != ListType.custom) ...[
+                    Icon(
+                      list.type.icon,
+                      key: const Key('list_type_icon'),
+                      size: 18,
+                      color: listColor,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -207,6 +242,12 @@ class ListCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+
+    if (reorderIndex == null) return card;
+    return ReorderableDelayedDragStartListener(
+      index: reorderIndex!,
+      child: card,
     );
   }
 }

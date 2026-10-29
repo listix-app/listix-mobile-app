@@ -9,6 +9,7 @@ Listix is a fast, minimalist, **offline-first** checklist and shopping list appl
 | Feature | Status | Implementation Details |
 | :--- | :--- | :--- |
 | **List Management** | ✅ | Create, view, edit name, delete, star, sort, grid/list layout toggle |
+| **List Types** | ✅ | Five list types chosen at creation (Groceries, Shopping, Options, Tasks, Custom). Each adapts item fields and UI: groceries group by category with quantity/unit, shopping tracks price/store/link/priority, options compare alternatives through per-list configurable attributes (comparison table), with image, description, evaluation status, favorites and a single chosen option; tasks add status, priority, due date, description and notes. Existing lists are `custom` |
 | **Friction-Free Item Entry** | ✅ | Fixed bottom input, enter/tap submit, auto-refocus |
 | **Item Interaction** | ✅ | Animated custom checkbox, strikethrough typography animation, opacity dimming, collapsible completed group, swipe-to-delete |
 | **List Sharing & Collaboration** | ✅ | Socket.IO Realtime synchronization, anonymous token invites, web & deep-link joining (`listix://join/:token`), active presence avatars, 5-member limit enforcement |
@@ -19,9 +20,9 @@ Listix is a fast, minimalist, **offline-first** checklist and shopping list appl
 | **AdMob Ads (Banner & Interstitial)**| ✅ | Google Mobile Ads integration with anchored adaptive banners, interstitial preloading, and user consent handling |
 | **Notifications & Preferences** | ✅ | Local notifications scheduling, Material 3 appearance switching (Light/Dark/System), bilingual internationalization (EN/ES) |
 | **Navigation** | ✅ | Declarative routing with `go_router` (`/`, `/lists/new`, `/list/:id`, `/list/:id/edit`, `/settings`, `/backup`, `/join/:token`, `/about`) |
-| **Quantities & Units** | ❌ (V2) | Deferred to maintain minimal focused UX |
-| **Prices & Budgets** | ❌ (V2) | Deferred |
-| **Item Categories & Icons**| ❌ (V2) | Deferred |
+| **Quantities, Units & Categories** | ✅ | Available on `market` lists only |
+| **Prices & Links** | ✅ | Available on `shopping` lists only (running total in the list header); budgets remain deferred (V2) |
+| **Item Icons** | ❌ (V2) | Deferred |
 
 ---
 
@@ -79,9 +80,10 @@ lib/
     │   │           └── realtime_presence_badge.dart
     │   ├── lists/                          # Core lists and items domain, SQLite repo & UI
     │   │   ├── domain/                     # Pure Dart models & repository contracts
-    │   │   │   ├── entities/               # ShoppingList, TodoItem, Collaborator
+    │   │   │   ├── entities/               # ShoppingList, TodoItem, Collaborator, ListType (+ ItemPriority, MarketCatalog)
     │   │   │   └── repositories/lists_repository.dart
     │   │   ├── data/                       # SQLite data layer
+    │   │   │   ├── mappers/todo_item_row_mapper.dart   # items row <-> TodoItem (shared by repository and backup)
     │   │   │   └── repositories/sqlite_lists_repository.dart
     │   │   └── presentation/               # Riverpod controllers, screens & widgets
     │   │       ├── controllers/
@@ -95,6 +97,12 @@ lib/
     │   │       │   └── share_list_sheet.dart
     │   │       └── widgets/
     │   │           ├── collaborator_tile.dart
+    │   │           ├── item_card_base.dart          # Shared card shell, checkbox, title, meta line, thumbnail
+    │   │           ├── todo_item_tile.dart          # Selects the per-type card variant (Market/Shopping/Option/Task/Custom)
+    │   │           ├── item_editor_sheet.dart       # Per-type item editor (new + edit)
+    │   │           ├── options_tools.dart           # Attribute manager dialog and comparison sheet
+    │   │           ├── list_type_picker.dart        # Step 1 of list creation
+    │   │           ├── list_type_presentation.dart  # Icons and localized labels per type
     │   │           ├── list_card.dart
     │   │           ├── list_grid_card.dart
     │   │           ├── quick_add_input.dart
@@ -148,6 +156,14 @@ lib/
 - **Decoupled Business Logic**: Controllers run independently of the widget tree, allowing isolated unit testing without UI harness overhead.
 - **Unidirectional Reactive Flow**: UI components observe state (`ref.watch`) while callbacks dispatch mutations to notifiers (`ref.read(provider.notifier).method()`).
 - **Granular Re-renders**: Scoped providers and family providers (`shoppingListProvider(id)`) limit rebuilds strictly to modified items or active lists.
+
+### A2. Typed Lists
+- A list has a `ListType` (`lists.list_type`); all types share the same `lists`/`items` tables and `TodoItem` model. Type-specific attributes are optional columns on `items`, so no per-type models or repositories exist.
+- Creation is two steps inside `CreateEditListScreen`: pick a type (`ListTypePicker`), then name it. Editing a list does not change its type.
+- `ListDetailScreen` adapts per type: `market` groups pending items by category headers, `options` replaces the checkbox with a single-choice indicator and a favorite star, `shopping` shows the price total, `tasks` shows status/priority/due date. `custom` keeps the original behavior unchanged.
+- Item cards share `ItemCardBase` (swipe-to-delete, tap/long-press, edit and drag actions); each type has its own variant instead of a checkbox row: options use a single-choice indicator, thumbnail, attribute chips and favorite star; shopping highlights price and thumbnail.
+- Quick add still creates a title-only item; the details button (`QuickAddInput.onAddWithDetails`) opens `ItemEditorSheet` for the current type.
+- For shared lists, the REST adapter contract is unchanged: type and item details stay local, and `saveRemoteList` / `applyRemoteItem` merge incoming data without erasing local details.
 
 ### B. Local-First SQLite Persistence
 - **Zero-Latency Storage**: All user actions (creating lists, toggling items, reordering) commit immediately to local SQLite via atomic transactions.

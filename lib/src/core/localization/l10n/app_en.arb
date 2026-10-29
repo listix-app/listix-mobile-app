@@ -449,6 +449,86 @@
   "shareTextSubtitle": "Share or copy list items as text without real-time sync",
   "listTextCopied": "List text copied to clipboard",
   "realtimeCollaboration": "Real-time collaboration",
-  "itemActions": "Item actions"
+  "itemActions": "Item actions",
+  "listTypePickerHeading": "What kind of list do you need?",
+  "listTypePickerSubheading": "Pick a structure, then give your list a name.",
+  "changeListType": "Change type",
+  "listTypeMarket": "Groceries",
+  "listTypeMarketDesc": "Products by category, with quantities and units.",
+  "listTypeShopping": "Shopping",
+  "listTypeShoppingDesc": "Items with price, store, link and priority.",
+  "listTypeOptions": "Options",
+  "listTypeOptionsDesc": "Compare alternatives and pick one: universities, phones, apartments.",
+  "listTypeTasks": "Tasks",
+  "listTypeTasksDesc": "Activities with status, priority and due date.",
+  "listTypeCustom": "Custom",
+  "listTypeCustomDesc": "A flexible list with basic items.",
+  "newItemTitle": "New item",
+  "itemDetailsTitle": "Item details",
+  "addWithDetails": "Add with details",
+  "quantityLabel": "Quantity",
+  "unitLabel": "Unit",
+  "categoryLabel": "Category",
+  "priorityLabel": "Priority",
+  "priorityLow": "Low",
+  "priorityMedium": "Medium",
+  "priorityHigh": "High",
+  "priceLabel": "Price",
+  "storeLabel": "Store",
+  "linkLabel": "Link",
+  "linkInvalid": "Enter a valid http(s) link",
+  "numberInvalid": "Enter a valid number",
+  "notesLabel": "Notes",
+  "favoriteLabel": "Favorite",
+  "chosenBadge": "Chosen",
+  "markChosen": "Mark as chosen",
+  "unmarkChosen": "Remove choice",
+  "addFavorite": "Mark as favorite",
+  "removeFavorite": "Remove favorite",
+  "dueDateLabel": "Due date",
+  "noDueDate": "No date",
+  "clearDate": "Clear date",
+  "inProgressLabel": "In progress",
+  "openLink": "Open link",
+  "categoryProduce": "Produce",
+  "categoryDairy": "Dairy & eggs",
+  "categoryMeat": "Meat & fish",
+  "categoryBakery": "Bakery",
+  "categoryPantry": "Pantry",
+  "categoryBeverages": "Beverages",
+  "categoryCleaning": "Cleaning",
+  "categoryOther": "Other",
+  "optionsCount": "{count, plural, =1{1 option} other{{count} options}}",
+  "@optionsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingTotal": "Total: {amount}",
+  "@shoppingTotal": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "descriptionLabel": "Description",
+  "imageUrlLabel": "Image link",
+  "imageUrlInvalid": "Enter a valid http(s) image link",
+  "estimatedPriceLabel": "Estimated price",
+  "evaluationLabel": "Evaluation",
+  "evaluationPending": "To evaluate",
+  "evaluationEvaluated": "Evaluated",
+  "evaluationDiscarded": "Discarded",
+  "manageAttributes": "Comparison attributes",
+  "attributeNameLabel": "New attribute",
+  "attributeNameHint": "e.g. Tuition, Area, Battery",
+  "addAttribute": "Add",
+  "removeAttribute": "Remove attribute",
+  "attributesEmpty": "No attributes yet. Add the traits you want to compare.",
+  "compareOptions": "Compare options",
+  "compareNeedsTwo": "Add at least two options to compare them.",
+  "optionColumn": "Option"
 }
-

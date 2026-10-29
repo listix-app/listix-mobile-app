@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 
 class ListGridCard extends StatelessWidget {
@@ -42,6 +43,8 @@ class ListGridCard extends StatelessWidget {
 
     final badgeText = list.totalCount == 0
         ? tr.noItemsBadge
+        : list.type == ListType.options
+        ? tr.optionsCount(list.totalCount)
         : list.pendingCount == 0
         ? tr.allDoneBadge
         : tr.pendingBadge(list.progressText);

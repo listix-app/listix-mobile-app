@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -565,9 +566,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             child: ReorderableListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               itemCount: displayedLists.length,
-              buildDefaultDragHandles: _selectedTab == 0 && query.isEmpty,
+              buildDefaultDragHandles: false,
+              proxyDecorator: (child, index, animation) {
+                return Material(
+                  elevation: 4,
+                  shadowColor: Colors.black.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.transparent,
+                  child: child,
+                );
+              },
               onReorderItem: (oldIndex, newIndex) {
                 if (_selectedTab != 0 || query.isNotEmpty) return;
+                HapticFeedback.selectionClick();
                 ref
                     .read(listsControllerProvider.notifier)
                     .reorderLists(oldIndex, newIndex);
@@ -655,6 +666,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     key: ValueKey('card_${list.id}'),
                     list: list,
                     strings: tr,
+                    reorderIndex: (_selectedTab == 0 && query.isEmpty)
+                        ? index
+                        : null,
                     onTap: () => context.push('/list/${list.id}'),
                     onToggleStar: _selectedTab == 0
                         ? () {

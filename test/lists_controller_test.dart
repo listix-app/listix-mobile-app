@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
+import 'package:listix/src/features/lists/domain/entities/list_type.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:listix/src/features/lists/domain/repositories/lists_repository.dart';
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
@@ -27,10 +28,15 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> createList(String name, {int? color}) async {
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  }) async {
     final list = ShoppingList(
       id: 'l_${internalLists.length + 1}',
       name: name,
+      type: type,
       color: color,
       position: internalLists.length,
       createdAt: DateTime.now(),
@@ -44,6 +50,7 @@ class FakeFailingListsRepository implements ListsRepository {
     String id,
     String newName, {
     int? color,
+    ListType? type,
   }) async {
     if (newName.contains('FAIL')) {
       throw Exception('Simulated update error');
@@ -110,7 +117,12 @@ class FakeFailingListsRepository implements ListsRepository {
   }
 
   @override
-  Future<TodoItem> addItem(String listId, String title, {String? id}) async {
+  Future<TodoItem> addItem(
+    String listId,
+    String title, {
+    String? id,
+    TodoItem? details,
+  }) async {
     if (title.contains('FAIL')) {
       throw Exception('Simulated item error');
     }
@@ -128,6 +140,18 @@ class FakeFailingListsRepository implements ListsRepository {
     }
     return item;
   }
+
+  @override
+  Future<TodoItem> updateItemDetails(TodoItem item) async => item;
+
+  @override
+  Future<void> updateListAttributes(
+    String listId,
+    List<String> attributeNames,
+  ) async {}
+
+  @override
+  Future<void> toggleChosenItem(String listId, String itemId) async {}
 
   @override
   Future<TodoItem> toggleItemCompletion(String listId, String itemId) async {

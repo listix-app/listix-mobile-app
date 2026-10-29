@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:listix/src/features/lists/domain/entities/list_type.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:listix/src/core/config/app_environment.dart';
 import 'package:listix/src/features/ads/presentation/widgets/banner_ad_widget.dart';
@@ -61,6 +63,10 @@ void main() {
         ),
       );
 
+      await tester.ensureVisible(find.byKey(const Key('list_type_custom')));
+      await tester.tap(find.byKey(const Key('list_type_custom')));
+      await tester.pumpAndSettle();
+
       expect(find.text('Crear lista'), findsOneWidget);
       expect(find.text('Nueva lista'), findsOneWidget);
       await tester.tap(find.text('Crear lista'));
@@ -73,6 +79,153 @@ void main() {
 
       expect(fakeController.createdNames, contains('Nueva Despensa'));
       expect(find.text('List: created_new'), findsOneWidget);
+    });
+
+    testWidgets('shows the five list types before asking for the name', (
+      tester,
+    ) async {
+      final fakeController = _ScreensTestListsController([]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: CreateEditListScreen(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextFormField), findsNothing);
+      for (final type in ListType.values) {
+        expect(find.byKey(Key('list_type_${type.name}')), findsOneWidget);
+      }
+      expect(find.text('Mercado'), findsOneWidget);
+      expect(find.text('Compras'), findsOneWidget);
+      expect(find.text('Opciones'), findsOneWidget);
+      expect(find.text('Tareas'), findsOneWidget);
+      expect(find.text('Personalizada'), findsOneWidget);
+      expect(
+        find.text('Productos por categoría, con cantidades y unidades.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('creates the list with the selected type', (tester) async {
+      final fakeController = _ScreensTestListsController([]);
+      final router = GoRouter(
+        initialLocation: '/lists/new',
+        routes: [
+          GoRoute(
+            path: '/lists/new',
+            builder: (context, state) => const CreateEditListScreen(),
+          ),
+          GoRoute(
+            path: '/list/:id',
+            builder: (context, state) =>
+                Text('List: ${state.pathParameters['id']}'),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('list_type_options')));
+      await tester.tap(find.byKey(const Key('list_type_options')));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('selected_list_type_label')))
+            .data,
+        'Opciones',
+      );
+
+      await tester.enterText(find.byType(TextFormField), 'Universidades');
+      await tester.tap(find.text('Crear lista'));
+      await tester.pumpAndSettle();
+
+      expect(fakeController.createdNames, ['Universidades']);
+      expect(fakeController.createdTypes, [ListType.options]);
+    });
+
+    testWidgets('change type and back return to the type picker', (
+      tester,
+    ) async {
+      final fakeController = _ScreensTestListsController([]);
+      final router = GoRouter(
+        initialLocation: '/prev',
+        routes: [
+          GoRoute(
+            path: '/prev',
+            builder: (ctx, state) => Scaffold(
+              body: ElevatedButton(
+                onPressed: () => ctx.push('/lists/new'),
+                child: const Text('Go New'),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/lists/new',
+            builder: (context, state) => const CreateEditListScreen(),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.tap(find.text('Go New'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('list_type_tasks')));
+      await tester.tap(find.byKey(const Key('list_type_tasks')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('change_list_type_button')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('list_type_tasks')), findsOneWidget);
+
+      await tester.ensureVisible(find.byKey(const Key('list_type_market')));
+      await tester.tap(find.byKey(const Key('list_type_market')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('list_type_market')), findsOneWidget);
+
+      await tester.ensureVisible(find.byKey(const Key('list_type_market')));
+      await tester.tap(find.byKey(const Key('list_type_market')));
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('list_type_market')), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+      await tester.pumpAndSettle();
+      expect(find.text('Go New'), findsOneWidget);
     });
 
     testWidgets('edit list mode populates name and saves changes', (
@@ -127,6 +280,63 @@ void main() {
 
       expect(fakeController.updatedNames['edit_target'], 'Lista Actualizada');
       expect(find.text('Go Edit'), findsOneWidget);
+    });
+
+    testWidgets('edit mode lets the list type be changed', (tester) async {
+      final list = ShoppingList(
+        id: 'edit_target',
+        name: 'Lista Vieja',
+        type: ListType.shopping,
+        createdAt: now,
+      );
+      final fakeController = _ScreensTestListsController([list]);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            shoppingListProvider('edit_target').overrideWithValue(list),
+            listsControllerProvider.overrideWith(() => fakeController),
+          ],
+          child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: GoRouter(
+              initialLocation: '/prev',
+              routes: [
+                GoRoute(
+                  path: '/prev',
+                  builder: (ctx, state) => ElevatedButton(
+                    onPressed: () => ctx.push('/edit'),
+                    child: const Text('Go Edit'),
+                  ),
+                ),
+                GoRoute(
+                  path: '/edit',
+                  builder: (context, state) =>
+                      const CreateEditListScreen(listId: 'edit_target'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Go Edit'));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<ChoiceChip>(
+              find.byKey(const Key('edit_list_type_shopping')),
+            )
+            .selected,
+        isTrue,
+      );
+      await tester.tap(find.byKey(const Key('edit_list_type_tasks')));
+      await tester.pump();
+      await tester.tap(find.text('Guardar cambios'));
+      await tester.pumpAndSettle();
+
+      expect(fakeController.updatedTypes['edit_target'], ListType.tasks);
     });
 
     testWidgets('tap back button on CreateEditListScreen', (tester) async {
@@ -233,6 +443,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('list_type_custom')));
+      await tester.tap(find.byKey(const Key('list_type_custom')));
+      await tester.pumpAndSettle();
 
       final firstColor = AppColors.listColors.first;
       final colorKey = Key(
@@ -264,6 +477,9 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('list_type_custom')));
+      await tester.tap(find.byKey(const Key('list_type_custom')));
       await tester.pumpAndSettle();
 
       final firstColor = AppColors.listColors.first;
@@ -412,6 +628,14 @@ void main() {
         reorderableHomeScreen.onReorderItem!(0, 1);
         await tester.pumpAndSettle();
         expect(fakeController.reorderedListsCalled, isTrue);
+        expect(
+          reorderableHomeScreen.proxyDecorator!(
+            const SizedBox(),
+            0,
+            const AlwaysStoppedAnimation(0),
+          ),
+          isA<Material>(),
+        );
 
         await tester.drag(find.byType(Dismissible), const Offset(-500, 0));
         await tester.pumpAndSettle();
@@ -1150,23 +1374,22 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('edit_item_to_edit')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Editar item'), findsOneWidget);
-      expect(find.byKey(const Key('edit_item_title_input')), findsOneWidget);
+      expect(find.text('Detalles del elemento'), findsOneWidget);
+      expect(find.byKey(const Key('item_editor_title')), findsOneWidget);
 
-      await tester.enterText(
-        find.byKey(const Key('edit_item_title_input')),
-        '',
-      );
-      await tester.tap(find.byKey(const Key('save_edit_item_button')));
+      await tester.enterText(find.byKey(const Key('item_editor_title')), '');
+      await tester.ensureVisible(find.byKey(const Key('item_editor_save')));
+      await tester.tap(find.byKey(const Key('item_editor_save')));
       await tester.pump();
 
       expect(find.text('Por favor ingresa un nombre'), findsOneWidget);
 
       await tester.enterText(
-        find.byKey(const Key('edit_item_title_input')),
+        find.byKey(const Key('item_editor_title')),
         'Queso Mozzarella',
       );
-      await tester.tap(find.byKey(const Key('save_edit_item_button')));
+      await tester.ensureVisible(find.byKey(const Key('item_editor_save')));
+      await tester.tap(find.byKey(const Key('item_editor_save')));
       await tester.pumpAndSettle();
 
       expect(
@@ -1176,7 +1399,7 @@ void main() {
     });
 
     testWidgets(
-      'delete item from edit dialog deletes item and shows undo snackbar',
+      'delete item from actions sheet deletes item and shows undo snackbar',
       (tester) async {
         final item = TodoItem(
           id: 'item_del_dialog',
@@ -1215,16 +1438,9 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.byKey(const ValueKey('edit_item_del_dialog')));
+        await tester.longPress(find.text('Item to delete from dialog'));
         await tester.pumpAndSettle();
-
-        expect(
-          find.byKey(const Key('delete_item_from_dialog_button')),
-          findsOneWidget,
-        );
-        await tester.tap(
-          find.byKey(const Key('delete_item_from_dialog_button')),
-        );
+        await tester.tap(find.text('Eliminar'));
         await tester.pumpAndSettle();
 
         expect(fakeController.deletedItemIds, contains('item_del_dialog'));
@@ -1290,8 +1506,8 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.text('Renombrar'));
         await tester.pumpAndSettle();
-        expect(find.text('Editar item'), findsOneWidget);
-        await tester.tap(find.text('Cancelar'));
+        expect(find.text('Detalles del elemento'), findsOneWidget);
+        await tester.tapAt(const Offset(10, 10));
         await tester.pumpAndSettle();
 
         await tester.longPress(find.text('Item Actions Test'));
@@ -1785,7 +2001,9 @@ void main() {
 class _ScreensTestListsController extends ListsController {
   final List<ShoppingList> _lists;
   final List<String> createdNames = [];
+  final List<ListType> createdTypes = [];
   final Map<String, String> updatedNames = {};
+  final Map<String, ListType> updatedTypes = {};
   final List<String> deletedListIds = [];
   final List<ShoppingList> restoredLists = [];
   final List<String> starredListIds = [];
@@ -1821,11 +2039,22 @@ class _ScreensTestListsController extends ListsController {
   }
 
   @override
-  Future<ShoppingList> createList(String name, {int? color}) async {
+  Future<void> updateItemDetails(TodoItem item) async {
+    updatedItemTitles[item.id] = item.title;
+  }
+
+  @override
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  }) async {
     createdNames.add(name);
+    createdTypes.add(type);
     return ShoppingList(
       id: 'created_new',
       name: name,
+      type: type,
       color: color,
       createdAt: DateTime(2026, 9, 22),
     );
@@ -1849,8 +2078,10 @@ class _ScreensTestListsController extends ListsController {
     String listId,
     String newName, {
     int? color,
+    ListType? type,
   }) async {
     updatedNames[listId] = newName;
+    if (type != null) updatedTypes[listId] = type;
   }
 
   @override
@@ -1880,7 +2111,7 @@ class _ScreensTestListsController extends ListsController {
   }
 
   @override
-  Future<void> addItem(String listId, String title) async {
+  Future<void> addItem(String listId, String title, {TodoItem? details}) async {
     addedItems.add(title);
   }
 

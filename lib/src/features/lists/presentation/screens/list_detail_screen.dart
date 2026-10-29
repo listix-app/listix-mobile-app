@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../ads/data/interstitial_ad_service.dart';
@@ -13,9 +15,13 @@ import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
 import '../../../sync/data/api_sync_service.dart';
+import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/todo_item.dart';
 import '../controllers/lists_controller.dart';
+import '../widgets/item_editor_sheet.dart';
+import '../widgets/list_type_presentation.dart';
+import '../widgets/options_tools.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
 import 'share_list_sheet.dart';
@@ -85,6 +91,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   ) async {
     final tr = ref.read(stringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isOptions = _listType == ListType.options;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -117,13 +124,15 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
               const SizedBox(height: 12),
               ListTile(
                 leading: Icon(
-                  item.isCompleted
+                  (isOptions ? item.isChosen : item.isCompleted)
                       ? Icons.radio_button_unchecked_rounded
                       : Icons.check_circle_outline_rounded,
                   color: AppColors.primary,
                 ),
                 title: Text(
-                  item.isCompleted
+                  isOptions
+                      ? (item.isChosen ? tr.unmarkChosen : tr.markChosen)
+                      : item.isCompleted
                       ? 'Marcar como pendiente'
                       : 'Marcar como completado',
                   style: TextStyle(
@@ -134,9 +143,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                 ),
                 onTap: () {
                   ctx.pop();
-                  ref
-                      .read(listsControllerProvider.notifier)
-                      .toggleItem(widget.listId, item.id);
+                  final notifier = ref.read(listsControllerProvider.notifier);
+                  if (isOptions) {
+                    notifier.toggleChosenItem(widget.listId, item.id);
+                  } else {
+                    notifier.toggleItem(widget.listId, item.id);
+                  }
                 },
               ),
               if (!item.isCompleted)
@@ -155,7 +167,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                   ),
                   onTap: () {
                     ctx.pop();
-                    _showEditItemDialog(context, item);
+                    _editItem(item);
                   },
                 ),
               ListTile(
@@ -180,6 +192,110 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
         ),
       ),
     );
+  }
+
+  ListType get _listType =>
+      ref.read(shoppingListProvider(widget.listId))?.type ?? ListType.custom;
+
+  List<String> get _attributeNames =>
+      ref.read(shoppingListProvider(widget.listId))?.attributeNames ?? const [];
+
+  Future<void> _editItem(TodoItem item) async {
+    final updated = await showItemEditorSheet(
+      context,
+      type: _listType,
+      strings: ref.read(stringsProvider),
+      draft: item,
+      attributeNames: _attributeNames,
+    );
+    if (updated == null || !mounted) return;
+    await ref.read(listsControllerProvider.notifier).updateItemDetails(updated);
+  }
+
+  Future<void> _addItemWithDetails(String title) async {
+    final created = await showItemEditorSheet(
+      context,
+      type: _listType,
+      strings: ref.read(stringsProvider),
+      draft: TodoItem(
+        id: '',
+        listId: widget.listId,
+        title: title,
+        createdAt: DateTime.now(),
+      ),
+      attributeNames: _attributeNames,
+      isNew: true,
+    );
+    if (created == null || !mounted) return;
+    await ref
+        .read(listsControllerProvider.notifier)
+        .addItem(widget.listId, created.title, details: created);
+  }
+
+  Widget _buildItemTile(
+    ShoppingList list,
+    TodoItem item,
+    Color listColor, {
+    int? reorderIndex,
+  }) {
+    final notifier = ref.read(listsControllerProvider.notifier);
+    return TodoItemTile(
+      key: ValueKey(item.id),
+      item: item,
+      reorderIndex: reorderIndex,
+      listType: list.type,
+      attributeNames: list.attributeNames,
+      strings: ref.read(stringsProvider),
+      activeColor: listColor,
+      onToggle: () => list.type == ListType.options
+          ? notifier.toggleChosenItem(list.id, item.id)
+          : notifier.toggleItem(list.id, item.id),
+      onDelete: () => _handleDeleteItem(list.id, item.id),
+      onEdit: () => _editItem(item),
+      onLongPress: () => _showItemActionsSheet(context, item),
+      onToggleFavorite: () => notifier.updateItemDetails(
+        item.copyWith(isFavorite: !item.isFavorite),
+      ),
+      onOpenLink: () =>
+          ref.read(urlLauncherServiceProvider).openUrl(item.url ?? ''),
+    );
+  }
+
+  List<Widget> _buildCategoryGroups(
+    ShoppingList list,
+    List<TodoItem> pending,
+    Color listColor,
+    AppStrings tr,
+    bool isDark,
+  ) {
+    final order = MarketCatalog.categories;
+    String keyOf(TodoItem item) => order.contains(item.category)
+        ? item.category!
+        : MarketCatalog.uncategorized;
+    final groups = <String, List<TodoItem>>{};
+    for (final item in pending) {
+      groups.putIfAbsent(keyOf(item), () => []).add(item);
+    }
+    final sortedKeys = groups.keys.toList()
+      ..sort((a, b) => order.indexOf(a).compareTo(order.indexOf(b)));
+    return [
+      for (final key in sortedKeys) ...[
+        Padding(
+          key: Key('category_header_$key'),
+          padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
+          child: Text(
+            tr.categoryName(key).toUpperCase(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+            ),
+          ),
+        ),
+        for (final item in groups[key]!) _buildItemTile(list, item, listColor),
+      ],
+    ];
   }
 
   Future<void> _handleDeleteItem(String listId, String itemId) async {
@@ -265,78 +381,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     }
   }
 
-  Future<void> _showEditItemDialog(BuildContext context, TodoItem item) async {
-    final tr = ref.read(stringsProvider);
-    final controller = TextEditingController(text: item.title);
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr.editItemTitle),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            key: const Key('edit_item_title_input'),
-            controller: controller,
-            autofocus: true,
-            maxLength: 100,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              labelText: tr.itemTitleLabel,
-              hintText: tr.itemTitleHint,
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return tr.itemTitleValidation;
-              }
-              return null;
-            },
-            onFieldSubmitted: (_) {
-              if (formKey.currentState!.validate()) {
-                ref
-                    .read(listsControllerProvider.notifier)
-                    .updateItem(widget.listId, item.id, controller.text);
-                ctx.pop();
-              }
-            },
-          ),
-        ),
-        actions: [
-          TextButton.icon(
-            key: const Key('delete_item_from_dialog_button'),
-            onPressed: () {
-              ctx.pop();
-              _handleDeleteItem(widget.listId, item.id);
-            },
-            icon: const Icon(
-              Icons.delete_outline_rounded,
-              color: AppColors.delete,
-              size: 18,
-            ),
-            label: Text(
-              tr.delete,
-              style: const TextStyle(color: AppColors.delete),
-            ),
-          ),
-          TextButton(onPressed: () => ctx.pop(), child: Text(tr.cancel)),
-          FilledButton(
-            key: const Key('save_edit_item_button'),
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                ref
-                    .read(listsControllerProvider.notifier)
-                    .updateItem(widget.listId, item.id, controller.text);
-                ctx.pop();
-              }
-            },
-            child: Text(tr.saveChanges),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.listen<ShoppingList?>(shoppingListProvider(widget.listId), (
@@ -414,6 +458,78 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     final listColor = list.color != null
         ? Color(list.color!)
         : AppColors.primary;
+
+    final Widget? completedFooter = filteredCompleted.isEmpty
+        ? null
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isCompletedExpanded = !_isCompletedExpanded;
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6.0,
+                    horizontal: 4.0,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _isCompletedExpanded
+                            ? Icons.expand_more
+                            : Icons.chevron_right,
+                        size: 18,
+                        color: isDark
+                            ? AppColors.textMutedDark
+                            : AppColors.textMuted,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        tr.completedGroup(filteredCompleted.length),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        key: const Key('delete_completed_items_button'),
+                        onPressed: () => _handleDeleteCompletedItems(
+                          list.id,
+                          filteredCompleted.length,
+                        ),
+                        icon: const Icon(
+                          Icons.delete_sweep_outlined,
+                          size: 16,
+                          color: AppColors.delete,
+                        ),
+                        label: Text(
+                          tr.deleteCompletedItems,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.delete,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_isCompletedExpanded)
+                ...filteredCompleted.map(
+                  (item) => _buildItemTile(list, item, listColor),
+                ),
+            ],
+          );
 
     return Scaffold(
       appBar: AppBar(
@@ -529,6 +645,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                     Text(
                       list.items.isEmpty
                           ? tr.noItemsYet
+                          : list.type == ListType.options
+                          ? tr.optionsCount(list.totalCount)
                           : tr.pendingCountText(
                               list.pendingCount,
                               list.totalCount,
@@ -543,9 +661,13 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                       ),
                     ),
                     const Spacer(),
-                    if (list.totalCount > 0)
+                    if (list.totalCount > 0 && list.type.tracksCompletion)
                       Text(
-                        tr.percentCompleted((progress * 100).toInt()),
+                        list.type == ListType.shopping && list.totalPrice > 0
+                            ? tr.shoppingTotal(
+                                list.totalPrice.toStringAsFixed(2),
+                              )
+                            : tr.percentCompleted((progress * 100).toInt()),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -556,7 +678,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                       ),
                   ],
                 ),
-                if (list.totalCount > 0) ...[
+                if (list.totalCount > 0 && list.type.tracksCompletion) ...[
                   const SizedBox(height: 6),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
@@ -568,6 +690,25 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                       valueColor: AlwaysStoppedAnimation<Color>(listColor),
                       minHeight: 4,
                     ),
+                  ),
+                ],
+                if (list.type == ListType.options) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    children: [
+                      TextButton.icon(
+                        key: const Key('compare_options_button'),
+                        onPressed: () => showCompareSheet(context, list.id),
+                        icon: const Icon(Icons.table_chart_outlined, size: 18),
+                        label: Text(tr.compareOptions),
+                      ),
+                      TextButton.icon(
+                        key: const Key('manage_attributes_button'),
+                        onPressed: () => showAttributesDialog(context, list.id),
+                        icon: const Icon(Icons.tune_rounded, size: 18),
+                        label: Text(tr.manageAttributes),
+                      ),
+                    ],
                   ),
                 ],
                 if (list.collaborators.isNotEmpty) ...[
@@ -655,142 +796,58 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                           .manualSync();
                     },
                     color: listColor,
-                    child: ReorderableListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      itemCount: filteredPending.length,
-                      buildDefaultDragHandles: false,
-                      proxyDecorator: (child, index, animation) {
-                        return Material(
-                          elevation: 4,
-                          shadowColor: Colors.black.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.transparent,
-                          child: child,
-                        );
-                      },
-                      onReorderItem: (oldIndex, newIndex) {
-                        if (query.isNotEmpty) return;
-                        HapticFeedback.selectionClick();
-                        ref
-                            .read(listsControllerProvider.notifier)
-                            .reorderItems(list.id, oldIndex, newIndex);
-                      },
-                      itemBuilder: (context, index) {
-                        final item = filteredPending[index];
-                        return TodoItemTile(
-                          key: ValueKey(item.id),
-                          item: item,
-                          reorderIndex: query.isEmpty ? index : null,
-                          activeColor: listColor,
-                          onToggle: () {
-                            ref
-                                .read(listsControllerProvider.notifier)
-                                .toggleItem(list.id, item.id);
-                          },
-                          onDelete: () => _handleDeleteItem(list.id, item.id),
-                          onEdit: () => _showEditItemDialog(context, item),
-                          onLongPress: () =>
-                              _showItemActionsSheet(context, item),
-                        );
-                      },
-                      footer: filteredCompleted.isEmpty
-                          ? null
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 12),
-                                InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _isCompletedExpanded =
-                                          !_isCompletedExpanded;
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 6.0,
-                                      horizontal: 4.0,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          _isCompletedExpanded
-                                              ? Icons.expand_more
-                                              : Icons.chevron_right,
-                                          size: 18,
-                                          color: isDark
-                                              ? AppColors.textMutedDark
-                                              : AppColors.textMuted,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          tr.completedGroup(
-                                            filteredCompleted.length,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: isDark
-                                                ? AppColors.textMutedDark
-                                                : AppColors.textMuted,
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        TextButton.icon(
-                                          key: const Key(
-                                            'delete_completed_items_button',
-                                          ),
-                                          onPressed: () =>
-                                              _handleDeleteCompletedItems(
-                                                list.id,
-                                                filteredCompleted.length,
-                                              ),
-                                          icon: const Icon(
-                                            Icons.delete_sweep_outlined,
-                                            size: 16,
-                                            color: AppColors.delete,
-                                          ),
-                                          label: Text(
-                                            tr.deleteCompletedItems,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.delete,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                if (_isCompletedExpanded)
-                                  ...filteredCompleted.map(
-                                    (item) => TodoItemTile(
-                                      key: ValueKey(item.id),
-                                      item: item,
-                                      activeColor: listColor,
-                                      onToggle: () {
-                                        ref
-                                            .read(
-                                              listsControllerProvider.notifier,
-                                            )
-                                            .toggleItem(list.id, item.id);
-                                      },
-                                      onDelete: () =>
-                                          _handleDeleteItem(list.id, item.id),
-                                      onEdit: () =>
-                                          _showEditItemDialog(context, item),
-                                      onLongPress: () =>
-                                          _showItemActionsSheet(context, item),
-                                    ),
-                                  ),
-                              ],
+                    child: list.type.isGroupedByCategory
+                        ? ListView(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
                             ),
-                    ),
+                            children: [
+                              ..._buildCategoryGroups(
+                                list,
+                                filteredPending,
+                                listColor,
+                                tr,
+                                isDark,
+                              ),
+                              ?completedFooter,
+                            ],
+                          )
+                        : ReorderableListView.builder(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            itemCount: filteredPending.length,
+                            buildDefaultDragHandles: false,
+                            proxyDecorator: (child, index, animation) {
+                              return Material(
+                                elevation: 4,
+                                shadowColor: Colors.black.withValues(
+                                  alpha: 0.25,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.transparent,
+                                child: child,
+                              );
+                            },
+                            onReorderItem: (oldIndex, newIndex) {
+                              if (query.isNotEmpty) return;
+                              HapticFeedback.selectionClick();
+                              ref
+                                  .read(listsControllerProvider.notifier)
+                                  .reorderItems(list.id, oldIndex, newIndex);
+                            },
+                            itemBuilder: (context, index) {
+                              return _buildItemTile(
+                                list,
+                                filteredPending[index],
+                                listColor,
+                                reorderIndex: query.isEmpty ? index : null,
+                              );
+                            },
+                            footer: completedFooter,
+                          ),
                   ),
           ),
 
@@ -803,6 +860,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                   .read(listsControllerProvider.notifier)
                   .addItem(list.id, title);
             },
+            onAddWithDetails: _addItemWithDetails,
+            detailsTooltip: tr.addWithDetails,
           ),
         ],
       ),

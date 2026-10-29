@@ -8,6 +8,8 @@ class QuickAddInput extends StatefulWidget {
   final bool autoFocus;
   final String? hintText;
   final String? tooltip;
+  final ValueChanged<String>? onAddWithDetails;
+  final String? detailsTooltip;
 
   const QuickAddInput({
     super.key,
@@ -15,6 +17,8 @@ class QuickAddInput extends StatefulWidget {
     this.autoFocus = true,
     this.hintText,
     this.tooltip,
+    this.onAddWithDetails,
+    this.detailsTooltip,
   });
 
   @override
@@ -50,6 +54,13 @@ class _QuickAddInputState extends State<QuickAddInput> {
     setState(() => _canSubmit = false);
     widget.onAdd(text);
     _focusNode.requestFocus();
+  }
+
+  void _openDetails() {
+    final text = _controller.text.trim();
+    _controller.clear();
+    setState(() => _canSubmit = false);
+    widget.onAddWithDetails!(text);
   }
 
   @override
@@ -145,6 +156,19 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 ),
               ),
             ),
+            if (widget.onAddWithDetails != null) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                key: const Key('quick_add_details_button'),
+                onPressed: _openDetails,
+                icon: Icon(
+                  Icons.tune_rounded,
+                  size: 22,
+                  color: unselectedIconColor,
+                ),
+                tooltip: widget.detailsTooltip,
+              ),
+            ],
             const SizedBox(width: 8),
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),

@@ -82,7 +82,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  tr.versionLabel('1.0.0', '1'),
+                  '${tr.version} 1.0.0',
                   style: TextStyle(fontSize: 13, color: textSubColor),
                 ),
                 const SizedBox(height: 4),

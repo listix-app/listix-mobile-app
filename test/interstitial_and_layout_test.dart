@@ -17,6 +17,7 @@ import 'package:listix/src/features/about/presentation/screens/about_screen.dart
 import 'package:listix/src/features/ads/data/ad_config.dart';
 import 'package:listix/src/features/ads/data/interstitial_ad_service.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
+import 'package:listix/src/features/lists/domain/entities/list_type.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:listix/src/features/lists/domain/repositories/lists_repository.dart';
 import 'package:listix/src/features/lists/presentation/controllers/list_layout_controller.dart';
@@ -1102,10 +1103,15 @@ class _FakeRepoWithLists implements ListsRepository {
       lists.where((l) => l.id == id).firstOrNull;
 
   @override
-  Future<ShoppingList> createList(String name, {int? color}) async {
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  }) async {
     final l = ShoppingList(
       id: 'new',
       name: name,
+      type: type,
       color: color,
       createdAt: DateTime.now(),
     );
@@ -1118,6 +1124,7 @@ class _FakeRepoWithLists implements ListsRepository {
     String id,
     String newName, {
     int? color,
+    ListType? type,
   }) async {
     final idx = lists.indexWhere((l) => l.id == id);
     final updated = lists[idx].copyWith(name: newName, color: color);
@@ -1150,7 +1157,12 @@ class _FakeRepoWithLists implements ListsRepository {
   Future<void> reorderLists(List<String> orderedListIds) async {}
 
   @override
-  Future<TodoItem> addItem(String listId, String title, {String? id}) async {
+  Future<TodoItem> addItem(
+    String listId,
+    String title, {
+    String? id,
+    TodoItem? details,
+  }) async {
     return TodoItem(
       id: id ?? 'item',
       listId: listId,
@@ -1158,6 +1170,18 @@ class _FakeRepoWithLists implements ListsRepository {
       createdAt: DateTime.now(),
     );
   }
+
+  @override
+  Future<TodoItem> updateItemDetails(TodoItem item) async => item;
+
+  @override
+  Future<void> updateListAttributes(
+    String listId,
+    List<String> attributeNames,
+  ) async {}
+
+  @override
+  Future<void> toggleChosenItem(String listId, String itemId) async {}
 
   @override
   Future<TodoItem> toggleItemCompletion(String listId, String itemId) async {

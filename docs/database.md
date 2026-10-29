@@ -24,6 +24,8 @@ erDiagram
     LIST {
         TEXT id PK "UUID v4"
         TEXT name "List title"
+        TEXT list_type "market, shopping, options, tasks, custom"
+        TEXT option_attributes "options: JSON array of attribute names"
         INTEGER is_synced "0 = pending, 1 = synced"
         INTEGER is_starred "0 = unstarred, 1 = starred"
         INTEGER is_shared "0 = local only, 1 = shared / sync enabled"
@@ -38,6 +40,22 @@ erDiagram
         TEXT id PK "UUID v4"
         TEXT list_id FK "References lists(id) ON DELETE CASCADE"
         TEXT title "Item text / title"
+        REAL quantity "market"
+        TEXT unit "market: un, kg, g, l, ml, pack"
+        TEXT category "market category key"
+        REAL price "shopping"
+        TEXT store "shopping"
+        TEXT url "shopping"
+        TEXT priority "shopping/tasks: low, medium, high"
+        TEXT notes "options"
+        TEXT description "options/tasks/custom"
+        TEXT image_url "shopping/options"
+        TEXT attributes "options: JSON map attribute name to value"
+        TEXT evaluation "options: pending, evaluated, discarded"
+        INTEGER is_favorite "options"
+        INTEGER is_chosen "options: one per list"
+        INTEGER due_date "tasks: unix epoch millis"
+        INTEGER in_progress "tasks"
         INTEGER is_completed "0 = active, 1 = completed"
         INTEGER is_synced "0 = pending, 1 = synced"
         INTEGER position "Sort order"
@@ -82,6 +100,8 @@ Stores the high-level lists owned by or shared with the user.
 | :--- | :--- | :--- | :--- |
 | `id` | `TEXT` | `PRIMARY KEY NOT NULL` | Unique client-generated UUID v4 |
 | `name` | `TEXT` | `NOT NULL` | List display name (e.g. "Supermercado") |
+| `list_type` | `TEXT` | `NOT NULL DEFAULT 'custom'` | List type: `market`, `shopping`, `options`, `tasks`, `custom` |
+| `option_attributes` | `TEXT` | `NULL` | `options`: JSON array with the comparison attribute names configured for the list |
 | `is_synced` | `INTEGER` | `NOT NULL DEFAULT 0` | Sync state: `0` = local only, `1` = synced |
 | `is_starred` | `INTEGER` | `NOT NULL DEFAULT 0` | Starred priority state |
 | `is_shared` | `INTEGER` | `NOT NULL DEFAULT 0` | `0` = private local only, `1` = shared & synced |
@@ -105,6 +125,24 @@ Individual items contained within a shopping list.
 | `created_at` | `INTEGER` | `NOT NULL` | Milliseconds since Unix epoch |
 | `updated_at` | `INTEGER` | `NOT NULL` | Milliseconds since Unix epoch |
 | `deleted_at` | `INTEGER` | `NULL` | Soft delete timestamp |
+| `quantity` | `REAL` | `NULL` | `market`: amount to buy |
+| `unit` | `TEXT` | `NULL` | `market`: `un`, `kg`, `g`, `l`, `ml`, `pack` |
+| `category` | `TEXT` | `NULL` | `market`: `produce`, `dairy`, `meat`, `bakery`, `pantry`, `beverages`, `cleaning`, `other` |
+| `price` | `REAL` | `NULL` | `market`/`shopping`: estimated price (summed in the shopping list header) |
+| `store` | `TEXT` | `NULL` | `shopping`: store name |
+| `url` | `TEXT` | `NULL` | `shopping`: http(s) product link |
+| `priority` | `TEXT` | `NULL` | `shopping`/`tasks`: `low`, `medium`, `high` |
+| `notes` | `TEXT` | `NULL` | `options`/`tasks`/`custom`: free notes |
+| `description` | `TEXT` | `NULL` | `options`/`tasks`/`custom`: short description |
+| `image_url` | `TEXT` | `NULL` | `shopping`/`options`: optional http(s) image link (no local picker, so it needs connectivity to render; offline shows an icon) |
+| `attributes` | `TEXT` | `NULL` | `options`: JSON object, attribute name to value |
+| `evaluation` | `TEXT` | `NULL` | `options`: `pending`, `evaluated`, `discarded` |
+| `is_favorite` | `INTEGER` | `NOT NULL DEFAULT 0` | `options`: favorite flag |
+| `is_chosen` | `INTEGER` | `NOT NULL DEFAULT 0` | `options`: chosen option (at most one per list) |
+| `due_date` | `INTEGER` | `NULL` | `tasks`: due date, milliseconds since Unix epoch |
+| `in_progress` | `INTEGER` | `NOT NULL DEFAULT 0` | `tasks`: in-progress status (cleared when completed) |
+
+Columns that do not apply to a list's type stay `NULL`/`0`. Existing databases gain the new columns on open (`_ensureColumns`) and existing lists default to `custom`.
 
 ### C. `collaborators`
 Collaborators who have joined or been invited to a shared list.
@@ -198,6 +236,7 @@ Backups are serialized into formatted JSON containing schema versioning, metadat
     {
       "id": "c3d18e8b-2d7c-4822-b2be-dcf444bbff30",
       "name": "Supermercado",
+      "type": "market",
       "isStarred": 1,
       "position": 0,
       "createdAt": 1727000000000,
@@ -207,6 +246,9 @@ Backups are serialized into formatted JSON containing schema versioning, metadat
           "id": "e4f29a1c-3e8d-4933-a3cf-edf555cc0041",
           "listId": "c3d18e8b-2d7c-4822-b2be-dcf444bbff30",
           "title": "Leche deslactosada",
+          "quantity": 2,
+          "unit": "l",
+          "category": "dairy",
           "isCompleted": 0,
           "position": 0,
           "createdAt": 1727000000000,
@@ -217,6 +259,8 @@ Backups are serialized into formatted JSON containing schema versioning, metadat
   ]
 }
 ```
+
+Type and item detail fields are optional and omitted when empty, so schema v1 backups remain readable (missing `type` restores as `custom`).
 
 ### B. CSV & Plain Text Exports
 - **CSV Export**: Tabular representation (`"List,Item,Status,Created"`) compatible with Google Sheets, Microsoft Excel, and Apple Numbers.
@@ -239,10 +283,6 @@ Restoring from a backup file executes inside an atomic SQLite transaction (`db.t
 
 In future versions, the schema will be expanded via incremental SQLite migrations (`ALTER TABLE` or migration scripts):
 
-- `items.quantity` (`REAL DEFAULT 1.0`): Item quantity.
-- `items.unit` (`TEXT DEFAULT 'unidades'`): Measurement unit (kg, g, l, un).
-- `items.estimated_price` (`REAL`): Unit price estimate.
-- `items.actual_price` (`REAL`): Actual price paid at checkout.
-- `items.currency` (`TEXT DEFAULT 'USD'`): Currency code.
-- `items.category_id` (`TEXT FK -> categories(id)`): Grouping category.
+- `items.currency` (`TEXT DEFAULT 'USD'`): Currency code for `price`.
 - `lists.budget_limit` (`REAL`): Maximum spending threshold.
+- Remote sync of `list_type` and item detail columns (the REST adapter currently only carries title, completion and position).
