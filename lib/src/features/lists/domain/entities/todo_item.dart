@@ -151,6 +151,7 @@ class TodoItem {
     bool? isInProgress,
     String? description,
     String? imageUrl,
+    bool clearImageUrl = false,
     Map<String, String>? attributes,
     ItemEvaluation? evaluation,
   }) {
@@ -175,7 +176,7 @@ class TodoItem {
       dueDate: dueDate ?? this.dueDate,
       isInProgress: isInProgress ?? this.isInProgress,
       description: description ?? this.description,
-      imageUrl: imageUrl ?? this.imageUrl,
+      imageUrl: clearImageUrl ? null : (imageUrl ?? this.imageUrl),
       attributes: attributes ?? this.attributes,
       evaluation: evaluation ?? this.evaluation,
     );

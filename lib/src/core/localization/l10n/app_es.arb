@@ -476,7 +476,6 @@
   "priorityMedium": "Media",
   "priorityHigh": "Alta",
   "priceLabel": "Precio",
-  "storeLabel": "Tienda",
   "linkLabel": "Enlace",
   "linkInvalid": "Ingresa un enlace http(s) válido",
   "numberInvalid": "Ingresa un número válido",
@@ -517,8 +516,6 @@
     }
   },
   "descriptionLabel": "Descripción",
-  "imageUrlLabel": "Enlace de imagen",
-  "imageUrlInvalid": "Ingresa un enlace de imagen http(s) válido",
   "estimatedPriceLabel": "Precio estimado",
   "evaluationLabel": "Evaluación",
   "evaluationPending": "Por evaluar",

@@ -134,7 +134,7 @@ Individual items contained within a shopping list.
 | `priority` | `TEXT` | `NULL` | `shopping`/`tasks`: `low`, `medium`, `high` |
 | `notes` | `TEXT` | `NULL` | `options`/`tasks`/`custom`: free notes |
 | `description` | `TEXT` | `NULL` | `options`/`tasks`/`custom`: short description |
-| `image_url` | `TEXT` | `NULL` | `shopping`/`options`: optional http(s) image link (no local picker, so it needs connectivity to render; offline shows an icon) |
+| `image_url` | `TEXT` | `NULL` | `shopping`/`options`: preview image resolved from the item link's `og:image`/`twitter:image` metadata when the link is saved (`LinkPreviewService`); never typed by the user. Rendering needs connectivity; offline shows an icon |
 | `attributes` | `TEXT` | `NULL` | `options`: JSON object, attribute name to value |
 | `evaluation` | `TEXT` | `NULL` | `options`: `pending`, `evaluated`, `discarded` |
 | `is_favorite` | `INTEGER` | `NOT NULL DEFAULT 0` | `options`: favorite flag |

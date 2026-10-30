@@ -927,9 +927,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get priceLabel => 'Price';
 
   @override
-  String get storeLabel => 'Store';
-
-  @override
   String get linkLabel => 'Link';
 
   @override
@@ -1016,12 +1013,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get descriptionLabel => 'Description';
-
-  @override
-  String get imageUrlLabel => 'Image link';
-
-  @override
-  String get imageUrlInvalid => 'Enter a valid http(s) image link';
 
   @override
   String get estimatedPriceLabel => 'Estimated price';

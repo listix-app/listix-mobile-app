@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'generated/app_localizations.dart';
 
@@ -14,6 +15,8 @@ class AppStrings {
 
   AppLanguage get language =>
       _l10n.localeName == 'en' ? AppLanguage.en : AppLanguage.es;
+
+  String get localeName => _l10n.localeName;
 
   bool get isSpanish => language == AppLanguage.es;
 
@@ -326,7 +329,11 @@ class AppStrings {
   String get priorityMedium => _l10n.priorityMedium;
   String get priorityHigh => _l10n.priorityHigh;
   String get priceLabel => _l10n.priceLabel;
-  String get storeLabel => _l10n.storeLabel;
+
+  String formatPrice(double value) => NumberFormat.decimalPatternDigits(
+    locale: _l10n.localeName,
+    decimalDigits: 2,
+  ).format(value);
   String get linkLabel => _l10n.linkLabel;
   String get linkInvalid => _l10n.linkInvalid;
   String get numberInvalid => _l10n.numberInvalid;
@@ -354,8 +361,6 @@ class AppStrings {
   String shoppingTotal(String amount) => _l10n.shoppingTotal(amount);
 
   String get descriptionLabel => _l10n.descriptionLabel;
-  String get imageUrlLabel => _l10n.imageUrlLabel;
-  String get imageUrlInvalid => _l10n.imageUrlInvalid;
   String get estimatedPriceLabel => _l10n.estimatedPriceLabel;
   String get evaluationLabel => _l10n.evaluationLabel;
   String get evaluationPending => _l10n.evaluationPending;

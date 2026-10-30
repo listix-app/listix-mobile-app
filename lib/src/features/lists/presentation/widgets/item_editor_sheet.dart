@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_colors_context.dart';
+import '../../../../core/utils/price_input.dart';
 import '../../domain/entities/list_type.dart';
 import '../../domain/entities/todo_item.dart';
 import 'list_type_presentation.dart';
@@ -15,6 +18,7 @@ Future<TodoItem?> showItemEditorSheet(
   required TodoItem draft,
   List<String> attributeNames = const [],
   bool isNew = false,
+  Future<String?> Function(String link)? resolvePreview,
 }) {
   return showModalBottomSheet<TodoItem>(
     context: context,
@@ -31,6 +35,7 @@ Future<TodoItem?> showItemEditorSheet(
       draft: draft,
       attributeNames: attributeNames,
       isNew: isNew,
+      resolvePreview: resolvePreview,
     ),
   );
 }
@@ -41,6 +46,7 @@ class ItemEditorSheet extends StatefulWidget {
   final TodoItem draft;
   final List<String> attributeNames;
   final bool isNew;
+  final Future<String?> Function(String link)? resolvePreview;
 
   const ItemEditorSheet({
     super.key,
@@ -49,6 +55,7 @@ class ItemEditorSheet extends StatefulWidget {
     required this.draft,
     this.attributeNames = const [],
     this.isNew = false,
+    this.resolvePreview,
   });
 
   @override
@@ -60,10 +67,9 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
   late final TextEditingController _title;
   late final TextEditingController _quantity;
   late final TextEditingController _price;
-  late final TextEditingController _store;
   late final TextEditingController _url;
   late final TextEditingController _description;
-  late final TextEditingController _imageUrl;
+  late final PriceInput _priceInput;
   late final Map<String, TextEditingController> _attributes;
   late final TextEditingController _notes;
   String? _unit;
@@ -73,6 +79,12 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
   bool _isFavorite = false;
   bool _isInProgress = false;
   ItemEvaluation? _evaluation;
+  Timer? _previewDebounce;
+  String? _previewUrl;
+  String? _resolvedLink;
+  bool _loadingPreview = false;
+  bool _saving = false;
+  int _previewRequest = 0;
 
   AppStrings get _tr => widget.strings;
 
@@ -82,11 +94,10 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     final d = widget.draft;
     _title = TextEditingController(text: d.title);
     _quantity = TextEditingController(text: _formatNumber(d.quantity));
-    _price = TextEditingController(text: _formatNumber(d.price));
-    _store = TextEditingController(text: d.store ?? '');
+    _priceInput = PriceInput(widget.strings.localeName);
+    _price = TextEditingController(text: _priceInput.format(d.price));
     _url = TextEditingController(text: d.url ?? '');
     _description = TextEditingController(text: d.description ?? '');
-    _imageUrl = TextEditingController(text: d.imageUrl ?? '');
     _attributes = {
       for (final name in widget.attributeNames)
         name: TextEditingController(text: d.attributes[name] ?? ''),
@@ -99,18 +110,19 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     _dueDate = d.dueDate;
     _isFavorite = d.isFavorite;
     _isInProgress = d.isInProgress;
+    _previewUrl = d.imageUrl;
+    _resolvedLink = d.imageUrl == null ? null : d.url;
   }
 
   @override
   void dispose() {
+    _previewDebounce?.cancel();
     for (final controller in [
       _title,
       _quantity,
       _price,
-      _store,
       _url,
       _description,
-      _imageUrl,
       _notes,
       ..._attributes.values,
     ]) {
@@ -147,14 +159,66 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
         uri.host.isNotEmpty;
   }
 
+  void _onLinkChanged(String value) {
+    final link = value.trim();
+    _previewDebounce?.cancel();
+    if (link == _resolvedLink) return;
+    if (widget.resolvePreview == null || !_isWebLink(link)) {
+      _previewRequest++;
+      setState(() {
+        _previewUrl = null;
+        _resolvedLink = null;
+        _loadingPreview = false;
+      });
+      return;
+    }
+    _previewDebounce = Timer(
+      const Duration(milliseconds: 600),
+      () => _fetchPreview(link),
+    );
+  }
+
+  Future<void> _fetchPreview(String link) async {
+    final request = ++_previewRequest;
+    setState(() => _loadingPreview = true);
+    final imageUrl = await widget.resolvePreview!(link);
+    if (!mounted || request != _previewRequest) return;
+    setState(() {
+      _previewUrl = imageUrl;
+      _resolvedLink = link;
+      _loadingPreview = false;
+    });
+  }
+
+  Widget _previewImage() {
+    if (_loadingPreview) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: LinearProgressIndicator(key: Key('item_editor_preview_loading')),
+      );
+    }
+    final url = _previewUrl;
+    if (url == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Image.network(
+          url,
+          key: const Key('item_editor_preview'),
+          height: 140,
+          width: double.infinity,
+          fit: BoxFit.cover,
+          excludeFromSemantics: true,
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
+
   String? _validateUrl(String? value) {
     if (value == null || value.trim().isEmpty) return null;
     return _isWebLink(value) ? null : _tr.linkInvalid;
-  }
-
-  String? _validateImageUrl(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    return _isWebLink(value) ? null : _tr.imageUrlInvalid;
   }
 
   Map<String, String> _collectAttributes() {
@@ -181,8 +245,18 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     if (picked != null) setState(() => _dueDate = picked);
   }
 
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _save() async {
+    if (_saving || !_formKey.currentState!.validate()) return;
+    final link = _textOrNull(_url);
+    if (link != null &&
+        widget.resolvePreview != null &&
+        link != _resolvedLink) {
+      _previewDebounce?.cancel();
+      _saving = true;
+      await _fetchPreview(link);
+      _saving = false;
+      if (!mounted) return;
+    }
     final d = widget.draft;
     Navigator.of(context).pop(
       TodoItem(
@@ -196,13 +270,13 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
         quantity: _parseNumber(_quantity.text),
         unit: _unit,
         category: _category,
-        price: _parseNumber(_price.text),
-        store: _textOrNull(_store),
+        price: _priceInput.parse(_price.text),
+        store: d.store,
         url: _textOrNull(_url),
         priority: _priority,
         notes: _textOrNull(_notes),
         description: _textOrNull(_description),
-        imageUrl: _textOrNull(_imageUrl),
+        imageUrl: link == null ? null : _previewUrl,
         attributes: _collectAttributes(),
         evaluation: _evaluation,
         isFavorite: _isFavorite,
@@ -346,17 +420,23 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     key: const Key('item_editor_price'),
     controller: _price,
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+    inputFormatters: [_priceInput.formatter],
     decoration: InputDecoration(labelText: _tr.estimatedPriceLabel),
-    validator: _validateNumber,
   );
 
-  Widget _imageField() => TextFormField(
-    key: const Key('item_editor_image'),
-    controller: _imageUrl,
-    keyboardType: TextInputType.url,
-    decoration: InputDecoration(labelText: _tr.imageUrlLabel),
-    validator: _validateImageUrl,
+  Widget _linkField() => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      TextFormField(
+        key: const Key('item_editor_url'),
+        controller: _url,
+        keyboardType: TextInputType.url,
+        decoration: InputDecoration(labelText: _tr.linkLabel),
+        validator: _validateUrl,
+        onChanged: _onLinkChanged,
+      ),
+      _previewImage(),
+    ],
   );
 
   Widget _descriptionField({int maxLines = 2}) => TextFormField(
@@ -407,30 +487,15 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
 
   List<Widget> _shoppingFields(Color labelColor) => [
     const SizedBox(height: 12),
-    _imageField(),
-    const SizedBox(height: 12),
     _priceField(),
     const SizedBox(height: 12),
-    TextFormField(
-      key: const Key('item_editor_store'),
-      controller: _store,
-      textCapitalization: TextCapitalization.words,
-      decoration: InputDecoration(labelText: _tr.storeLabel),
-    ),
-    const SizedBox(height: 12),
-    TextFormField(
-      key: const Key('item_editor_url'),
-      controller: _url,
-      keyboardType: TextInputType.url,
-      decoration: InputDecoration(labelText: _tr.linkLabel),
-      validator: _validateUrl,
-    ),
+    _linkField(),
     ..._priorityFields(labelColor),
   ];
 
   List<Widget> _optionsFields(Color labelColor) => [
     const SizedBox(height: 12),
-    _imageField(),
+    _linkField(),
     const SizedBox(height: 12),
     _descriptionField(),
     for (final entry in _attributes.entries) ...[

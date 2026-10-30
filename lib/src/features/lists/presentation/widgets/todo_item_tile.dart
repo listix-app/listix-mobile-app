@@ -158,7 +158,7 @@ class MarketItemTile extends StatelessWidget {
           entries: [
             if (quantity != null)
               ('${formatNumber(quantity)} ${item.unit ?? ''}'.trim(), null),
-            if (price != null) (price.toStringAsFixed(2), null),
+            if (price != null) (tile._tr.formatPrice(price), null),
           ],
         ),
       ],
@@ -200,7 +200,7 @@ class ShoppingItemTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(left: 8),
             child: Text(
-              price.toStringAsFixed(2),
+              tr.formatPrice(price),
               key: ValueKey('price_${item.id}'),
               style: TextStyle(
                 fontSize: 14,
@@ -307,6 +307,19 @@ class OptionItemTile extends StatelessWidget {
         ],
       ),
       actions: [
+        if (tile.onOpenLink != null && item.url != null)
+          IconButton(
+            key: ValueKey('link_${item.id}'),
+            icon: const Icon(
+              Icons.open_in_new_rounded,
+              size: 18,
+              color: AppColors.primary,
+            ),
+            tooltip: tr.openLink,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            padding: const EdgeInsets.all(8),
+            onPressed: tile.onOpenLink,
+          ),
         if (tile.onToggleFavorite != null)
           IconButton(
             key: ValueKey('favorite_${item.id}'),

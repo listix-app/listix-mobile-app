@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:go_router/go_router.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
+import 'package:listix/src/core/services/link_preview_service.dart';
 import 'package:listix/src/core/services/url_launcher_service.dart';
 import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/features/backup/data/datasources/backup_local_data_source.dart';
@@ -879,14 +884,11 @@ void main() {
           tr.categoryLabel,
           tr.priorityLabel,
           tr.priceLabel,
-          tr.storeLabel,
           tr.linkLabel,
           tr.linkInvalid,
           tr.numberInvalid,
           tr.notesLabel,
           tr.descriptionLabel,
-          tr.imageUrlLabel,
-          tr.imageUrlInvalid,
           tr.estimatedPriceLabel,
           tr.evaluationLabel,
           tr.evaluationPending,
@@ -1038,12 +1040,9 @@ void main() {
 
       await tester.enterText(
         find.byKey(const Key('item_editor_price')),
-        '120.50',
+        '120,50',
       );
-      await tester.enterText(
-        find.byKey(const Key('item_editor_store')),
-        'Alkosto',
-      );
+      expect(find.byKey(const Key('item_editor_store')), findsNothing);
       await tester.enterText(
         find.byKey(const Key('item_editor_url')),
         'ftp://x',
@@ -1065,7 +1064,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(saved!.price, 120.5);
-      expect(saved!.store, 'Alkosto');
       expect(saved!.url, 'https://alkosto.com/k');
       expect(saved!.priority, ItemPriority.high);
     });
@@ -1281,7 +1279,7 @@ void main() {
         ListType.shopping,
         onLink: () => opened = true,
       );
-      expect(find.text('12.50'), findsOneWidget);
+      expect(find.text('12,50'), findsOneWidget);
       expect(find.text('Alkosto'), findsOneWidget);
       expect(find.text('Alta'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('link_a')));
@@ -1389,7 +1387,7 @@ void main() {
 
     testWidgets('custom lists render no extra metadata', (tester) async {
       await pumpTile(tester, _item('a', price: 5), ListType.custom);
-      expect(find.text('5.00'), findsNothing);
+      expect(find.text('5,00'), findsNothing);
     });
 
     testWidgets('tile falls back to Spanish when no strings are given', (
@@ -1615,20 +1613,20 @@ void main() {
       );
       final controller = await pumpDetail(tester, list);
 
-      expect(find.text('Total: 100.00'), findsOneWidget);
+      expect(find.text('Total: 100,00'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('edit_a')));
       await tester.pumpAndSettle();
       expect(find.text('Detalles del elemento'), findsOneWidget);
       await tester.enterText(
-        find.byKey(const Key('item_editor_store')),
-        'Alkosto',
+        find.byKey(const Key('item_editor_price')),
+        '1234,5',
       );
+      expect(find.text('1.234,5'), findsOneWidget);
       await tester.ensureVisible(find.byKey(const Key('item_editor_save')));
       await tester.tap(find.byKey(const Key('item_editor_save')));
       await tester.pumpAndSettle();
 
-      expect(controller.updated.single.store, 'Alkosto');
-      expect(controller.updated.single.price, 100);
+      expect(controller.updated.single.price, 1234.5);
 
       await tester.tap(find.byKey(const ValueKey('edit_a')));
       await tester.pumpAndSettle();
@@ -1904,6 +1902,7 @@ void main() {
       required ListType type,
       required TodoItem draft,
       List<String> attributeNames = const [],
+      Future<String?> Function(String link)? resolvePreview,
       required void Function(TodoItem?) onResult,
     }) async {
       await tester.pumpWidget(
@@ -1917,6 +1916,7 @@ void main() {
                   strings: _spanish,
                   draft: draft,
                   attributeNames: attributeNames,
+                  resolvePreview: resolvePreview,
                 ),
               ),
               child: const Text('open'),
@@ -1934,7 +1934,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('options: image, description, attributes and evaluation', (
+    testWidgets('options: link, description, attributes and evaluation', (
       tester,
     ) async {
       TodoItem? saved;
@@ -1953,8 +1953,8 @@ void main() {
       expect(find.byKey(const Key('item_editor_attr_Área')), findsOneWidget);
       expect(find.byKey(const Key('item_editor_attr_Piso')), findsOneWidget);
       await tester.enterText(
-        find.byKey(const Key('item_editor_image')),
-        'https://img.test/apto.png',
+        find.byKey(const Key('item_editor_url')),
+        'https://shop.test/apto',
       );
       await tester.enterText(
         find.byKey(const Key('item_editor_description')),
@@ -1973,13 +1973,208 @@ void main() {
       await tester.pump();
       await save(tester);
 
-      expect(saved!.imageUrl, 'https://img.test/apto.png');
+      expect(saved!.url, 'https://shop.test/apto');
       expect(saved!.description, 'Cerca al metro');
       expect(saved!.attributes, {'Viejo': 'x', 'Piso': '5'});
       expect(saved!.evaluation, ItemEvaluation.evaluated);
     });
 
-    testWidgets('image links must be http(s)', (tester) async {
+    testWidgets('keeps the stored store although it has no input', (
+      tester,
+    ) async {
+      TodoItem? saved;
+      await openSheet(
+        tester,
+        type: ListType.shopping,
+        draft: _item('s1', store: 'Alkosto', price: 1500.5),
+        onResult: (item) => saved = item,
+      );
+      expect(find.text('1.500,5'), findsOneWidget);
+      await save(tester);
+      expect(saved!.store, 'Alkosto');
+      expect(saved!.price, 1500.5);
+    });
+
+    testWidgets('shows a fractional quantity as typed', (tester) async {
+      await openSheet(
+        tester,
+        type: ListType.market,
+        draft: _item('m1', quantity: 1.5),
+        onResult: (_) {},
+      );
+      expect(find.text('1.5'), findsOneWidget);
+    });
+
+    testWidgets('a lone decimal separator is read as zero', (tester) async {
+      TodoItem? saved;
+      await openSheet(
+        tester,
+        type: ListType.market,
+        draft: _item('m1'),
+        onResult: (item) => saved = item,
+      );
+      await tester.ensureVisible(find.byKey(const Key('item_editor_price')));
+      await tester.enterText(find.byKey(const Key('item_editor_price')), ',');
+      expect(find.text('0,'), findsOneWidget);
+      await save(tester);
+      expect(saved!.price, 0);
+    });
+
+    testWidgets('shows the preview while typing the link', (tester) async {
+      final calls = <String>[];
+      TodoItem? saved;
+      await openSheet(
+        tester,
+        type: ListType.shopping,
+        draft: _item('s1'),
+        resolvePreview: (link) async {
+          calls.add(link);
+          return 'https://img.test/p.png';
+        },
+        onResult: (item) => saved = item,
+      );
+
+      await tester.enterText(
+        find.byKey(const Key('item_editor_url')),
+        'https://shop.test/p',
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(calls, isEmpty);
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+      expect(calls, ['https://shop.test/p']);
+      expect(find.byKey(const Key('item_editor_preview')), findsOneWidget);
+
+      await save(tester);
+      expect(calls, hasLength(1));
+      expect(saved!.imageUrl, 'https://img.test/p.png');
+    });
+
+    testWidgets('shows a loader while the preview is resolving', (
+      tester,
+    ) async {
+      final completer = Completer<String?>();
+      await openSheet(
+        tester,
+        type: ListType.shopping,
+        draft: _item('s1'),
+        resolvePreview: (_) => completer.future,
+        onResult: (_) {},
+      );
+      await tester.enterText(
+        find.byKey(const Key('item_editor_url')),
+        'https://shop.test/p',
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(
+        find.byKey(const Key('item_editor_preview_loading')),
+        findsOneWidget,
+      );
+      completer.complete(null);
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('item_editor_preview_loading')),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('item_editor_preview')), findsNothing);
+    });
+
+    testWidgets('saving right after typing waits for the preview', (
+      tester,
+    ) async {
+      TodoItem? saved;
+      await openSheet(
+        tester,
+        type: ListType.options,
+        draft: _item('o1'),
+        resolvePreview: (_) async => 'https://img.test/q.png',
+        onResult: (item) => saved = item,
+      );
+      await tester.enterText(
+        find.byKey(const Key('item_editor_url')),
+        'https://shop.test/q',
+      );
+      await save(tester);
+      expect(saved!.url, 'https://shop.test/q');
+      expect(saved!.imageUrl, 'https://img.test/q.png');
+    });
+
+    testWidgets('clearing or breaking the link drops the preview', (
+      tester,
+    ) async {
+      TodoItem? saved;
+      await openSheet(
+        tester,
+        type: ListType.shopping,
+        draft: _item(
+          's1',
+          url: 'https://shop.test/p',
+          imageUrl: 'https://img.test/p.png',
+        ),
+        resolvePreview: (_) async => 'https://img.test/new.png',
+        onResult: (item) => saved = item,
+      );
+      expect(find.byKey(const Key('item_editor_preview')), findsOneWidget);
+
+      await tester.enterText(find.byKey(const Key('item_editor_url')), 'htt');
+      await tester.pump();
+      expect(find.byKey(const Key('item_editor_preview')), findsNothing);
+
+      await tester.enterText(find.byKey(const Key('item_editor_url')), '');
+      await save(tester);
+      expect(saved!.url, isNull);
+      expect(saved!.imageUrl, isNull);
+    });
+
+    testWidgets('retyping the resolved link keeps its preview', (tester) async {
+      var calls = 0;
+      await openSheet(
+        tester,
+        type: ListType.shopping,
+        draft: _item(
+          's1',
+          url: 'https://shop.test/p',
+          imageUrl: 'https://img.test/p.png',
+        ),
+        resolvePreview: (_) async {
+          calls++;
+          return null;
+        },
+        onResult: (_) {},
+      );
+      await tester.enterText(
+        find.byKey(const Key('item_editor_url')),
+        'https://shop.test/p',
+      );
+      await tester.pump(const Duration(seconds: 1));
+      expect(calls, 0);
+      expect(find.byKey(const Key('item_editor_preview')), findsOneWidget);
+    });
+
+    testWidgets('a late preview answer for a replaced link is ignored', (
+      tester,
+    ) async {
+      final first = Completer<String?>();
+      await openSheet(
+        tester,
+        type: ListType.shopping,
+        draft: _item('s1'),
+        resolvePreview: (_) => first.future,
+        onResult: (_) {},
+      );
+      await tester.enterText(
+        find.byKey(const Key('item_editor_url')),
+        'https://shop.test/a',
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.enterText(find.byKey(const Key('item_editor_url')), '');
+      await tester.pump();
+      first.complete('https://img.test/late.png');
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('item_editor_preview')), findsNothing);
+    });
+
+    testWidgets('links must be http(s)', (tester) async {
       TodoItem? saved;
       await openSheet(
         tester,
@@ -1988,22 +2183,16 @@ void main() {
         onResult: (item) => saved = item,
       );
 
-      await tester.enterText(
-        find.byKey(const Key('item_editor_image')),
-        'nope',
-      );
+      await tester.enterText(find.byKey(const Key('item_editor_url')), 'nope');
       await tester.ensureVisible(find.byKey(const Key('item_editor_save')));
       await tester.tap(find.byKey(const Key('item_editor_save')));
       await tester.pump();
-      expect(
-        find.text('Ingresa un enlace de imagen http(s) válido'),
-        findsOneWidget,
-      );
+      expect(find.text('Ingresa un enlace http(s) válido'), findsOneWidget);
       expect(saved, isNull);
 
-      await tester.enterText(find.byKey(const Key('item_editor_image')), '');
+      await tester.enterText(find.byKey(const Key('item_editor_url')), '');
       await save(tester);
-      expect(saved!.imageUrl, isNull);
+      expect(saved!.url, isNull);
     });
 
     testWidgets('market captures the estimated price', (tester) async {
@@ -2123,7 +2312,7 @@ void main() {
         ListType.market,
       );
       expect(find.text('2 kg'), findsOneWidget);
-      expect(find.text('3.50'), findsOneWidget);
+      expect(find.text('3,50'), findsOneWidget);
       expect(find.byType(ItemCheckbox), findsOneWidget);
     });
 
@@ -2364,5 +2553,151 @@ void main() {
         findsOneWidget,
       );
     });
+  });
+
+  group('Link previews on the options screen', () {
+    ShoppingList list(TodoItem item) => ShoppingList(
+      id: 'o',
+      name: 'Aptos',
+      type: ListType.options,
+      items: [item],
+      createdAt: _now,
+    );
+
+    Future<(_RecordingController, List<Uri>)> pump(
+      WidgetTester tester,
+      TodoItem item, {
+      String? previewImage = 'https://img.test/p.png',
+    }) async {
+      final requests = <Uri>[];
+      final controller = _RecordingController([list(item)]);
+      final router = GoRouter(
+        initialLocation: '/list/o',
+        routes: [
+          GoRoute(
+            path: '/list/:id',
+            builder: (context, state) =>
+                ListDetailScreen(listId: state.pathParameters['id']!),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            listsControllerProvider.overrideWith(() => controller),
+            linkPreviewServiceProvider.overrideWithValue(
+              LinkPreviewService(
+                client: MockClient((request) async {
+                  requests.add(request.url);
+                  return http.Response(
+                    previewImage == null
+                        ? '<html></html>'
+                        : '<meta property="og:image" content="$previewImage">',
+                    200,
+                  );
+                }),
+              ),
+            ),
+          ],
+          child: MaterialApp.router(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      return (controller, requests);
+    }
+
+    Future<void> editAndSave(WidgetTester tester, {String? link}) async {
+      await tester.tap(find.byKey(const ValueKey('edit_a')));
+      await tester.pumpAndSettle();
+      if (link != null) {
+        await tester.enterText(find.byKey(const Key('item_editor_url')), link);
+      }
+      await tester.ensureVisible(find.byKey(const Key('item_editor_save')));
+      await tester.tap(find.byKey(const Key('item_editor_save')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a new link fetches its preview image', (tester) async {
+      final (controller, requests) = await pump(
+        tester,
+        _item('a', title: 'Apto', listId: 'o'),
+      );
+      await editAndSave(tester, link: 'https://shop.test/apto');
+
+      expect(requests, [Uri.parse('https://shop.test/apto')]);
+      expect(controller.updated.single.url, 'https://shop.test/apto');
+      expect(controller.updated.single.imageUrl, 'https://img.test/p.png');
+    });
+
+    testWidgets('an unchanged link keeps its stored preview', (tester) async {
+      final (controller, requests) = await pump(
+        tester,
+        _item(
+          'a',
+          title: 'Apto',
+          listId: 'o',
+          url: 'https://shop.test/apto',
+          imageUrl: 'https://img.test/old.png',
+        ),
+      );
+      await editAndSave(tester);
+
+      expect(requests, isEmpty);
+      expect(controller.updated.single.imageUrl, 'https://img.test/old.png');
+    });
+
+    testWidgets('a link without metadata clears the stale preview', (
+      tester,
+    ) async {
+      final (controller, _) = await pump(
+        tester,
+        _item(
+          'a',
+          title: 'Apto',
+          listId: 'o',
+          url: 'https://shop.test/apto',
+          imageUrl: 'https://img.test/old.png',
+        ),
+        previewImage: null,
+      );
+      await editAndSave(tester, link: 'https://shop.test/other');
+
+      expect(controller.updated.single.imageUrl, isNull);
+    });
+
+    testWidgets('removing the link removes the preview', (tester) async {
+      final (controller, requests) = await pump(
+        tester,
+        _item(
+          'a',
+          title: 'Apto',
+          listId: 'o',
+          url: 'https://shop.test/apto',
+          imageUrl: 'https://img.test/old.png',
+        ),
+      );
+      await editAndSave(tester, link: '');
+
+      expect(requests, isEmpty);
+      expect(controller.updated.single.url, isNull);
+      expect(controller.updated.single.imageUrl, isNull);
+    });
+
+    testWidgets('options cards expose the open-link action', (tester) async {
+      await pump(
+        tester,
+        _item('a', title: 'Apto', listId: 'o', url: 'https://shop.test/apto'),
+      );
+      expect(find.byKey(const ValueKey('link_a')), findsOneWidget);
+    });
+  });
+
+  test('formatPrice groups thousands per locale', () {
+    expect(AppStrings(AppLanguage.es).formatPrice(1234567.5), '1.234.567,50');
+    expect(AppStrings(AppLanguage.en).formatPrice(1234567.5), '1,234,567.50');
   });
 }

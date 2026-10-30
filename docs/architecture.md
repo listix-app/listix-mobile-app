@@ -134,7 +134,8 @@ lib/
         │   ├── api_client.dart
         │   ├── api_exception.dart
         │   └── auth_session_service.dart
-        ├── services/                       # URL launcher service
+        ├── services/                       # URL launcher and link preview (og:image) services
+        │   ├── link_preview_service.dart
         │   └── url_launcher_service.dart
         ├── storage/                        # SQLite AppDatabase and table definitions
         │   └── app_database.dart

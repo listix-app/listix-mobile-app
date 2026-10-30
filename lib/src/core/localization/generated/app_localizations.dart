@@ -1748,12 +1748,6 @@ abstract class AppLocalizations {
   /// **'Price'**
   String get priceLabel;
 
-  /// No description provided for @storeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Store'**
-  String get storeLabel;
-
   /// No description provided for @linkLabel.
   ///
   /// In en, this message translates to:
@@ -1909,18 +1903,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Description'**
   String get descriptionLabel;
-
-  /// No description provided for @imageUrlLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Image link'**
-  String get imageUrlLabel;
-
-  /// No description provided for @imageUrlInvalid.
-  ///
-  /// In en, this message translates to:
-  /// **'Enter a valid http(s) image link'**
-  String get imageUrlInvalid;
 
   /// No description provided for @estimatedPriceLabel.
   ///

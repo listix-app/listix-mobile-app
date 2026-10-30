@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/link_preview_service.dart';
 import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/widgets/content_width.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -145,6 +146,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
       strings: ref.read(stringsProvider),
       draft: item,
       attributeNames: _attributeNames,
+      resolvePreview: ref.read(linkPreviewServiceProvider).fetchImageUrl,
     );
     if (updated == null || !mounted) return;
     await ref.read(listsControllerProvider.notifier).updateItemDetails(updated);
@@ -163,6 +165,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
       ),
       attributeNames: _attributeNames,
       isNew: true,
+      resolvePreview: ref.read(linkPreviewServiceProvider).fetchImageUrl,
     );
     if (created == null || !mounted) return;
     await ref
@@ -605,7 +608,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                         Text(
                           list.type == ListType.shopping && list.totalPrice > 0
                               ? tr.shoppingTotal(
-                                  list.totalPrice.toStringAsFixed(2),
+                                  tr.formatPrice(list.totalPrice),
                                 )
                               : tr.percentCompleted((progress * 100).toInt()),
                           style: TextStyle(

@@ -570,10 +570,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               },
               color: AppColors.primary,
               child: ReorderableListView.builder(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
                 itemCount: displayedLists.length,
                 buildDefaultDragHandles: false,
                 proxyDecorator: (child, index, animation) {
