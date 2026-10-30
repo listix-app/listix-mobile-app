@@ -224,6 +224,7 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
           ),
         ],
       ),
+      scrollable: true,
       content: Form(
         key: _formKey,
         child: Column(

@@ -224,14 +224,21 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
         : AppColors.textSecondary;
 
     final mediaQuery = MediaQuery.of(context);
-    final maxHeight = mediaQuery.size.height * 0.92;
+    final keyboardInset = mediaQuery.viewInsets.bottom;
+    final maxHeight = (mediaQuery.size.height * 0.92).clamp(
+      0.0,
+      mediaQuery.size.height - keyboardInset - mediaQuery.padding.top,
+    );
+    final bottomSafeArea = keyboardInset > 0
+        ? 0.0
+        : mediaQuery.viewPadding.bottom;
 
     return AnimatedPadding(
       duration: mediaQuery.disableAnimations
           ? Duration.zero
           : const Duration(milliseconds: 150),
       curve: Curves.easeOut,
-      padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+      padding: EdgeInsets.only(bottom: keyboardInset),
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight),
         child: Form(
@@ -304,12 +311,7 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
                 ),
               ),
               Padding(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  12,
-                  20,
-                  16 + mediaQuery.viewPadding.bottom,
-                ),
+                padding: EdgeInsets.fromLTRB(20, 12, 20, 16 + bottomSafeArea),
                 child: FilledButton(
                   key: const Key('item_editor_save'),
                   onPressed: _save,
