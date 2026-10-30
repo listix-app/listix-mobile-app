@@ -18,6 +18,7 @@
   },
   "cancel": "Cancel",
   "delete": "Delete",
+  "editAction": "Edit",
   "listCountSuffix": "lists",
   "noItemsBadge": "No items",
   "allDoneBadge": "All done ✓",
@@ -76,6 +77,7 @@
   "listNameValidation": "Please enter a name",
   "saveChanges": "Save changes",
   "createListAction": "Create list",
+  "createItemAction": "Create item",
   "shareHeading": "Share",
   "shareListSubheading": "Send this list instantly via WhatsApp or Gmail.",
   "shareWhatsApp": "Share via WhatsApp",
@@ -540,5 +542,29 @@
   "emptyMarketMessage": "Add your first product below. Set quantity, unit and category with the details button.",
   "emptyShoppingMessage": "Add your first item below. Track its price, store and link with the details button.",
   "emptyOptionsMessage": "Add your first option below, then add notes and attributes to compare alternatives.",
-  "emptyTasksMessage": "Add your first task below. Set a due date and priority with the details button."
+  "emptyTasksMessage": "Add your first task below. Set a due date and priority with the details button.",
+  "retry": "Retry",
+  "goHome": "Go home",
+  "openList": "Open list",
+  "changeRole": "Change role",
+  "authenticationFailed": "Authentication failed",
+  "generatingInviteLink": "Generating invite link...",
+  "shareLinkAction": "Share link",
+  "copyLinkAction": "Copy link",
+  "inviteLinkError": "Could not generate the link: {error}",
+  "@inviteLinkError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "inviteLinkCreateError": "Could not create the invite link: {error}",
+  "@inviteLinkCreateError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

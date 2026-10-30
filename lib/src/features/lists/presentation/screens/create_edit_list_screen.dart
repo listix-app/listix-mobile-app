@@ -318,7 +318,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                               border: isSelected
                                                   ? Border.all(
                                                       color: isDark
-                                                          ? Colors.white
+                                                          ? AppColors.onPrimary
                                                           : Colors.black87,
                                                       width: 3,
                                                     )
@@ -327,7 +327,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                             child: isSelected
                                                 ? const Icon(
                                                     Icons.check_rounded,
-                                                    color: Colors.white,
+                                                    color: AppColors.onPrimary,
                                                     size: 24,
                                                   )
                                                 : null,
@@ -352,7 +352,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                         width: 20,
                                         child: CircularProgressIndicator(
                                           strokeWidth: 2,
-                                          color: Colors.white,
+                                          color: AppColors.onPrimary,
                                         ),
                                       )
                                     : Text(

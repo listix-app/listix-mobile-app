@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/collaborator.dart';
 import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
@@ -43,7 +44,7 @@ class ListCard extends StatelessWidget {
     final cardBg = isDark ? AppColors.cardDark : AppColors.cardLight;
     final borderColor = list.isStarred
         ? AppColors.star.withValues(alpha: 0.5)
-        : (isDark ? AppColors.borderDark : AppColors.borderLight);
+        : (context.borderColor);
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -52,7 +53,7 @@ class ListCard extends StatelessWidget {
         : AppColors.primary;
     final badgeBg = list.pendingCount == 0 && list.totalCount > 0
         ? listColor.withValues(alpha: 0.16)
-        : (isDark ? AppColors.surfaceDark : AppColors.surfaceLight);
+        : (context.surfaceColor);
 
     final card = Card(
       elevation: 0,
@@ -62,183 +63,175 @@ class ListCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: borderColor, width: list.isStarred ? 1.5 : 1.0),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (list.color != null) ...[
-                    Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Color(list.color!),
-                        shape: BoxShape.circle,
+      child: Semantics(
+        button: true,
+        label: list.name,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (list.color != null) ...[
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Color(list.color!),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: Text(
+                        list.name,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          color: textTitleColor,
+                          letterSpacing: -0.2,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                  ],
-                  Expanded(
-                    child: Text(
-                      list.name,
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: textTitleColor,
-                        letterSpacing: -0.2,
+                    if (onArchive != null)
+                      IconButton(
+                        icon: const Icon(Icons.archive_outlined, size: 20),
+                        tooltip: tr.archiveListAction,
+                        onPressed: onArchive,
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        padding: const EdgeInsets.all(8),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (onArchive != null)
-                    IconButton(
-                      icon: const Icon(Icons.archive_outlined, size: 20),
-                      tooltip: tr.archiveListAction,
-                      onPressed: onArchive,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
+                    if (onUnarchive != null)
+                      IconButton(
+                        icon: const Icon(Icons.unarchive_outlined, size: 20),
+                        tooltip: tr.unarchiveListAction,
+                        onPressed: onUnarchive,
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        padding: const EdgeInsets.all(8),
                       ),
-                      padding: const EdgeInsets.all(8),
-                    ),
-                  if (onUnarchive != null)
-                    IconButton(
-                      icon: const Icon(Icons.unarchive_outlined, size: 20),
-                      tooltip: tr.unarchiveListAction,
-                      onPressed: onUnarchive,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
+                    if (onToggleStar != null)
+                      IconButton(
+                        icon: Icon(
+                          list.isStarred
+                              ? Icons.star_rounded
+                              : Icons.star_outline_rounded,
+                          color: list.isStarred
+                              ? AppColors.star
+                              : (context.mutedTextColor),
+                        ),
+                        tooltip: list.isStarred ? tr.unstarList : tr.starList,
+                        onPressed: onToggleStar,
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        padding: const EdgeInsets.all(8),
                       ),
-                      padding: const EdgeInsets.all(8),
-                    ),
-                  if (onToggleStar != null)
-                    IconButton(
-                      icon: Icon(
-                        list.isStarred
-                            ? Icons.star_rounded
-                            : Icons.star_outline_rounded,
-                        color: list.isStarred
-                            ? AppColors.star
-                            : (isDark
-                                  ? AppColors.textMutedDark
-                                  : AppColors.textMuted),
-                      ),
-                      tooltip: list.isStarred ? tr.unstarList : tr.starList,
-                      onPressed: onToggleStar,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
-                      padding: const EdgeInsets.all(8),
-                    ),
-                  const SizedBox(width: 4),
-                  if (reorderIndex != null)
-                    ReorderableDragStartListener(
-                      index: reorderIndex!,
-                      child: Padding(
+                    const SizedBox(width: 4),
+                    if (reorderIndex != null)
+                      ReorderableDragStartListener(
+                        index: reorderIndex!,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.drag_handle_rounded,
+                            size: 20,
+                            color: context.mutedTextColor,
+                          ),
+                        ),
+                      )
+                    else
+                      Padding(
                         padding: const EdgeInsets.all(8),
                         child: Icon(
                           Icons.drag_handle_rounded,
-                          size: 20,
-                          color: isDark
-                              ? AppColors.textMutedDark
-                              : AppColors.textMuted,
+                          size: 18,
+                          color: (context.mutedTextColor).withValues(
+                            alpha: 0.45,
+                          ),
                         ),
                       ),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.drag_handle_rounded,
+                  ],
+                ),
+                if (list.totalCount > 0 && list.type.tracksCompletion) ...[
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: list.completionProgress,
+                      backgroundColor: context.surfaceColor,
+                      valueColor: AlwaysStoppedAnimation<Color>(listColor),
+                      minHeight: 4,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (list.type != ListType.custom) ...[
+                      Icon(
+                        list.type.icon,
+                        key: const Key('list_type_icon'),
                         size: 18,
-                        color:
-                            (isDark
-                                    ? AppColors.textMutedDark
-                                    : AppColors.textMuted)
-                                .withValues(alpha: 0.45),
+                        color: listColor,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: badgeBg,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: list.pendingCount == 0 && list.totalCount > 0
+                              ? listColor.withValues(alpha: 0.35)
+                              : (context.borderColor),
+                        ),
+                      ),
+                      child: Text(
+                        badgeText,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: list.pendingCount == 0 && list.totalCount > 0
+                              ? listColor
+                              : (isDark
+                                    ? AppColors.textSecondaryDark
+                                    : AppColors.textSecondary),
+                        ),
                       ),
                     ),
-                ],
-              ),
-              if (list.totalCount > 0 && list.type.tracksCompletion) ...[
-                const SizedBox(height: 10),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: list.completionProgress,
-                    backgroundColor: isDark
-                        ? AppColors.surfaceDark
-                        : AppColors.surfaceLight,
-                    valueColor: AlwaysStoppedAnimation<Color>(listColor),
-                    minHeight: 4,
-                  ),
+                    const Spacer(),
+                    if (list.isShared) ...[
+                      _CollaboratorAvatars(collaborators: list.collaborators),
+                    ],
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: context.mutedTextColor,
+                    ),
+                  ],
                 ),
               ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (list.type != ListType.custom) ...[
-                    Icon(
-                      list.type.icon,
-                      key: const Key('list_type_icon'),
-                      size: 18,
-                      color: listColor,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: badgeBg,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: list.pendingCount == 0 && list.totalCount > 0
-                            ? listColor.withValues(alpha: 0.35)
-                            : (isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.borderLight),
-                      ),
-                    ),
-                    child: Text(
-                      badgeText,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: list.pendingCount == 0 && list.totalCount > 0
-                            ? listColor
-                            : (isDark
-                                  ? AppColors.textSecondaryDark
-                                  : AppColors.textSecondary),
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  if (list.isShared) ...[
-                    _CollaboratorAvatars(collaborators: list.collaborators),
-                  ],
-                  const SizedBox(width: 6),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 20,
-                    color: isDark
-                        ? AppColors.textMutedDark
-                        : AppColors.textMuted,
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -271,14 +264,14 @@ class _CollaboratorAvatars extends StatelessWidget {
             widthFactor: 0.75,
             child: CircleAvatar(
               radius: 12,
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.onPrimary,
               child: CircleAvatar(
                 radius: 11,
                 backgroundColor: AppColors.primaryLight,
                 child: Text(
                   visible[i].initials,
                   style: const TextStyle(
-                    fontSize: 9,
+                    fontSize: 11,
                     fontWeight: FontWeight.bold,
                     color: AppColors.primaryDark,
                   ),
@@ -291,14 +284,14 @@ class _CollaboratorAvatars extends StatelessWidget {
             widthFactor: 0.75,
             child: CircleAvatar(
               radius: 12,
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.onPrimary,
               child: CircleAvatar(
                 radius: 11,
                 backgroundColor: AppColors.borderLight,
                 child: Text(
                   '+$remaining',
                   style: const TextStyle(
-                    fontSize: 8,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textSecondary,
                   ),

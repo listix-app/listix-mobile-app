@@ -90,6 +90,22 @@ void main() {
         expect(tr.listNameHint, isNotEmpty);
         expect(tr.listNameValidation, isNotEmpty);
         expect(tr.createListAction, isNotEmpty);
+        expect(tr.editAction, isNotEmpty);
+        expect(tr.createItemAction, isNotEmpty);
+        for (final text in [
+          tr.retry,
+          tr.goHome,
+          tr.openList,
+          tr.changeRole,
+          tr.authenticationFailed,
+          tr.generatingInviteLink,
+          tr.shareLinkAction,
+          tr.copyLinkAction,
+          tr.inviteLinkError('x'),
+          tr.inviteLinkCreateError('x'),
+        ]) {
+          expect(text, isNotEmpty);
+        }
         expect(tr.saveChanges, isNotEmpty);
         expect(tr.shareHeading, isNotEmpty);
         expect(tr.shareListSubheading, isNotEmpty);

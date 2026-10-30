@@ -6,6 +6,7 @@ import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/auth_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../collaboration/data/repositories/api_collaboration_repository.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
 import '../../domain/entities/shopping_list.dart';
@@ -246,7 +247,9 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
       ..clearSnackBars()
       ..showSnackBar(
         SnackBar(
-          content: Text('No se pudo crear el enlace de invitación: $error'),
+          content: Text(
+            ref.read(stringsProvider).inviteLinkCreateError('$error'),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -258,14 +261,14 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
     final tr = ref.watch(stringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final sheetBg = isDark ? AppColors.cardDark : Colors.white;
+    final sheetBg = context.cardSurface;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
     final textMutedColor = isDark
         ? AppColors.textSecondaryDark
         : AppColors.textSecondary;
-    final handleColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final handleColor = context.borderColor;
 
     if (list == null) {
       return Container(
@@ -367,9 +370,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                   subtitle: tr.shareTextSubtitle,
                   copyButtonLabel: tr.copyListAsText,
                   shareButtonLabel: tr.shareAsText,
-                  cardBg: isDark
-                      ? AppColors.surfaceDark
-                      : AppColors.surfaceLight,
+                  cardBg: context.surfaceColor,
                   borderColor: handleColor,
                   textTitleColor: textTitleColor,
                   textMutedColor: textMutedColor,
@@ -402,15 +403,9 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.surfaceDark
-                          : AppColors.surfaceLight,
+                      color: context.surfaceColor,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: isDark
-                            ? AppColors.borderDark
-                            : AppColors.borderLight,
-                      ),
+                      border: Border.all(color: context.borderColor),
                     ),
                     child: Row(
                       children: [
@@ -439,9 +434,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                   decoration: BoxDecoration(
                     color: list.isShared
                         ? AppColors.primary.withValues(alpha: 0.08)
-                        : (isDark
-                              ? AppColors.surfaceDark
-                              : AppColors.surfaceLight),
+                        : (context.surfaceColor),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: list.isShared
@@ -462,17 +455,17 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       ),
                       inactiveThumbColor: isDark
                           ? AppColors.textSecondaryDark
-                          : const Color(0xFF94A3B8),
+                          : AppColors.textSecondaryDark,
                       inactiveTrackColor: isDark
                           ? AppColors.surfaceDark
-                          : const Color(0xFFE2E8F0),
+                          : AppColors.borderLight,
                       thumbIcon: WidgetStateProperty.resolveWith<Icon?>((
                         states,
                       ) {
                         if (states.contains(WidgetState.selected)) {
                           return const Icon(
                             Icons.check_rounded,
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                             size: 14,
                           );
                         }
@@ -488,9 +481,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                           color:
                               (list.isShared
                                       ? AppColors.primary
-                                      : (isDark
-                                            ? AppColors.borderDark
-                                            : AppColors.borderLight))
+                                      : (context.borderColor))
                                   .withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
@@ -539,9 +530,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       list: list,
                       tr: tr,
                       isDark: isDark,
-                      cardBg: isDark
-                          ? AppColors.surfaceDark
-                          : AppColors.surfaceLight,
+                      cardBg: context.surfaceColor,
                       borderColor: handleColor,
                       textTitleColor: textTitleColor,
                       textMutedColor: textMutedColor,
@@ -571,12 +560,11 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                       onCopy: () => _copyInviteLink(context, ref, list),
                       // coverage:ignore-end
                       onShare: () => _shareInviteLink(context, ref, list),
-                      shareButtonLabel: tr.copyInviteLink.contains('Compartir')
-                          ? 'Compartir enlace'
-                          : 'Share link',
-                      copyButtonLabel: tr.linkCopied.contains('copiado')
-                          ? 'Copiar enlace'
-                          : 'Copy link',
+                      shareButtonLabel: tr.shareLinkAction,
+                      copyButtonLabel: tr.copyLinkAction,
+                      retryLabel: tr.retry,
+                      generatingLabel: tr.generatingInviteLink,
+                      errorLabelBuilder: tr.inviteLinkError,
                     ),
                     const SizedBox(height: 14),
                   ],
@@ -605,15 +593,9 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: isDark
-                            ? AppColors.surfaceDark
-                            : AppColors.surfaceLight,
+                        color: context.surfaceColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isDark
-                              ? AppColors.borderDark
-                              : AppColors.borderLight,
-                        ),
+                        border: Border.all(color: context.borderColor),
                       ),
                       child: Text(
                         tr.noCollaboratorsYet,
@@ -629,6 +611,7 @@ class _ShareListSheetState extends ConsumerState<ShareListSheet> {
                         adminLabel: tr.adminBadge,
                         memberLabel: tr.memberBadge,
                         removeTooltip: tr.removeCollaborator,
+                        changeRoleTooltip: tr.changeRole,
                         onRoleChanged: (list.isOwner && !collab.isOwner)
                             ? (newRole) {
                                 ref
@@ -669,6 +652,9 @@ class _ShareInviteUrlCard extends StatelessWidget {
   final VoidCallback onShare;
   final String shareButtonLabel;
   final String copyButtonLabel;
+  final String retryLabel;
+  final String generatingLabel;
+  final String Function(String) errorLabelBuilder;
 
   const _ShareInviteUrlCard({
     required this.inviteUrl,
@@ -680,13 +666,16 @@ class _ShareInviteUrlCard extends StatelessWidget {
     required this.onShare,
     required this.shareButtonLabel,
     required this.copyButtonLabel,
+    required this.retryLabel,
+    required this.generatingLabel,
+    required this.errorLabelBuilder,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final cardBg = context.surfaceColor;
+    final borderColor = context.borderColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -748,20 +737,20 @@ class _ShareInviteUrlCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 6.0),
               child: Text(
-                'Generando enlace de invitación...',
+                generatingLabel,
                 style: TextStyle(fontSize: 12, color: textMutedColor),
               ),
             )
           else if (errorMessage != null && inviteUrl == null) ...[
             Text(
-              'No se pudo generar el enlace: $errorMessage',
+              errorLabelBuilder(errorMessage!),
               style: const TextStyle(fontSize: 12, color: AppColors.delete),
             ),
             const SizedBox(height: 6),
             TextButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Reintentar'),
+              label: Text(retryLabel),
             ),
           ] else if (inviteUrl != null) ...[
             // coverage:ignore-end
@@ -829,7 +818,7 @@ class _ShareInviteUrlCard extends StatelessWidget {
                             height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.onPrimary,
                             ),
                           )
                         : const Icon(Icons.share_rounded, size: 16),
@@ -904,7 +893,7 @@ class _ShareInviteUrlCard extends StatelessWidget {
                             height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.onPrimary,
                             ),
                           )
                         : const Icon(Icons.share_rounded, size: 16),

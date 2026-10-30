@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../controllers/lists_controller.dart';
@@ -17,12 +18,11 @@ Future<void> showAttributesDialog(BuildContext context, String listId) {
 }
 
 Future<void> showCompareSheet(BuildContext context, String listId) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+    backgroundColor: context.cardSurface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),

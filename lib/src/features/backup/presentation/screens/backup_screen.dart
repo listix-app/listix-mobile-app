@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../controllers/backup_controller.dart';
 import '../controllers/backup_state.dart';
 
@@ -60,7 +61,7 @@ class BackupScreen extends ConsumerWidget {
               key: const Key('restore_dialog_replace_button'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.delete,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.onPrimary,
               ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
@@ -93,8 +94,8 @@ class BackupScreen extends ConsumerWidget {
     final notifier = ref.read(backupControllerProvider.notifier);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final cardBg = isDark ? AppColors.cardDark : Colors.white;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final cardBg = context.cardSurface;
+    final borderColor = context.borderColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -180,12 +181,12 @@ class BackupScreen extends ConsumerWidget {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                  color: AppColors.syncDone.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.table_chart_rounded,
-                  color: Color(0xFF10B981),
+                  color: AppColors.syncDone,
                   size: 22,
                 ),
               ),
@@ -282,12 +283,12 @@ class BackupScreen extends ConsumerWidget {
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                  color: AppColors.accentIndigo.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
                   Icons.folder_open_rounded,
-                  color: Color(0xFF6366F1),
+                  color: AppColors.accentIndigo,
                   size: 22,
                 ),
               ),

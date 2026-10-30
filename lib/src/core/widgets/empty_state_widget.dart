@@ -62,7 +62,7 @@ class EmptyStateWidget extends StatelessWidget {
                 label: Text(actionLabel!),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.onPrimary,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 12,

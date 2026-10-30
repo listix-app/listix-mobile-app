@@ -140,7 +140,7 @@ class SyncStatusBadge extends ConsumerWidget {
               style: TextStyle(
                 color: fg,
                 fontWeight: FontWeight.w600,
-                fontSize: 11,
+                fontSize: 12,
                 letterSpacing: -0.2,
               ),
             ),

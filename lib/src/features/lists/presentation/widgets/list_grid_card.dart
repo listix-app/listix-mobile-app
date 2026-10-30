@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 
@@ -33,7 +34,7 @@ class ListGridCard extends StatelessWidget {
     final cardBg = isDark ? AppColors.cardDark : AppColors.cardLight;
     final borderColor = list.isStarred
         ? AppColors.star.withValues(alpha: 0.5)
-        : (isDark ? AppColors.borderDark : AppColors.borderLight);
+        : (context.borderColor);
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -60,170 +61,168 @@ class ListGridCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: borderColor, width: list.isStarred ? 1.5 : 1.0),
       ),
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onDelete,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(14.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
+      child: Semantics(
+        button: true,
+        label: list.name,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onDelete,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(14.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: list.pendingCount == 0 && list.totalCount > 0
+                              ? listColor.withValues(alpha: 0.16)
+                              : (context.surfaceColor),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          badgeText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: list.pendingCount == 0 && list.totalCount > 0
+                                ? listColor
+                                : textSubColor,
+                          ),
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: list.pendingCount == 0 && list.totalCount > 0
-                            ? listColor.withValues(alpha: 0.16)
-                            : (isDark
-                                  ? AppColors.surfaceDark
-                                  : AppColors.surfaceLight),
-                        borderRadius: BorderRadius.circular(8),
+                    ),
+                    if (onToggleStar != null)
+                      IconButton(
+                        icon: Icon(
+                          list.isStarred
+                              ? Icons.star_rounded
+                              : Icons.star_outline_rounded,
+                          size: 20,
+                          color: list.isStarred
+                              ? AppColors.star
+                              : (context.mutedTextColor),
+                        ),
+                        tooltip: list.isStarred ? tr.unstarList : tr.starList,
+                        onPressed: onToggleStar,
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        padding: const EdgeInsets.all(8),
                       ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    if (list.color != null) ...[
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: Color(list.color!),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
                       child: Text(
-                        badgeText,
-                        maxLines: 1,
+                        list.name,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: list.pendingCount == 0 && list.totalCount > 0
-                              ? listColor
-                              : textSubColor,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.2,
+                          color: textTitleColor,
                         ),
                       ),
                     ),
-                  ),
-                  if (onToggleStar != null)
-                    IconButton(
-                      icon: Icon(
-                        list.isStarred
-                            ? Icons.star_rounded
-                            : Icons.star_outline_rounded,
-                        size: 20,
-                        color: list.isStarred
-                            ? AppColors.star
-                            : (isDark
-                                  ? AppColors.textMutedDark
-                                  : AppColors.textMuted),
-                      ),
-                      tooltip: list.isStarred ? tr.unstarList : tr.starList,
-                      onPressed: onToggleStar,
-                      constraints: const BoxConstraints(
-                        minWidth: 44,
-                        minHeight: 44,
-                      ),
-                      padding: const EdgeInsets.all(8),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  if (list.color != null) ...[
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: Color(list.color!),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
                   ],
-                  Expanded(
-                    child: Text(
-                      list.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: -0.2,
-                        color: textTitleColor,
+                ),
+                const SizedBox(height: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: list.completionProgress,
+                        backgroundColor: context.surfaceColor,
+                        valueColor: AlwaysStoppedAnimation<Color>(listColor),
+                        minHeight: 5,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: list.completionProgress,
-                      backgroundColor: isDark
-                          ? AppColors.surfaceDark
-                          : AppColors.surfaceLight,
-                      valueColor: AlwaysStoppedAnimation<Color>(listColor),
-                      minHeight: 5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${list.completedCount}/${list.totalCount}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: textSubColor,
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${list.completedCount}/${list.totalCount}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textSubColor,
+                          ),
                         ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (onArchive != null)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.archive_outlined,
-                                size: 18,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (onArchive != null)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.archive_outlined,
+                                  size: 18,
+                                ),
+                                tooltip: tr.archiveListAction,
+                                onPressed: onArchive,
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.only(right: 6),
                               ),
-                              tooltip: tr.archiveListAction,
-                              onPressed: onArchive,
-                              constraints: const BoxConstraints(),
-                              padding: const EdgeInsets.only(right: 6),
-                            ),
-                          if (onUnarchive != null)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.unarchive_outlined,
-                                size: 18,
+                            if (onUnarchive != null)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.unarchive_outlined,
+                                  size: 18,
+                                ),
+                                tooltip: tr.unarchiveListAction,
+                                onPressed: onUnarchive,
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.only(right: 6),
                               ),
-                              tooltip: tr.unarchiveListAction,
-                              onPressed: onUnarchive,
-                              constraints: const BoxConstraints(),
-                              padding: const EdgeInsets.only(right: 6),
-                            ),
-                          if (onDelete != null)
-                            IconButton(
-                              icon: const Icon(
-                                Icons.delete_outline_rounded,
-                                size: 18,
-                                color: AppColors.delete,
+                            if (onDelete != null)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 18,
+                                  color: AppColors.delete,
+                                ),
+                                tooltip: tr.delete,
+                                onPressed: onDelete,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
                               ),
-                              tooltip: tr.delete,
-                              onPressed: onDelete,
-                              constraints: const BoxConstraints(),
-                              padding: EdgeInsets.zero,
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

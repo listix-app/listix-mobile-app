@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/list_type.dart';
 import '../../domain/entities/todo_item.dart';
 import 'item_card_base.dart';
@@ -86,12 +87,15 @@ class _CheckableItemCard extends StatelessWidget {
     return ItemCardBase(
       itemId: item.id,
       isDimmed: item.isCompleted,
+      isChecked: item.isCompleted,
       showDeleteAction: item.isCompleted,
       showEditAction: !item.isCompleted,
       showIdleDragHandle: !item.isCompleted,
       reorderIndex: tile.reorderIndex,
       onTap: tile.onToggle,
       onDelete: tile.onDelete,
+      deleteTooltip: tile._tr.delete,
+      editTooltip: tile._tr.editAction,
       onEdit: tile.onEdit,
       onLongPress: tile.onLongPress,
       leading: leadingExtra == null
@@ -234,8 +238,7 @@ class OptionItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final item = tile.item;
     final tr = tile._tr;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = isDark ? AppColors.textMutedDark : AppColors.textMuted;
+    final mutedColor = context.mutedTextColor;
     final names = tile.attributeNames.isEmpty
         ? item.attributes.keys.toList()
         : tile.attributeNames;
@@ -249,12 +252,15 @@ class OptionItemTile extends StatelessWidget {
 
     return ItemCardBase(
       itemId: item.id,
+      isChecked: item.isChosen,
       isHighlighted: item.isChosen,
       isDimmed: evaluation == ItemEvaluation.discarded,
       showIdleDragHandle: true,
       reorderIndex: tile.reorderIndex,
       onTap: tile.onEdit ?? tile.onToggle,
       onDelete: tile.onDelete,
+      deleteTooltip: tile._tr.delete,
+      editTooltip: tile._tr.editAction,
       onEdit: tile.onEdit,
       onLongPress: tile.onLongPress,
       leading: Row(

@@ -6,6 +6,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/widgets/listix_logo.dart';
 import '../../../../routing/routes.dart';
@@ -42,8 +43,8 @@ class SettingsScreen extends ConsumerWidget {
     final urlService = ref.read(urlLauncherServiceProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final cardBg = isDark ? AppColors.cardDark : Colors.white;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final cardBg = context.cardSurface;
+    final borderColor = context.borderColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -225,7 +226,7 @@ class SettingsScreen extends ConsumerWidget {
                 if (states.contains(WidgetState.selected)) {
                   return const Icon(
                     Icons.check_rounded,
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                     size: 14,
                   );
                 }
@@ -252,9 +253,7 @@ class SettingsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: notifState.isEnabled
                       ? AppColors.primary.withValues(alpha: 0.12)
-                      : (isDark
-                            ? AppColors.surfaceDark
-                            : AppColors.surfaceLight),
+                      : (context.surfaceColor),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -296,7 +295,7 @@ class SettingsScreen extends ConsumerWidget {
                 if (states.contains(WidgetState.selected)) {
                   return const Icon(
                     Icons.check_rounded,
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                     size: 14,
                   );
                 }
@@ -312,7 +311,7 @@ class SettingsScreen extends ConsumerWidget {
                 if (!success && context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(tr.errorPrefix('Authentication failed')),
+                      content: Text(tr.errorPrefix(tr.authenticationFailed)),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -334,9 +333,7 @@ class SettingsScreen extends ConsumerWidget {
                 decoration: BoxDecoration(
                   color: lockState.isEnabled
                       ? AppColors.primary.withValues(alpha: 0.12)
-                      : (isDark
-                            ? AppColors.surfaceDark
-                            : AppColors.surfaceLight),
+                      : (context.surfaceColor),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -413,12 +410,12 @@ class SettingsScreen extends ConsumerWidget {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF813F).withValues(alpha: 0.12),
+                        color: AppColors.coffee.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
                         Icons.coffee_rounded,
-                        color: Color(0xFFFF813F),
+                        color: AppColors.coffee,
                         size: 22,
                       ),
                     ),
@@ -447,12 +444,12 @@ class SettingsScreen extends ConsumerWidget {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                      color: AppColors.accentIndigo.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(
                       Icons.feedback_outlined,
-                      color: Color(0xFF6366F1),
+                      color: AppColors.accentIndigo,
                       size: 22,
                     ),
                   ),
@@ -483,12 +480,12 @@ class SettingsScreen extends ConsumerWidget {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFB800).withValues(alpha: 0.12),
+                        color: AppColors.star.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
                         Icons.star_rate_rounded,
-                        color: Color(0xFFFFB800),
+                        color: AppColors.star,
                         size: 22,
                       ),
                     ),

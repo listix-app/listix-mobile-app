@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/list_type.dart';
 import 'list_type_presentation.dart';
 
@@ -59,9 +60,7 @@ class _ListTypeCard extends StatelessWidget {
       color: isDark ? AppColors.cardDark : AppColors.cardLight,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
-        ),
+        side: BorderSide(color: context.borderColor),
       ),
       child: InkWell(
         onTap: onTap,

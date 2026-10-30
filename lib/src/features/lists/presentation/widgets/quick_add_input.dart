@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 
 class QuickAddInput extends StatefulWidget {
   final ValueChanged<String> onAdd;
@@ -73,18 +74,14 @@ class _QuickAddInputState extends State<QuickAddInput> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barBg = isDark ? AppColors.cardDark : Colors.white;
-    final inputBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final barBg = context.cardSurface;
+    final inputBg = context.surfaceColor;
+    final borderColor = context.borderColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
-    final unselectedButtonBg = isDark
-        ? AppColors.surfaceDark
-        : AppColors.surfaceLight;
-    final unselectedIconColor = isDark
-        ? AppColors.textMutedDark
-        : AppColors.textMuted;
+    final unselectedButtonBg = context.surfaceColor;
+    final unselectedIconColor = context.mutedTextColor;
 
     final mediaQuery = MediaQuery.of(context);
     final bottomInset = mediaQuery.viewInsets.bottom;
@@ -183,7 +180,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 icon: Icon(
                   Icons.check,
                   size: 22,
-                  color: _canSubmit ? Colors.white : unselectedIconColor,
+                  color: _canSubmit ? AppColors.onPrimary : unselectedIconColor,
                 ),
                 splashRadius: 24,
                 tooltip: widget.tooltip ?? 'Agregar item',

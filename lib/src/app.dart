@@ -29,7 +29,15 @@ class ListixApp extends ConsumerWidget {
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      builder: (context, child) => AppLockWrapper(child: child!),
+      builder: (context, child) => AppLockWrapper(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: child!,
+          ),
+        ),
+      ),
     );
   }
 }

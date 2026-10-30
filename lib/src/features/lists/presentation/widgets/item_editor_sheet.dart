@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/list_type.dart';
 import '../../domain/entities/todo_item.dart';
 import 'list_type_presentation.dart';
@@ -15,12 +16,12 @@ Future<TodoItem?> showItemEditorSheet(
   List<String> attributeNames = const [],
   bool isNew = false,
 }) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
   return showModalBottomSheet<TodoItem>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    backgroundColor: isDark ? AppColors.cardDark : Colors.white,
+    showDragHandle: false,
+    backgroundColor: context.cardSurface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -222,60 +223,105 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
         ? AppColors.textSecondaryDark
         : AppColors.textSecondary;
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+    final mediaQuery = MediaQuery.of(context);
+    final maxHeight = mediaQuery.size.height * 0.92;
+
+    return AnimatedPadding(
+      duration: mediaQuery.disableAnimations
+          ? Duration.zero
+          : const Duration(milliseconds: 150),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
         child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  Icon(widget.type.icon, size: 20, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    widget.isNew ? _tr.newItemTitle : _tr.itemDetailsTitle,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: headingColor,
-                      letterSpacing: -0.3,
-                    ),
+              const SizedBox(height: 8),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: labelColor.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                key: const Key('item_editor_title'),
-                controller: _title,
-                autofocus: widget.isNew,
-                maxLength: 100,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: InputDecoration(
-                  labelText: _tr.itemTitleLabel,
-                  hintText: _tr.itemTitleHint,
-                  counterText: '',
                 ),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? _tr.itemTitleValidation
-                    : null,
               ),
-              ..._typeFields(labelColor),
-              const SizedBox(height: 20),
-              FilledButton(
-                key: const Key('item_editor_save'),
-                onPressed: _save,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                child: Row(
+                  children: [
+                    Icon(widget.type.icon, size: 20, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        widget.isNew ? _tr.newItemTitle : _tr.itemDetailsTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: headingColor,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  widget.isNew ? _tr.createListAction : _tr.saveChanges,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+              ),
+              Flexible(
+                child: SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        key: const Key('item_editor_title'),
+                        controller: _title,
+                        autofocus: widget.isNew,
+                        maxLength: 100,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: InputDecoration(
+                          labelText: _tr.itemTitleLabel,
+                          hintText: _tr.itemTitleHint,
+                          counterText: '',
+                        ),
+                        validator: (value) =>
+                            value == null || value.trim().isEmpty
+                            ? _tr.itemTitleValidation
+                            : null,
+                      ),
+                      ..._typeFields(labelColor),
+                      const SizedBox(height: 8),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  12,
+                  20,
+                  16 + mediaQuery.viewPadding.bottom,
+                ),
+                child: FilledButton(
+                  key: const Key('item_editor_save'),
+                  onPressed: _save,
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                  child: Text(
+                    widget.isNew ? _tr.createItemAction : _tr.saveChanges,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),

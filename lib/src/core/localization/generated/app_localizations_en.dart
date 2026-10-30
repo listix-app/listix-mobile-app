@@ -46,6 +46,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
+  String get editAction => 'Edit';
+
+  @override
   String get listCountSuffix => 'lists';
 
   @override
@@ -136,6 +139,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createListAction => 'Create list';
+
+  @override
+  String get createItemAction => 'Create item';
 
   @override
   String get shareHeading => 'Share';
@@ -1093,4 +1099,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emptyTasksMessage =>
       'Add your first task below. Set a due date and priority with the details button.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get goHome => 'Go home';
+
+  @override
+  String get openList => 'Open list';
+
+  @override
+  String get changeRole => 'Change role';
+
+  @override
+  String get authenticationFailed => 'Authentication failed';
+
+  @override
+  String get generatingInviteLink => 'Generating invite link...';
+
+  @override
+  String get shareLinkAction => 'Share link';
+
+  @override
+  String get copyLinkAction => 'Copy link';
+
+  @override
+  String inviteLinkError(String error) {
+    return 'Could not generate the link: $error';
+  }
+
+  @override
+  String inviteLinkCreateError(String error) {
+    return 'Could not create the invite link: $error';
+  }
 }

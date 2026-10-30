@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 
 class ItemCardBase extends StatelessWidget {
   final String itemId;
@@ -14,6 +15,9 @@ class ItemCardBase extends StatelessWidget {
   final List<Widget> actions;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final String deleteTooltip;
+  final String editTooltip;
+  final bool? isChecked;
   final VoidCallback? onEdit;
   final VoidCallback? onLongPress;
   final int? reorderIndex;
@@ -26,6 +30,9 @@ class ItemCardBase extends StatelessWidget {
     required this.content,
     required this.onTap,
     required this.onDelete,
+    required this.deleteTooltip,
+    required this.editTooltip,
+    this.isChecked,
     this.isDimmed = false,
     this.showDeleteAction = false,
     this.showEditAction = true,
@@ -40,7 +47,7 @@ class ItemCardBase extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final mutedColor = isDark ? AppColors.textMutedDark : AppColors.textMuted;
+    final mutedColor = context.mutedTextColor;
     final borderColor = isHighlighted
         ? AppColors.primary
         : (isDark
@@ -58,11 +65,13 @@ class ItemCardBase extends StatelessWidget {
       secondaryBackground: const _DeleteBackground(),
       child: AnimatedOpacity(
         opacity: isDimmed ? 0.45 : 1.0,
-        duration: const Duration(milliseconds: 200),
+        duration: MediaQuery.disableAnimationsOf(context)
+            ? Duration.zero
+            : const Duration(milliseconds: 200),
         child: Container(
           margin: const EdgeInsets.symmetric(vertical: 2),
           decoration: BoxDecoration(
-            color: isDark ? AppColors.cardDark : Colors.white,
+            color: context.cardSurface,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: borderColor,
@@ -71,69 +80,70 @@ class ItemCardBase extends StatelessWidget {
           ),
           child: Material(
             color: Colors.transparent,
-            child: InkWell(
-              onTap: () {
-                HapticFeedback.lightImpact();
-                onTap();
-              },
-              onLongPress: onLongPress == null
-                  ? null
-                  : () {
-                      HapticFeedback.mediumImpact();
-                      onLongPress!();
-                    },
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 11,
-                ),
-                child: Row(
-                  children: [
-                    leading,
-                    const SizedBox(width: 12),
-                    Expanded(child: content),
-                    ...actions,
-                    if (showDeleteAction)
-                      _ActionButton(
-                        key: ValueKey('delete_$itemId'),
-                        icon: Icons.delete_outline_rounded,
-                        iconSize: 19,
-                        color: mutedColor,
-                        tooltip: 'Eliminar',
-                        onPressed: onDelete,
-                      ),
-                    if (onEdit != null && showEditAction)
-                      _ActionButton(
-                        key: ValueKey('edit_$itemId'),
-                        icon: Icons.edit_outlined,
-                        iconSize: 18,
-                        color: mutedColor,
-                        tooltip: 'Editar',
-                        onPressed: onEdit!,
-                      ),
-                    if (reorderIndex != null)
-                      ReorderableDragStartListener(
-                        index: reorderIndex!,
-                        child: Padding(
+            child: Semantics(
+              button: true,
+              checked: isChecked,
+              child: InkWell(
+                onTap: onTap,
+                onLongPress: onLongPress == null
+                    ? null
+                    : () {
+                        HapticFeedback.mediumImpact();
+                        onLongPress!();
+                      },
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 11,
+                  ),
+                  child: Row(
+                    children: [
+                      leading,
+                      const SizedBox(width: 12),
+                      Expanded(child: content),
+                      ...actions,
+                      if (showDeleteAction)
+                        _ActionButton(
+                          key: ValueKey('delete_$itemId'),
+                          icon: Icons.delete_outline_rounded,
+                          iconSize: 19,
+                          color: mutedColor,
+                          tooltip: deleteTooltip,
+                          onPressed: onDelete,
+                        ),
+                      if (onEdit != null && showEditAction)
+                        _ActionButton(
+                          key: ValueKey('edit_$itemId'),
+                          icon: Icons.edit_outlined,
+                          iconSize: 18,
+                          color: mutedColor,
+                          tooltip: editTooltip,
+                          onPressed: onEdit!,
+                        ),
+                      if (reorderIndex != null)
+                        ReorderableDragStartListener(
+                          index: reorderIndex!,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.drag_handle_rounded,
+                              size: 20,
+                              color: mutedColor,
+                            ),
+                          ),
+                        )
+                      else if (showIdleDragHandle)
+                        Padding(
                           padding: const EdgeInsets.all(8),
                           child: Icon(
                             Icons.drag_handle_rounded,
-                            size: 20,
-                            color: mutedColor,
+                            size: 18,
+                            color: mutedColor.withValues(alpha: 0.45),
                           ),
                         ),
-                      )
-                    else if (showIdleDragHandle)
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.drag_handle_rounded,
-                          size: 18,
-                          color: mutedColor.withValues(alpha: 0.45),
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -208,7 +218,6 @@ class ItemCheckbox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Semantics(
       checked: isChecked,
       label: label,
@@ -220,14 +229,12 @@ class ItemCheckbox extends StatelessWidget {
           color: isChecked ? activeColor : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isChecked
-                ? activeColor
-                : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
+            color: isChecked ? activeColor : (context.mutedTextColor),
             width: 1.8,
           ),
         ),
         child: isChecked
-            ? const Icon(Icons.check, size: 16, color: Colors.white)
+            ? const Icon(Icons.check, size: 16, color: AppColors.onPrimary)
             : null,
       ),
     );
@@ -326,7 +333,7 @@ class ItemThumbnail extends StatelessWidget {
       child: Icon(
         fallbackIcon,
         size: size * 0.5,
-        color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+        color: context.mutedTextColor,
       ),
     );
     final url = imageUrl;

@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
+  /// No description provided for @editAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editAction;
+
   /// No description provided for @listCountSuffix.
   ///
   /// In en, this message translates to:
@@ -325,6 +331,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create list'**
   String get createListAction;
+
+  /// No description provided for @createItemAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create item'**
+  String get createItemAction;
 
   /// No description provided for @shareHeading.
   ///
@@ -2053,6 +2065,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add your first task below. Set a due date and priority with the details button.'**
   String get emptyTasksMessage;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @goHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go home'**
+  String get goHome;
+
+  /// No description provided for @openList.
+  ///
+  /// In en, this message translates to:
+  /// **'Open list'**
+  String get openList;
+
+  /// No description provided for @changeRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Change role'**
+  String get changeRole;
+
+  /// No description provided for @authenticationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed'**
+  String get authenticationFailed;
+
+  /// No description provided for @generatingInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating invite link...'**
+  String get generatingInviteLink;
+
+  /// No description provided for @shareLinkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get shareLinkAction;
+
+  /// No description provided for @copyLinkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLinkAction;
+
+  /// No description provided for @inviteLinkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate the link: {error}'**
+  String inviteLinkError(String error);
+
+  /// No description provided for @inviteLinkCreateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the invite link: {error}'**
+  String inviteLinkCreateError(String error);
 }
 
 class _AppLocalizationsDelegate

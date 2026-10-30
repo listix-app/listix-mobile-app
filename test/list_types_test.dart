@@ -943,7 +943,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nuevo elemento'), findsOneWidget);
+      expect(find.text('Nuevo item'), findsOneWidget);
       await tester.enterText(
         find.byKey(const Key('item_editor_quantity')),
         '2,5',
@@ -1136,6 +1136,7 @@ void main() {
       expect(find.text('Sin fecha'), findsOneWidget);
       await tester.tap(find.byKey(const Key('priority_medium')));
       await tester.pump();
+      await tester.ensureVisible(find.byKey(const Key('item_editor_due_date')));
       await tester.tap(find.byKey(const Key('item_editor_due_date')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
@@ -1143,10 +1144,14 @@ void main() {
       expect(find.text('Sin fecha'), findsNothing);
       expect(find.byKey(const Key('item_editor_clear_date')), findsOneWidget);
 
+      await tester.ensureVisible(
+        find.byKey(const Key('item_editor_clear_date')),
+      );
       await tester.tap(find.byKey(const Key('item_editor_clear_date')));
       await tester.pump();
       expect(find.text('Sin fecha'), findsOneWidget);
 
+      await tester.ensureVisible(find.byKey(const Key('item_editor_due_date')));
       await tester.tap(find.byKey(const Key('item_editor_due_date')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
@@ -1187,6 +1192,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('item_editor_in_progress')), findsNothing);
+      await tester.ensureVisible(find.byKey(const Key('item_editor_due_date')));
       await tester.tap(find.byKey(const Key('item_editor_due_date')));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
@@ -1595,17 +1601,6 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('favorite_a')));
       await tester.pump();
       expect(controller.updated.single.isFavorite, isTrue);
-
-      await tester.longPress(find.text('UNAL'));
-      await tester.pumpAndSettle();
-      expect(find.text('Quitar elección'), findsOneWidget);
-      await tester.tap(find.text('Quitar elección'));
-      await tester.pumpAndSettle();
-      expect(controller.chosen, ['a', 'a']);
-
-      await tester.longPress(find.text('Javeriana'));
-      await tester.pumpAndSettle();
-      expect(find.text('Marcar como elegida'), findsOneWidget);
     });
 
     testWidgets('editing an item opens the typed editor and saves details', (
@@ -1642,26 +1637,6 @@ void main() {
       expect(controller.updated, hasLength(1));
     });
 
-    testWidgets('rename from the actions sheet opens the typed editor', (
-      tester,
-    ) async {
-      final list = ShoppingList(
-        id: 't',
-        name: 'Pendientes',
-        type: ListType.tasks,
-        items: [_item('a', title: 'Declarar', listId: 't')],
-        createdAt: _now,
-      );
-      await pumpDetail(tester, list);
-
-      await tester.longPress(find.text('Declarar'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Renombrar'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Detalles del elemento'), findsOneWidget);
-    });
-
     testWidgets('add with details sends the draft to the controller', (
       tester,
     ) async {
@@ -1677,7 +1652,7 @@ void main() {
       await tester.enterText(find.byType(TextField).last, 'Llamar');
       await tester.tap(find.byKey(const Key('quick_add_details_button')));
       await tester.pumpAndSettle();
-      expect(find.text('Nuevo elemento'), findsOneWidget);
+      expect(find.text('Nuevo item'), findsOneWidget);
       await tester.tap(find.byKey(const Key('priority_high')));
       await tester.pump();
       await tester.ensureVisible(find.byKey(const Key('item_editor_save')));

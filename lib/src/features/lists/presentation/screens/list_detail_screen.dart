@@ -7,7 +7,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/services/url_launcher_service.dart';
+import '../../../../core/widgets/content_width.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../ads/data/interstitial_ad_service.dart';
 import '../../../ads/presentation/controllers/banner_ad_controller.dart';
@@ -85,115 +87,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     } else {
       context.go('/');
     }
-  }
-
-  Future<void> _showItemActionsSheet(
-    BuildContext context,
-    TodoItem item,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isOptions = _listType == ListType.options;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: isDark ? AppColors.cardDark : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  item.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: Icon(
-                  (isOptions ? item.isChosen : item.isCompleted)
-                      ? Icons.radio_button_unchecked_rounded
-                      : Icons.check_circle_outline_rounded,
-                  color: AppColors.primary,
-                ),
-                title: Text(
-                  isOptions
-                      ? (item.isChosen ? tr.unmarkChosen : tr.markChosen)
-                      : item.isCompleted
-                      ? 'Marcar como pendiente'
-                      : 'Marcar como completado',
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary,
-                  ),
-                ),
-                onTap: () {
-                  ctx.pop();
-                  final notifier = ref.read(listsControllerProvider.notifier);
-                  if (isOptions) {
-                    notifier.toggleChosenItem(widget.listId, item.id);
-                  } else {
-                    notifier.toggleItem(widget.listId, item.id);
-                  }
-                },
-              ),
-              if (!item.isCompleted)
-                ListTile(
-                  leading: const Icon(
-                    Icons.edit_outlined,
-                    color: AppColors.textSecondary,
-                  ),
-                  title: Text(
-                    tr.rename,
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimary,
-                    ),
-                  ),
-                  onTap: () {
-                    ctx.pop();
-                    _editItem(item);
-                  },
-                ),
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: AppColors.delete,
-                ),
-                title: Text(
-                  tr.delete,
-                  style: const TextStyle(
-                    color: AppColors.delete,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  ctx.pop();
-                  _handleDeleteItem(widget.listId, item.id);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildSortMenu(
@@ -297,7 +190,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           : notifier.toggleItem(list.id, item.id),
       onDelete: () => _handleDeleteItem(list.id, item.id),
       onEdit: () => _editItem(item),
-      onLongPress: () => _showItemActionsSheet(context, item),
       onToggleFavorite: () => notifier.updateItemDetails(
         item.copyWith(isFavorite: !item.isFavorite),
       ),
@@ -334,7 +226,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
               fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.6,
-              color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+              color: context.mutedTextColor,
             ),
           ),
         ),
@@ -539,9 +431,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                             ? Icons.expand_more
                             : Icons.chevron_right,
                         size: 18,
-                        color: isDark
-                            ? AppColors.textMutedDark
-                            : AppColors.textMuted,
+                        color: context.mutedTextColor,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -549,9 +439,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.textMutedDark
-                              : AppColors.textMuted,
+                          color: context.mutedTextColor,
                         ),
                       ),
                       const Spacer(),
@@ -601,11 +489,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                 decoration: InputDecoration(
                   hintText: tr.searchItemsHint,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(
-                    color: isDark
-                        ? AppColors.textMutedDark
-                        : AppColors.textMuted,
-                  ),
+                  hintStyle: TextStyle(color: context.mutedTextColor),
                 ),
                 style: TextStyle(
                   fontSize: 16,
@@ -683,245 +567,240 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                  width: 1,
+      body: ContentWidth(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: context.surfaceColor,
+                border: Border(
+                  bottom: BorderSide(color: context.borderColor, width: 1),
                 ),
               ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      list.items.isEmpty
-                          ? tr.noItemsYet
-                          : list.type == ListType.options
-                          ? tr.optionsCount(list.totalCount)
-                          : tr.pendingCountText(
-                              list.pendingCount,
-                              list.totalCount,
-                            ),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondary,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (list.totalCount > 0 && list.type.tracksCompletion)
-                      Text(
-                        list.type == ListType.shopping && list.totalPrice > 0
-                            ? tr.shoppingTotal(
-                                list.totalPrice.toStringAsFixed(2),
-                              )
-                            : tr.percentCompleted((progress * 100).toInt()),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.textMutedDark
-                              : AppColors.textMuted,
-                        ),
-                      ),
-                  ],
-                ),
-                if (list.totalCount > 0 && list.type.tracksCompletion) ...[
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: isDark
-                          ? AppColors.borderDark
-                          : AppColors.borderLight,
-                      valueColor: AlwaysStoppedAnimation<Color>(listColor),
-                      minHeight: 4,
-                    ),
-                  ),
-                ],
-                if (list.type == ListType.options) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    children: [
-                      TextButton.icon(
-                        key: const Key('compare_options_button'),
-                        onPressed: () => showCompareSheet(context, list.id),
-                        icon: const Icon(Icons.table_chart_outlined, size: 18),
-                        label: Text(tr.compareOptions),
-                      ),
-                      TextButton.icon(
-                        key: const Key('manage_attributes_button'),
-                        onPressed: () => showAttributesDialog(context, list.id),
-                        icon: const Icon(Icons.tune_rounded, size: 18),
-                        label: Text(tr.manageAttributes),
-                      ),
-                    ],
-                  ),
-                ],
-                if (list.collaborators.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+              child: Column(
+                children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.group_outlined,
-                        size: 14,
-                        color: isDark
-                            ? AppColors.textMutedDark
-                            : AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 6),
                       Text(
-                        '${tr.collaborators}:',
+                        list.items.isEmpty
+                            ? tr.noItemsYet
+                            : list.type == ListType.options
+                            ? tr.optionsCount(list.totalCount)
+                            : tr.pendingCountText(
+                                list.pendingCount,
+                                list.totalCount,
+                              ),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: isDark
-                              ? AppColors.textMutedDark
-                              : AppColors.textMuted,
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondary,
+                          letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: SizedBox(
-                          height: 22,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: list.collaborators.map((c) {
-                              return Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.cardDark
-                                      : AppColors.primaryLight,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  c.name,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark
-                                        ? AppColors.textPrimaryDark
-                                        : AppColors.primaryDark,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                      const Spacer(),
+                      if (list.totalCount > 0 && list.type.tracksCompletion)
+                        Text(
+                          list.type == ListType.shopping && list.totalPrice > 0
+                              ? tr.shoppingTotal(
+                                  list.totalPrice.toStringAsFixed(2),
+                                )
+                              : tr.percentCompleted((progress * 100).toInt()),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: context.mutedTextColor,
                           ),
                         ),
-                      ),
                     ],
                   ),
-                ],
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: list.items.isEmpty
-                ? EmptyStateWidget(
-                    icon: list.type.icon,
-                    title: tr.emptyItemsTitle,
-                    message: tr.emptyItemsMessageFor(list.type),
-                  )
-                : (query.isNotEmpty &&
-                      filteredPending.isEmpty &&
-                      filteredCompleted.isEmpty)
-                ? EmptyStateWidget(
-                    icon: Icons.search_off_rounded,
-                    title: tr.noSearchResults,
-                    message: tr.searchItemsHint,
-                  )
-                : RefreshIndicator(
-                    onRefresh: () async {
-                      await ref
-                          .read(listsControllerProvider.notifier)
-                          .manualSync();
-                    },
-                    color: listColor,
-                    child: list.type.isGroupedByCategory
-                        ? ListView(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            children: [
-                              ..._buildCategoryGroups(
-                                list,
-                                filteredPending,
-                                listColor,
-                                tr,
-                                isDark,
-                              ),
-                              ?completedFooter,
-                            ],
-                          )
-                        : ReorderableListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            itemCount: filteredPending.length,
-                            buildDefaultDragHandles: false,
-                            proxyDecorator: (child, index, animation) {
-                              return Material(
-                                elevation: 4,
-                                shadowColor: Colors.black.withValues(
-                                  alpha: 0.25,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                                color: Colors.transparent,
-                                child: child,
-                              );
-                            },
-                            onReorderItem: (oldIndex, newIndex) {
-                              if (!canReorder) return;
-                              HapticFeedback.selectionClick();
-                              ref
-                                  .read(listsControllerProvider.notifier)
-                                  .reorderItems(list.id, oldIndex, newIndex);
-                            },
-                            itemBuilder: (context, index) {
-                              return _buildItemTile(
-                                list,
-                                filteredPending[index],
-                                listColor,
-                                reorderIndex: canReorder ? index : null,
-                              );
-                            },
-                            footer: completedFooter,
+                  if (list.totalCount > 0 && list.type.tracksCompletion) ...[
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: context.borderColor,
+                        valueColor: AlwaysStoppedAnimation<Color>(listColor),
+                        minHeight: 4,
+                      ),
+                    ),
+                  ],
+                  if (list.type == ListType.options) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      children: [
+                        TextButton.icon(
+                          key: const Key('compare_options_button'),
+                          onPressed: () => showCompareSheet(context, list.id),
+                          icon: const Icon(
+                            Icons.table_chart_outlined,
+                            size: 18,
                           ),
-                  ),
-          ),
+                          label: Text(tr.compareOptions),
+                        ),
+                        TextButton.icon(
+                          key: const Key('manage_attributes_button'),
+                          onPressed: () =>
+                              showAttributesDialog(context, list.id),
+                          icon: const Icon(Icons.tune_rounded, size: 18),
+                          label: Text(tr.manageAttributes),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (list.collaborators.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.group_outlined,
+                          size: 14,
+                          color: context.mutedTextColor,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${tr.collaborators}:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: context.mutedTextColor,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: SizedBox(
+                            height: 28,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: list.collaborators.map((c) {
+                                return Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppColors.cardDark
+                                        : AppColors.primaryLight,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    c.name,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? AppColors.textPrimaryDark
+                                          : AppColors.primaryDark,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
 
-          QuickAddInput(
-            autoFocus: list.items.isEmpty,
-            hintText: tr.quickAddHint,
-            tooltip: tr.quickAddTooltip,
-            onAdd: (title) {
-              ref
-                  .read(listsControllerProvider.notifier)
-                  .addItem(list.id, title);
-            },
-            onAddWithDetails: _addItemWithDetails,
-            detailsTooltip: tr.addWithDetails,
-          ),
-        ],
+            Expanded(
+              child: list.items.isEmpty
+                  ? EmptyStateWidget(
+                      icon: list.type.icon,
+                      title: tr.emptyItemsTitle,
+                      message: tr.emptyItemsMessageFor(list.type),
+                    )
+                  : (query.isNotEmpty &&
+                        filteredPending.isEmpty &&
+                        filteredCompleted.isEmpty)
+                  ? EmptyStateWidget(
+                      icon: Icons.search_off_rounded,
+                      title: tr.noSearchResults,
+                      message: tr.searchItemsHint,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        await ref
+                            .read(listsControllerProvider.notifier)
+                            .manualSync();
+                      },
+                      color: listColor,
+                      child: list.type.isGroupedByCategory
+                          ? ListView(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              children: [
+                                ..._buildCategoryGroups(
+                                  list,
+                                  filteredPending,
+                                  listColor,
+                                  tr,
+                                  isDark,
+                                ),
+                                ?completedFooter,
+                              ],
+                            )
+                          : ReorderableListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              itemCount: filteredPending.length,
+                              buildDefaultDragHandles: false,
+                              proxyDecorator: (child, index, animation) {
+                                return Material(
+                                  elevation: 4,
+                                  shadowColor: Colors.black.withValues(
+                                    alpha: 0.25,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.transparent,
+                                  child: child,
+                                );
+                              },
+                              onReorderItem: (oldIndex, newIndex) {
+                                if (!canReorder) return;
+                                HapticFeedback.selectionClick();
+                                ref
+                                    .read(listsControllerProvider.notifier)
+                                    .reorderItems(list.id, oldIndex, newIndex);
+                              },
+                              itemBuilder: (context, index) {
+                                return _buildItemTile(
+                                  list,
+                                  filteredPending[index],
+                                  listColor,
+                                  reorderIndex: canReorder ? index : null,
+                                );
+                              },
+                              footer: completedFooter,
+                            ),
+                    ),
+            ),
+
+            QuickAddInput(
+              autoFocus: list.items.isEmpty,
+              hintText: tr.quickAddHint,
+              tooltip: tr.quickAddTooltip,
+              onAdd: (title) {
+                ref
+                    .read(listsControllerProvider.notifier)
+                    .addItem(list.id, title);
+              },
+              onAddWithDetails: _addItemWithDetails,
+              detailsTooltip: tr.addWithDetails,
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: switch (ref.watch(detailBannerAdProvider)) {
         BannerAdStatus.loaded ||

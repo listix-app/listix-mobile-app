@@ -29,6 +29,7 @@ class AppStrings {
   String deleteListMessage(String name) => _l10n.deleteListMessage(name);
   String get cancel => _l10n.cancel;
   String get delete => _l10n.delete;
+  String get editAction => _l10n.editAction;
   String get listCountSuffix => _l10n.listCountSuffix;
   String get noItemsBadge => _l10n.noItemsBadge;
   String get allDoneBadge => _l10n.allDoneBadge;
@@ -59,6 +60,7 @@ class AppStrings {
   String get listNameValidation => _l10n.listNameValidation;
   String get saveChanges => _l10n.saveChanges;
   String get createListAction => _l10n.createListAction;
+  String get createItemAction => _l10n.createItemAction;
 
   String get shareHeading => _l10n.shareHeading;
   String get shareListSubheading => _l10n.shareListSubheading;
@@ -143,6 +145,17 @@ class AppStrings {
   String get termsStatement => _l10n.termsStatement;
   String copyrightFooter(int year) => _l10n.copyrightFooter(year);
   String errorPrefix(String error) => _l10n.errorPrefix(error);
+  String get retry => _l10n.retry;
+  String get goHome => _l10n.goHome;
+  String get openList => _l10n.openList;
+  String get changeRole => _l10n.changeRole;
+  String get authenticationFailed => _l10n.authenticationFailed;
+  String get generatingInviteLink => _l10n.generatingInviteLink;
+  String get shareLinkAction => _l10n.shareLinkAction;
+  String get copyLinkAction => _l10n.copyLinkAction;
+  String inviteLinkCreateError(String error) =>
+      _l10n.inviteLinkCreateError(error);
+  String inviteLinkError(String error) => _l10n.inviteLinkError(error);
 
   String get developer => _l10n.developer;
   String get developerName => _l10n.developerName;

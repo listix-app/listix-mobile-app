@@ -46,6 +46,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get delete => 'Eliminar';
 
   @override
+  String get editAction => 'Editar';
+
+  @override
   String get listCountSuffix => 'listas';
 
   @override
@@ -136,6 +139,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get createListAction => 'Crear lista';
+
+  @override
+  String get createItemAction => 'Crear item';
 
   @override
   String get shareHeading => 'Compartir';
@@ -894,7 +900,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get listTypeCustomDesc => 'Una lista flexible con elementos básicos.';
 
   @override
-  String get newItemTitle => 'Nuevo elemento';
+  String get newItemTitle => 'Nuevo item';
 
   @override
   String get itemDetailsTitle => 'Detalles del elemento';
@@ -1100,4 +1106,38 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get emptyTasksMessage =>
       'Agrega tu primera tarea abajo. Define fecha límite y prioridad con el botón de detalles.';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get goHome => 'Ir al inicio';
+
+  @override
+  String get openList => 'Abrir lista';
+
+  @override
+  String get changeRole => 'Cambiar rol';
+
+  @override
+  String get authenticationFailed => 'Falló la autenticación';
+
+  @override
+  String get generatingInviteLink => 'Generando enlace de invitación...';
+
+  @override
+  String get shareLinkAction => 'Compartir enlace';
+
+  @override
+  String get copyLinkAction => 'Copiar enlace';
+
+  @override
+  String inviteLinkError(String error) {
+    return 'No se pudo generar el enlace: $error';
+  }
+
+  @override
+  String inviteLinkCreateError(String error) {
+    return 'No se pudo crear el enlace de invitación: $error';
+  }
 }
