@@ -24,3 +24,17 @@ abstract final class AppEnvironmentConfig {
 final adsEnabledProvider = Provider<bool>(
   (ref) => AppEnvironmentConfig.adsEnabled,
 );
+
+extension AppEnvironmentLabel on AppEnvironment {
+  String get appTitle => switch (this) {
+    AppEnvironment.prod => 'Listix',
+    AppEnvironment.dev => 'Listix (dev)',
+    AppEnvironment.preview => 'Listix (preview)',
+  };
+
+  String? get badgeLabel => switch (this) {
+    AppEnvironment.prod => null,
+    AppEnvironment.dev => 'DEV',
+    AppEnvironment.preview => 'PREVIEW',
+  };
+}

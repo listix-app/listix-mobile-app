@@ -82,6 +82,16 @@ void main() {
       expect(AppEnvironmentConfig.parse('unknown'), AppEnvironment.dev);
     });
 
+    test('appTitle and badgeLabel cover every environment', () {
+      expect(AppEnvironment.prod.appTitle, 'Listix');
+      expect(AppEnvironment.dev.appTitle, 'Listix (dev)');
+      expect(AppEnvironment.preview.appTitle, 'Listix (preview)');
+
+      expect(AppEnvironment.prod.badgeLabel, isNull);
+      expect(AppEnvironment.dev.badgeLabel, 'DEV');
+      expect(AppEnvironment.preview.badgeLabel, 'PREVIEW');
+    });
+
     test('ads are temporarily disabled', () {
       expect(AppEnvironmentConfig.rawName, isNotEmpty);
       expect(AppEnvironmentConfig.current, AppEnvironment.dev);

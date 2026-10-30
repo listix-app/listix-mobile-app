@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/content_width.dart';
 
+import '../../../../core/config/app_environment.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -270,7 +271,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   });
                 },
               )
-            : const ListixLogo(size: 28, showWordmark: true, fontSize: 22),
+            : const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListixLogo(size: 28, showWordmark: true, fontSize: 22),
+                  _EnvironmentBadge(),
+                ],
+              ),
         actions: [
           IconButton(
             key: const Key('list_search_toggle_button'),
@@ -714,6 +721,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EnvironmentBadge extends StatelessWidget {
+  const _EnvironmentBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final label = AppEnvironmentConfig.current.badgeLabel;
+    if (label == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+            color: AppColors.primary,
           ),
         ),
       ),
