@@ -224,6 +224,7 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
           ),
         ],
       ),
+      scrollable: true,
       content: Form(
         key: _formKey,
         child: Column(
@@ -291,7 +292,7 @@ class _JoinListDialogState extends ConsumerState<JoinListDialog> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: AppColors.onPrimary,
                   ),
                 )
               : Text(tr.joinAction),

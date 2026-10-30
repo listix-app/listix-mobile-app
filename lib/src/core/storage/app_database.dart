@@ -57,35 +57,24 @@ class AppDatabase {
   }
 
   Future<void> _onOpen(Database db) async {
-    await _ensureColumn(
-      db,
-      'lists',
-      'has_invite',
-      'INTEGER NOT NULL DEFAULT 0',
-    );
-    await _ensureColumn(db, 'lists', 'is_shared', 'INTEGER NOT NULL DEFAULT 0');
-    await _ensureColumn(
-      db,
-      'lists',
-      'is_starred',
-      'INTEGER NOT NULL DEFAULT 0',
-    );
-    await _ensureColumn(db, 'lists', 'position', 'INTEGER NOT NULL DEFAULT 0');
-    await _ensureColumn(db, 'items', 'position', 'INTEGER NOT NULL DEFAULT 0');
-    await _ensureColumn(
-      db,
-      'collaborators',
-      'role',
-      "TEXT NOT NULL DEFAULT 'member'",
-    );
-    await _ensureColumn(
-      db,
-      'lists',
-      'is_archived',
-      'INTEGER NOT NULL DEFAULT 0',
-    );
-    await _ensureColumn(db, 'lists', 'color', 'INTEGER');
-    await _ensureColumn(db, 'lists', 'is_owner', 'INTEGER NOT NULL DEFAULT 1');
+    await _ensureColumns(db, 'lists', const [
+      ('has_invite', 'INTEGER NOT NULL DEFAULT 0'),
+      ('is_shared', 'INTEGER NOT NULL DEFAULT 0'),
+      ('is_starred', 'INTEGER NOT NULL DEFAULT 0'),
+      ('position', 'INTEGER NOT NULL DEFAULT 0'),
+      ('is_archived', 'INTEGER NOT NULL DEFAULT 0'),
+      ('color', 'INTEGER'),
+      ('is_owner', 'INTEGER NOT NULL DEFAULT 1'),
+      ('list_type', "TEXT NOT NULL DEFAULT 'custom'"),
+      ('option_attributes', 'TEXT'),
+    ]);
+    await _ensureColumns(db, 'items', const [
+      ('position', 'INTEGER NOT NULL DEFAULT 0'),
+      ..._itemDetailColumns,
+    ]);
+    await _ensureColumns(db, 'collaborators', const [
+      ('role', "TEXT NOT NULL DEFAULT 'member'"),
+    ]);
     await db.execute('''
       CREATE TABLE IF NOT EXISTS pending_operations (
         id TEXT PRIMARY KEY NOT NULL,
@@ -105,16 +94,37 @@ class AppDatabase {
     ''');
   }
 
-  Future<void> _ensureColumn(
+  static const List<(String, String)> _itemDetailColumns = [
+    ('quantity', 'REAL'),
+    ('unit', 'TEXT'),
+    ('category', 'TEXT'),
+    ('price', 'REAL'),
+    ('store', 'TEXT'),
+    ('url', 'TEXT'),
+    ('priority', 'TEXT'),
+    ('notes', 'TEXT'),
+    ('is_favorite', 'INTEGER NOT NULL DEFAULT 0'),
+    ('is_chosen', 'INTEGER NOT NULL DEFAULT 0'),
+    ('due_date', 'INTEGER'),
+    ('in_progress', 'INTEGER NOT NULL DEFAULT 0'),
+    ('description', 'TEXT'),
+    ('image_url', 'TEXT'),
+    ('attributes', 'TEXT'),
+    ('evaluation', 'TEXT'),
+  ];
+
+  Future<void> _ensureColumns(
     Database db,
     String table,
-    String column,
-    String definition,
+    List<(String, String)> required,
   ) async {
     final tableInfo = await db.rawQuery("PRAGMA table_info('$table');");
     final columns = tableInfo.map((col) => col['name'] as String).toSet();
-    if (columns.isNotEmpty && !columns.contains(column)) {
-      await db.execute('ALTER TABLE $table ADD COLUMN $column $definition;');
+    if (columns.isEmpty) return;
+    for (final (column, definition) in required) {
+      if (!columns.contains(column)) {
+        await db.execute('ALTER TABLE $table ADD COLUMN $column $definition;');
+      }
     }
   }
 
@@ -123,6 +133,8 @@ class AppDatabase {
       CREATE TABLE lists (
         id TEXT PRIMARY KEY NOT NULL,
         name TEXT NOT NULL,
+        list_type TEXT NOT NULL DEFAULT 'custom',
+        option_attributes TEXT,
         is_synced INTEGER NOT NULL DEFAULT 0,
         is_starred INTEGER NOT NULL DEFAULT 0,
         is_shared INTEGER NOT NULL DEFAULT 0,
@@ -148,6 +160,22 @@ class AppDatabase {
         created_at INTEGER NOT NULL,
         updated_at INTEGER NOT NULL,
         deleted_at INTEGER,
+        quantity REAL,
+        unit TEXT,
+        category TEXT,
+        price REAL,
+        store TEXT,
+        url TEXT,
+        priority TEXT,
+        notes TEXT,
+        is_favorite INTEGER NOT NULL DEFAULT 0,
+        is_chosen INTEGER NOT NULL DEFAULT 0,
+        due_date INTEGER,
+        in_progress INTEGER NOT NULL DEFAULT 0,
+        description TEXT,
+        image_url TEXT,
+        attributes TEXT,
+        evaluation TEXT,
         FOREIGN KEY (list_id) REFERENCES lists (id) ON DELETE CASCADE
       );
     ''');

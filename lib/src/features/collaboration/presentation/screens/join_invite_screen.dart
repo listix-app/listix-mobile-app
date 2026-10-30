@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/storage/app_database.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../lists/domain/entities/shopping_list.dart';
 import '../../../lists/presentation/controllers/lists_controller.dart';
 import '../../domain/entities/collaboration_exceptions.dart';
@@ -107,8 +108,8 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
   Widget build(BuildContext context) {
     final tr = ref.watch(stringsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final cardBg = isDark ? AppColors.cardDark : Colors.white;
+    final scaffoldBg = context.surfaceColor;
+    final cardBg = context.cardSurface;
     final textPrimary = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -140,9 +141,7 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
             color: cardBg,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: isDark ? AppColors.borderDark : AppColors.borderLight,
-              ),
+              side: BorderSide(color: context.borderColor),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -215,7 +214,7 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text('Ir al inicio'),
+                            child: Text(tr.goHome),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -231,7 +230,7 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text('Reintentar'),
+                            child: Text(tr.retry),
                           ),
                         ),
                       ],
@@ -280,7 +279,7 @@ class _JoinInviteScreenState extends ConsumerState<JoinInviteScreen> {
                         context.go('/list/${_joinedList!.id}');
                       },
                       icon: const Icon(Icons.arrow_forward_rounded),
-                      label: const Text('Abrir lista'),
+                      label: Text(tr.openList),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         minimumSize: const Size(double.infinity, 48),

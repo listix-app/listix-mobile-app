@@ -46,6 +46,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
+  String get editAction => 'Edit';
+
+  @override
   String get listCountSuffix => 'lists';
 
   @override
@@ -136,6 +139,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get createListAction => 'Create list';
+
+  @override
+  String get createItemAction => 'Create item';
 
   @override
   String get shareHeading => 'Share';
@@ -842,4 +848,280 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get itemActions => 'Item actions';
+
+  @override
+  String get listTypePickerHeading => 'What kind of list do you need?';
+
+  @override
+  String get listTypePickerSubheading =>
+      'Pick a structure, then give your list a name.';
+
+  @override
+  String get changeListType => 'Change type';
+
+  @override
+  String get listTypeMarket => 'Groceries';
+
+  @override
+  String get listTypeMarketDesc =>
+      'Products by category, with quantities and units.';
+
+  @override
+  String get listTypeShopping => 'Shopping';
+
+  @override
+  String get listTypeShoppingDesc =>
+      'Items with price, store, link and priority.';
+
+  @override
+  String get listTypeOptions => 'Options';
+
+  @override
+  String get listTypeOptionsDesc =>
+      'Compare alternatives and pick one: universities, phones, apartments.';
+
+  @override
+  String get listTypeTasks => 'Tasks';
+
+  @override
+  String get listTypeTasksDesc =>
+      'Activities with status, priority and due date.';
+
+  @override
+  String get listTypeCustom => 'Custom';
+
+  @override
+  String get listTypeCustomDesc => 'A flexible list with basic items.';
+
+  @override
+  String get newItemTitle => 'New item';
+
+  @override
+  String get itemDetailsTitle => 'Item details';
+
+  @override
+  String get addWithDetails => 'Add with details';
+
+  @override
+  String get quantityLabel => 'Quantity';
+
+  @override
+  String get unitLabel => 'Unit';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get priorityLabel => 'Priority';
+
+  @override
+  String get priorityLow => 'Low';
+
+  @override
+  String get priorityMedium => 'Medium';
+
+  @override
+  String get priorityHigh => 'High';
+
+  @override
+  String get priceLabel => 'Price';
+
+  @override
+  String get linkLabel => 'Link';
+
+  @override
+  String get linkInvalid => 'Enter a valid http(s) link';
+
+  @override
+  String get numberInvalid => 'Enter a valid number';
+
+  @override
+  String get notesLabel => 'Notes';
+
+  @override
+  String get favoriteLabel => 'Favorite';
+
+  @override
+  String get chosenBadge => 'Chosen';
+
+  @override
+  String get markChosen => 'Mark as chosen';
+
+  @override
+  String get unmarkChosen => 'Remove choice';
+
+  @override
+  String get addFavorite => 'Mark as favorite';
+
+  @override
+  String get removeFavorite => 'Remove favorite';
+
+  @override
+  String get dueDateLabel => 'Due date';
+
+  @override
+  String get noDueDate => 'No date';
+
+  @override
+  String get clearDate => 'Clear date';
+
+  @override
+  String get inProgressLabel => 'In progress';
+
+  @override
+  String get openLink => 'Open link';
+
+  @override
+  String get categoryProduce => 'Produce';
+
+  @override
+  String get categoryDairy => 'Dairy & eggs';
+
+  @override
+  String get categoryMeat => 'Meat & fish';
+
+  @override
+  String get categoryBakery => 'Bakery';
+
+  @override
+  String get categoryPantry => 'Pantry';
+
+  @override
+  String get categoryBeverages => 'Beverages';
+
+  @override
+  String get categoryCleaning => 'Cleaning';
+
+  @override
+  String get categoryOther => 'Other';
+
+  @override
+  String optionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count options',
+      one: '1 option',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shoppingTotal(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String get descriptionLabel => 'Description';
+
+  @override
+  String get estimatedPriceLabel => 'Estimated price';
+
+  @override
+  String get evaluationLabel => 'Evaluation';
+
+  @override
+  String get evaluationPending => 'To evaluate';
+
+  @override
+  String get evaluationEvaluated => 'Evaluated';
+
+  @override
+  String get evaluationDiscarded => 'Discarded';
+
+  @override
+  String get manageAttributes => 'Comparison attributes';
+
+  @override
+  String get attributeNameLabel => 'New attribute';
+
+  @override
+  String get attributeNameHint => 'e.g. Tuition, Area, Battery';
+
+  @override
+  String get addAttribute => 'Add';
+
+  @override
+  String get removeAttribute => 'Remove attribute';
+
+  @override
+  String get attributesEmpty =>
+      'No attributes yet. Add the traits you want to compare.';
+
+  @override
+  String get compareOptions => 'Compare options';
+
+  @override
+  String get compareNeedsTwo => 'Add at least two options to compare them.';
+
+  @override
+  String get optionColumn => 'Option';
+
+  @override
+  String get sortItems => 'Sort';
+
+  @override
+  String get sortManual => 'Manual order';
+
+  @override
+  String get sortPrice => 'Price';
+
+  @override
+  String get sortPriority => 'Priority';
+
+  @override
+  String get sortDueDate => 'Due date';
+
+  @override
+  String get favoritesOnly => 'Favorites only';
+
+  @override
+  String get emptyMarketMessage =>
+      'Add your first product below. Set quantity, unit and category with the details button.';
+
+  @override
+  String get emptyShoppingMessage =>
+      'Add your first item below. Track its price, store and link with the details button.';
+
+  @override
+  String get emptyOptionsMessage =>
+      'Add your first option below, then add notes and attributes to compare alternatives.';
+
+  @override
+  String get emptyTasksMessage =>
+      'Add your first task below. Set a due date and priority with the details button.';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get goHome => 'Go home';
+
+  @override
+  String get openList => 'Open list';
+
+  @override
+  String get changeRole => 'Change role';
+
+  @override
+  String get authenticationFailed => 'Authentication failed';
+
+  @override
+  String get generatingInviteLink => 'Generating invite link...';
+
+  @override
+  String get shareLinkAction => 'Share link';
+
+  @override
+  String get copyLinkAction => 'Copy link';
+
+  @override
+  String inviteLinkError(String error) {
+    return 'Could not generate the link: $error';
+  }
+
+  @override
+  String inviteLinkCreateError(String error) {
+    return 'Could not create the invite link: $error';
+  }
 }

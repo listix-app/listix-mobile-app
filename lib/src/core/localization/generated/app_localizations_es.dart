@@ -46,6 +46,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get delete => 'Eliminar';
 
   @override
+  String get editAction => 'Editar';
+
+  @override
   String get listCountSuffix => 'listas';
 
   @override
@@ -136,6 +139,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get createListAction => 'Crear lista';
+
+  @override
+  String get createItemAction => 'Crear item';
 
   @override
   String get shareHeading => 'Compartir';
@@ -848,4 +854,281 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get itemActions => 'Acciones del item';
+
+  @override
+  String get listTypePickerHeading => '¿Qué tipo de lista necesitas?';
+
+  @override
+  String get listTypePickerSubheading =>
+      'Elige una estructura y luego ponle nombre a tu lista.';
+
+  @override
+  String get changeListType => 'Cambiar tipo';
+
+  @override
+  String get listTypeMarket => 'Mercado';
+
+  @override
+  String get listTypeMarketDesc =>
+      'Productos por categoría, con cantidades y unidades.';
+
+  @override
+  String get listTypeShopping => 'Compras';
+
+  @override
+  String get listTypeShoppingDesc =>
+      'Artículos con precio, tienda, enlace y prioridad.';
+
+  @override
+  String get listTypeOptions => 'Opciones';
+
+  @override
+  String get listTypeOptionsDesc =>
+      'Compara alternativas y elige una: universidades, celulares, apartamentos.';
+
+  @override
+  String get listTypeTasks => 'Tareas';
+
+  @override
+  String get listTypeTasksDesc =>
+      'Actividades con estado, prioridad y fecha límite.';
+
+  @override
+  String get listTypeCustom => 'Personalizada';
+
+  @override
+  String get listTypeCustomDesc => 'Una lista flexible con elementos básicos.';
+
+  @override
+  String get newItemTitle => 'Nuevo item';
+
+  @override
+  String get itemDetailsTitle => 'Detalles del elemento';
+
+  @override
+  String get addWithDetails => 'Agregar con detalles';
+
+  @override
+  String get quantityLabel => 'Cantidad';
+
+  @override
+  String get unitLabel => 'Unidad';
+
+  @override
+  String get categoryLabel => 'Categoría';
+
+  @override
+  String get priorityLabel => 'Prioridad';
+
+  @override
+  String get priorityLow => 'Baja';
+
+  @override
+  String get priorityMedium => 'Media';
+
+  @override
+  String get priorityHigh => 'Alta';
+
+  @override
+  String get priceLabel => 'Precio';
+
+  @override
+  String get linkLabel => 'Enlace';
+
+  @override
+  String get linkInvalid => 'Ingresa un enlace http(s) válido';
+
+  @override
+  String get numberInvalid => 'Ingresa un número válido';
+
+  @override
+  String get notesLabel => 'Notas';
+
+  @override
+  String get favoriteLabel => 'Favorito';
+
+  @override
+  String get chosenBadge => 'Elegida';
+
+  @override
+  String get markChosen => 'Marcar como elegida';
+
+  @override
+  String get unmarkChosen => 'Quitar elección';
+
+  @override
+  String get addFavorite => 'Marcar como favorito';
+
+  @override
+  String get removeFavorite => 'Quitar favorito';
+
+  @override
+  String get dueDateLabel => 'Fecha límite';
+
+  @override
+  String get noDueDate => 'Sin fecha';
+
+  @override
+  String get clearDate => 'Quitar fecha';
+
+  @override
+  String get inProgressLabel => 'En progreso';
+
+  @override
+  String get openLink => 'Abrir enlace';
+
+  @override
+  String get categoryProduce => 'Frutas y verduras';
+
+  @override
+  String get categoryDairy => 'Lácteos y huevos';
+
+  @override
+  String get categoryMeat => 'Carnes y pescado';
+
+  @override
+  String get categoryBakery => 'Panadería';
+
+  @override
+  String get categoryPantry => 'Despensa';
+
+  @override
+  String get categoryBeverages => 'Bebidas';
+
+  @override
+  String get categoryCleaning => 'Limpieza';
+
+  @override
+  String get categoryOther => 'Otros';
+
+  @override
+  String optionsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count opciones',
+      one: '1 opción',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shoppingTotal(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String get descriptionLabel => 'Descripción';
+
+  @override
+  String get estimatedPriceLabel => 'Precio estimado';
+
+  @override
+  String get evaluationLabel => 'Evaluación';
+
+  @override
+  String get evaluationPending => 'Por evaluar';
+
+  @override
+  String get evaluationEvaluated => 'Evaluada';
+
+  @override
+  String get evaluationDiscarded => 'Descartada';
+
+  @override
+  String get manageAttributes => 'Atributos de comparación';
+
+  @override
+  String get attributeNameLabel => 'Nuevo atributo';
+
+  @override
+  String get attributeNameHint => 'p. ej. Matrícula, Área, Batería';
+
+  @override
+  String get addAttribute => 'Agregar';
+
+  @override
+  String get removeAttribute => 'Quitar atributo';
+
+  @override
+  String get attributesEmpty =>
+      'Aún no hay atributos. Agrega las características que quieras comparar.';
+
+  @override
+  String get compareOptions => 'Comparar opciones';
+
+  @override
+  String get compareNeedsTwo =>
+      'Agrega al menos dos opciones para compararlas.';
+
+  @override
+  String get optionColumn => 'Opción';
+
+  @override
+  String get sortItems => 'Ordenar';
+
+  @override
+  String get sortManual => 'Orden manual';
+
+  @override
+  String get sortPrice => 'Precio';
+
+  @override
+  String get sortPriority => 'Prioridad';
+
+  @override
+  String get sortDueDate => 'Fecha límite';
+
+  @override
+  String get favoritesOnly => 'Solo favoritos';
+
+  @override
+  String get emptyMarketMessage =>
+      'Agrega tu primer producto abajo. Define cantidad, unidad y categoría con el botón de detalles.';
+
+  @override
+  String get emptyShoppingMessage =>
+      'Agrega tu primer artículo abajo. Registra precio, tienda y enlace con el botón de detalles.';
+
+  @override
+  String get emptyOptionsMessage =>
+      'Agrega tu primera opción abajo y luego añade notas y atributos para comparar alternativas.';
+
+  @override
+  String get emptyTasksMessage =>
+      'Agrega tu primera tarea abajo. Define fecha límite y prioridad con el botón de detalles.';
+
+  @override
+  String get retry => 'Reintentar';
+
+  @override
+  String get goHome => 'Ir al inicio';
+
+  @override
+  String get openList => 'Abrir lista';
+
+  @override
+  String get changeRole => 'Cambiar rol';
+
+  @override
+  String get authenticationFailed => 'Falló la autenticación';
+
+  @override
+  String get generatingInviteLink => 'Generando enlace de invitación...';
+
+  @override
+  String get shareLinkAction => 'Compartir enlace';
+
+  @override
+  String get copyLinkAction => 'Copiar enlace';
+
+  @override
+  String inviteLinkError(String error) {
+    return 'No se pudo generar el enlace: $error';
+  }
+
+  @override
+  String inviteLinkCreateError(String error) {
+    return 'No se pudo crear el enlace de invitación: $error';
+  }
 }

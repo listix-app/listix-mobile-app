@@ -14,6 +14,8 @@ import 'package:listix/src/core/localization/generated/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:listix/src/features/lists/domain/entities/list_type.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:listix/src/core/localization/app_strings.dart';
 import 'package:listix/src/core/localization/locale_controller.dart';
@@ -88,6 +90,22 @@ void main() {
         expect(tr.listNameHint, isNotEmpty);
         expect(tr.listNameValidation, isNotEmpty);
         expect(tr.createListAction, isNotEmpty);
+        expect(tr.editAction, isNotEmpty);
+        expect(tr.createItemAction, isNotEmpty);
+        for (final text in [
+          tr.retry,
+          tr.goHome,
+          tr.openList,
+          tr.changeRole,
+          tr.authenticationFailed,
+          tr.generatingInviteLink,
+          tr.shareLinkAction,
+          tr.copyLinkAction,
+          tr.inviteLinkError('x'),
+          tr.inviteLinkCreateError('x'),
+        ]) {
+          expect(text, isNotEmpty);
+        }
         expect(tr.saveChanges, isNotEmpty);
         expect(tr.shareHeading, isNotEmpty);
         expect(tr.shareListSubheading, isNotEmpty);
@@ -544,6 +562,9 @@ void main() {
         ),
       );
 
+      await tester.ensureVisible(find.byKey(const Key('list_type_custom')));
+      await tester.tap(find.byKey(const Key('list_type_custom')));
+      await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextFormField), 'Enter List');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
@@ -853,6 +874,7 @@ void main() {
 class _ScreensTestListsController extends ListsController {
   final List<ShoppingList> _lists;
   final List<String> createdNames = [];
+  final List<ListType> createdTypes = [];
   final List<String> deletedItemIds = [];
   final List<String> toggledItemIds = [];
   final List<String> collaboratorsAdded = [];
@@ -865,11 +887,17 @@ class _ScreensTestListsController extends ListsController {
   Future<List<ShoppingList>> build() async => _lists;
 
   @override
-  Future<ShoppingList> createList(String name, {int? color}) async {
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  }) async {
     createdNames.add(name);
+    createdTypes.add(type);
     return ShoppingList(
       id: 'created_new',
       name: name,
+      type: type,
       color: color,
       createdAt: DateTime(2026, 9, 22),
     );

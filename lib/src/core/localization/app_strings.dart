@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'generated/app_localizations.dart';
 
@@ -15,6 +16,8 @@ class AppStrings {
   AppLanguage get language =>
       _l10n.localeName == 'en' ? AppLanguage.en : AppLanguage.es;
 
+  String get localeName => _l10n.localeName;
+
   bool get isSpanish => language == AppLanguage.es;
 
   String get appName => _l10n.appName;
@@ -29,6 +32,7 @@ class AppStrings {
   String deleteListMessage(String name) => _l10n.deleteListMessage(name);
   String get cancel => _l10n.cancel;
   String get delete => _l10n.delete;
+  String get editAction => _l10n.editAction;
   String get listCountSuffix => _l10n.listCountSuffix;
   String get noItemsBadge => _l10n.noItemsBadge;
   String get allDoneBadge => _l10n.allDoneBadge;
@@ -59,6 +63,7 @@ class AppStrings {
   String get listNameValidation => _l10n.listNameValidation;
   String get saveChanges => _l10n.saveChanges;
   String get createListAction => _l10n.createListAction;
+  String get createItemAction => _l10n.createItemAction;
 
   String get shareHeading => _l10n.shareHeading;
   String get shareListSubheading => _l10n.shareListSubheading;
@@ -143,6 +148,17 @@ class AppStrings {
   String get termsStatement => _l10n.termsStatement;
   String copyrightFooter(int year) => _l10n.copyrightFooter(year);
   String errorPrefix(String error) => _l10n.errorPrefix(error);
+  String get retry => _l10n.retry;
+  String get goHome => _l10n.goHome;
+  String get openList => _l10n.openList;
+  String get changeRole => _l10n.changeRole;
+  String get authenticationFailed => _l10n.authenticationFailed;
+  String get generatingInviteLink => _l10n.generatingInviteLink;
+  String get shareLinkAction => _l10n.shareLinkAction;
+  String get copyLinkAction => _l10n.copyLinkAction;
+  String inviteLinkCreateError(String error) =>
+      _l10n.inviteLinkCreateError(error);
+  String inviteLinkError(String error) => _l10n.inviteLinkError(error);
 
   String get developer => _l10n.developer;
   String get developerName => _l10n.developerName;
@@ -288,4 +304,85 @@ class AppStrings {
   String get listTextCopied => _l10n.listTextCopied;
   String get realtimeCollaboration => _l10n.realtimeCollaboration;
   String get itemActions => _l10n.itemActions;
+
+  String get listTypePickerHeading => _l10n.listTypePickerHeading;
+  String get listTypePickerSubheading => _l10n.listTypePickerSubheading;
+  String get changeListType => _l10n.changeListType;
+  String get listTypeMarket => _l10n.listTypeMarket;
+  String get listTypeMarketDesc => _l10n.listTypeMarketDesc;
+  String get listTypeShopping => _l10n.listTypeShopping;
+  String get listTypeShoppingDesc => _l10n.listTypeShoppingDesc;
+  String get listTypeOptions => _l10n.listTypeOptions;
+  String get listTypeOptionsDesc => _l10n.listTypeOptionsDesc;
+  String get listTypeTasks => _l10n.listTypeTasks;
+  String get listTypeTasksDesc => _l10n.listTypeTasksDesc;
+  String get listTypeCustom => _l10n.listTypeCustom;
+  String get listTypeCustomDesc => _l10n.listTypeCustomDesc;
+  String get newItemTitle => _l10n.newItemTitle;
+  String get itemDetailsTitle => _l10n.itemDetailsTitle;
+  String get addWithDetails => _l10n.addWithDetails;
+  String get quantityLabel => _l10n.quantityLabel;
+  String get unitLabel => _l10n.unitLabel;
+  String get categoryLabel => _l10n.categoryLabel;
+  String get priorityLabel => _l10n.priorityLabel;
+  String get priorityLow => _l10n.priorityLow;
+  String get priorityMedium => _l10n.priorityMedium;
+  String get priorityHigh => _l10n.priorityHigh;
+  String get priceLabel => _l10n.priceLabel;
+
+  String formatPrice(double value) => NumberFormat.decimalPatternDigits(
+    locale: _l10n.localeName,
+    decimalDigits: 2,
+  ).format(value);
+  String get linkLabel => _l10n.linkLabel;
+  String get linkInvalid => _l10n.linkInvalid;
+  String get numberInvalid => _l10n.numberInvalid;
+  String get notesLabel => _l10n.notesLabel;
+  String get favoriteLabel => _l10n.favoriteLabel;
+  String get chosenBadge => _l10n.chosenBadge;
+  String get markChosen => _l10n.markChosen;
+  String get unmarkChosen => _l10n.unmarkChosen;
+  String get addFavorite => _l10n.addFavorite;
+  String get removeFavorite => _l10n.removeFavorite;
+  String get dueDateLabel => _l10n.dueDateLabel;
+  String get noDueDate => _l10n.noDueDate;
+  String get clearDate => _l10n.clearDate;
+  String get inProgressLabel => _l10n.inProgressLabel;
+  String get openLink => _l10n.openLink;
+  String get categoryProduce => _l10n.categoryProduce;
+  String get categoryDairy => _l10n.categoryDairy;
+  String get categoryMeat => _l10n.categoryMeat;
+  String get categoryBakery => _l10n.categoryBakery;
+  String get categoryPantry => _l10n.categoryPantry;
+  String get categoryBeverages => _l10n.categoryBeverages;
+  String get categoryCleaning => _l10n.categoryCleaning;
+  String get categoryOther => _l10n.categoryOther;
+  String optionsCount(int count) => _l10n.optionsCount(count);
+  String shoppingTotal(String amount) => _l10n.shoppingTotal(amount);
+
+  String get descriptionLabel => _l10n.descriptionLabel;
+  String get estimatedPriceLabel => _l10n.estimatedPriceLabel;
+  String get evaluationLabel => _l10n.evaluationLabel;
+  String get evaluationPending => _l10n.evaluationPending;
+  String get evaluationEvaluated => _l10n.evaluationEvaluated;
+  String get evaluationDiscarded => _l10n.evaluationDiscarded;
+  String get manageAttributes => _l10n.manageAttributes;
+  String get attributeNameLabel => _l10n.attributeNameLabel;
+  String get attributeNameHint => _l10n.attributeNameHint;
+  String get addAttribute => _l10n.addAttribute;
+  String get removeAttribute => _l10n.removeAttribute;
+  String get attributesEmpty => _l10n.attributesEmpty;
+  String get compareOptions => _l10n.compareOptions;
+  String get compareNeedsTwo => _l10n.compareNeedsTwo;
+  String get optionColumn => _l10n.optionColumn;
+  String get sortItems => _l10n.sortItems;
+  String get sortManual => _l10n.sortManual;
+  String get sortPrice => _l10n.sortPrice;
+  String get sortPriority => _l10n.sortPriority;
+  String get sortDueDate => _l10n.sortDueDate;
+  String get favoritesOnly => _l10n.favoritesOnly;
+  String get emptyMarketMessage => _l10n.emptyMarketMessage;
+  String get emptyShoppingMessage => _l10n.emptyShoppingMessage;
+  String get emptyOptionsMessage => _l10n.emptyOptionsMessage;
+  String get emptyTasksMessage => _l10n.emptyTasksMessage;
 }

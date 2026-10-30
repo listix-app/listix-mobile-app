@@ -14,6 +14,7 @@ import '../../../notifications/presentation/controllers/notifications_controller
 import '../../../sync/presentation/sync_controller.dart';
 import '../../data/repositories/sqlite_lists_repository.dart';
 import '../../domain/entities/collaborator.dart';
+import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/todo_item.dart';
 import '../../domain/repositories/lists_repository.dart';
@@ -109,9 +110,13 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     state = AsyncData(await repository.getLists());
   }
 
-  Future<ShoppingList> createList(String name, {int? color}) async {
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  }) async {
     final repository = ref.read(listsRepositoryProvider);
-    final created = await repository.createList(name, color: color);
+    final created = await repository.createList(name, color: color, type: type);
     state = AsyncData(await repository.getLists());
     return created;
   }
@@ -163,7 +168,12 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     return await joinList(cleanId, 'Lista Compartida');
   }
 
-  Future<void> updateListName(String id, String newName, {int? color}) async {
+  Future<void> updateListName(
+    String id,
+    String newName, {
+    int? color,
+    ListType? type,
+  }) async {
     final currentLists = state.value;
     if (currentLists != null) {
       final updatedLists = currentLists.map((l) {
@@ -171,6 +181,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           return l.copyWith(
             name: newName.trim(),
             color: color ?? l.color,
+            type: type ?? l.type,
             isSynced: false,
           );
         }
@@ -181,7 +192,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
     try {
       final repository = ref.read(listsRepositoryProvider);
-      await repository.updateListName(id, newName, color: color);
+      await repository.updateListName(id, newName, color: color, type: type);
       _syncIfReady();
     } catch (_) {
       final repository = ref.read(listsRepositoryProvider);
@@ -398,7 +409,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     }
   }
 
-  Future<void> addItem(String listId, String title) async {
+  Future<void> addItem(String listId, String title, {TodoItem? details}) async {
     final itemId = _uuid.v4();
     final now = DateTime.now();
 
@@ -406,15 +417,18 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     final targetList = currentLists?.where((l) => l.id == listId).firstOrNull;
     final nextPosition = (targetList?.items.length ?? 0);
 
-    final optimisticItem = TodoItem(
-      id: itemId,
-      listId: listId,
-      title: title.trim(),
-      isCompleted: false,
-      isSynced: false,
-      position: nextPosition,
-      createdAt: now,
-    );
+    final optimisticItem =
+        (details ??
+                TodoItem(id: itemId, listId: listId, title: '', createdAt: now))
+            .copyWith(
+              id: itemId,
+              listId: listId,
+              title: title.trim(),
+              isCompleted: false,
+              isSynced: false,
+              position: nextPosition,
+              createdAt: now,
+            );
 
     if (currentLists != null) {
       final updatedLists = currentLists.map((l) {
@@ -429,7 +443,7 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
 
     try {
       final repository = ref.read(listsRepositoryProvider);
-      await repository.addItem(listId, title, id: itemId);
+      await repository.addItem(listId, title, id: itemId, details: details);
       if (!ref.mounted) return;
 
       _broadcastEvent(
@@ -504,6 +518,105 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     }
   }
 
+  Future<void> updateItemDetails(TodoItem item) async {
+    _replaceItemInState(item.copyWith(isSynced: false));
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.updateItemDetails(item);
+      _broadcastEvent(
+        CollaborationEvent.itemUpdated(
+          listId: item.listId,
+          itemId: item.id,
+          title: item.title.trim(),
+          senderEmail: _getCurrentEmail(),
+          senderName: _getCurrentName(),
+        ),
+      );
+      _syncIfReady();
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<void> updateListAttributes(
+    String listId,
+    List<String> attributeNames,
+  ) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      state = AsyncData(
+        currentLists
+            .map(
+              (l) => l.id == listId
+                  ? l.copyWith(attributeNames: attributeNames, isSynced: false)
+                  : l,
+            )
+            .toList(),
+      );
+    }
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.updateListAttributes(listId, attributeNames);
+      _syncIfReady();
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  Future<void> toggleChosenItem(String listId, String itemId) async {
+    final currentLists = state.value;
+    if (currentLists != null) {
+      state = AsyncData(
+        currentLists.map((l) {
+          if (l.id != listId) return l;
+          return l.copyWith(
+            isSynced: false,
+            items: l.items
+                .map(
+                  (item) => item.copyWith(
+                    isChosen: item.id == itemId && !item.isChosen,
+                    isSynced: false,
+                  ),
+                )
+                .toList(),
+          );
+        }).toList(),
+      );
+    }
+
+    try {
+      final repository = ref.read(listsRepositoryProvider);
+      await repository.toggleChosenItem(listId, itemId);
+      _syncIfReady();
+    } catch (_) {
+      final repository = ref.read(listsRepositoryProvider);
+      state = AsyncData(await repository.getLists());
+      rethrow;
+    }
+  }
+
+  void _replaceItemInState(TodoItem updated) {
+    final currentLists = state.value;
+    if (currentLists == null) return;
+    state = AsyncData(
+      currentLists.map((l) {
+        if (l.id != updated.listId) return l;
+        return l.copyWith(
+          isSynced: false,
+          items: l.items
+              .map((item) => item.id == updated.id ? updated : item)
+              .toList(),
+        );
+      }).toList(),
+    );
+  }
+
   Future<void> toggleItem(String listId, String itemId) async {
     final currentLists = state.value;
     bool? newCompleted;
@@ -514,7 +627,11 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
           final updatedItems = l.items.map((item) {
             if (item.id == itemId) {
               newCompleted = !item.isCompleted;
-              return item.copyWith(isCompleted: newCompleted!, isSynced: false);
+              return item.copyWith(
+                isCompleted: newCompleted!,
+                isInProgress: false,
+                isSynced: false,
+              );
             }
             return item;
           }).toList();

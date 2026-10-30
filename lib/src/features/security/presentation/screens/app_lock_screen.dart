@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../../core/widgets/listix_logo.dart';
 import '../controllers/app_lock_controller.dart';
 
@@ -31,7 +32,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
     final lockState = ref.watch(appLockControllerProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final bgColor = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
+    final bgColor = context.surfaceColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -84,7 +85,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: AppColors.onPrimary,
                             ),
                           )
                         : const Icon(Icons.fingerprint_rounded, size: 22),
