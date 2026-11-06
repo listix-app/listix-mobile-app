@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,6 +13,8 @@ class AuthSessionService {
 
   final FlutterSecureStorage _storage;
   final http.Client _httpClient;
+  final Duration _requestTimeout;
+  final StreamController<bool> _authStateController;
   bool _initialized;
 
   static const _accessTokenKey = 'listix_access_token';
@@ -31,14 +34,30 @@ class AuthSessionService {
     http.Client? httpClient,
     bool initialized = false,
     bool Function()? isConfigured,
+    Duration requestTimeout = const Duration(seconds: 10),
   }) : _storage = storage ?? const FlutterSecureStorage(),
        _httpClient = httpClient ?? http.Client(),
        _initialized = initialized,
-       _isConfigured = isConfigured;
+       _isConfigured = isConfigured,
+       _requestTimeout = requestTimeout,
+       _authStateController = StreamController<bool>.broadcast();
+
+  Stream<bool> get authStateStream => _authStateController.stream;
+
+  void _notifyAuthState() {
+    if (!_authStateController.isClosed) {
+      _authStateController.add(isReady);
+    }
+  }
+
+  void dispose() {
+    _authStateController.close();
+  }
 
   @visibleForTesting
   set testInitialized(bool value) {
     _initialized = value;
+    _notifyAuthState();
   }
 
   @visibleForTesting
@@ -54,23 +73,27 @@ class AuthSessionService {
   Future<void> initialize() async {
     if (!_configured) {
       _initialized = false;
+      _notifyAuthState();
       return;
     }
     await _loadFromStorage();
     if (_cachedAccessToken == null || _cachedRefreshToken == null) {
       await authenticateAnonymously();
       _initialized = true;
+      _notifyAuthState();
       return;
     }
     if (_isExpiringSoon()) {
       await refreshTokens();
     }
     _initialized = true;
+    _notifyAuthState();
   }
 
   Future<void> ensureInitialized() async {
     if (!_configured) {
       _initialized = false;
+      _notifyAuthState();
       return;
     }
     if (_initialized) {
@@ -117,14 +140,14 @@ class AuthSessionService {
       return;
     }
     final url = Uri.parse('${ApiConfig.restBaseUrl}/auth/anonymous');
-    final response = await _httpClient.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-    );
+    final response = await _httpClient
+        .post(url, headers: {'Content-Type': 'application/json'})
+        .timeout(_requestTimeout);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       _initialized = true;
+      _notifyAuthState();
       await _saveSession(data);
     } else {
       throw _parseError(response);
@@ -145,15 +168,18 @@ class AuthSessionService {
     }
 
     final url = Uri.parse('${ApiConfig.restBaseUrl}/auth/refresh');
-    final response = await _httpClient.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'refreshToken': refreshToken}),
-    );
+    final response = await _httpClient
+        .post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'refreshToken': refreshToken}),
+        )
+        .timeout(_requestTimeout);
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       _initialized = true;
+      _notifyAuthState();
       await _saveSession(data);
       return true;
     }
@@ -170,6 +196,7 @@ class AuthSessionService {
   }
 
   Future<void> clearSession() async {
+    _initialized = false;
     _cachedAccessToken = null;
     _cachedRefreshToken = null;
     _cachedUserId = null;
@@ -178,6 +205,7 @@ class AuthSessionService {
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _userIdKey);
     await _storage.delete(key: _expiresAtKey);
+    _notifyAuthState();
   }
 
   bool _isExpiringSoon() {
@@ -248,3 +276,24 @@ class AuthSessionService {
 final authSessionServiceProvider = Provider<AuthSessionService>((ref) {
   return AuthSessionService.instance;
 });
+
+class AuthSessionNotifier extends Notifier<bool> {
+  StreamSubscription<bool>? _subscription;
+
+  @override
+  bool build() {
+    final service = ref.watch(authSessionServiceProvider);
+    _subscription?.cancel();
+    _subscription = service.authStateStream.listen((ready) {
+      state = ready;
+    });
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
+    return service.isReady;
+  }
+}
+
+final authReadyProvider = NotifierProvider<AuthSessionNotifier, bool>(
+  AuthSessionNotifier.new,
+);

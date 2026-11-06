@@ -21,9 +21,9 @@ class SyncController extends Notifier<SyncStatus> {
   @override
   SyncStatus build() {
     final mockService = ref.watch(mockBackendSyncServiceProvider);
-    final authSession = ref.watch(authSessionServiceProvider);
+    final isAuthReady = ref.watch(authReadyProvider);
 
-    if (authSession.isReady) {
+    if (isAuthReady) {
       final realSync = ref.watch(apiSyncServiceProvider);
       _syncTimer?.cancel();
       _syncTimer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -56,16 +56,16 @@ class SyncController extends Notifier<SyncStatus> {
   }
 
   bool get isOffline {
-    final authSession = ref.read(authSessionServiceProvider);
-    if (authSession.isReady) {
+    final isAuthReady = ref.read(authReadyProvider);
+    if (isAuthReady) {
       return ref.read(apiSyncServiceProvider).isSimulatedOffline;
     }
     return ref.read(mockBackendSyncServiceProvider).isSimulatedOffline;
   }
 
   void toggleOfflineMode() {
-    final authSession = ref.read(authSessionServiceProvider);
-    if (authSession.isReady) {
+    final isAuthReady = ref.read(authReadyProvider);
+    if (isAuthReady) {
       final currentOffline = ref
           .read(apiSyncServiceProvider)
           .isSimulatedOffline;
@@ -76,8 +76,8 @@ class SyncController extends Notifier<SyncStatus> {
   }
 
   Future<bool> syncNow() async {
-    final authSession = ref.read(authSessionServiceProvider);
-    if (authSession.isReady) {
+    final isAuthReady = ref.read(authReadyProvider);
+    if (isAuthReady) {
       await ref.read(apiSyncServiceProvider).syncPendingOperations();
       return true;
     }

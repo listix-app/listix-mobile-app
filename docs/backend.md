@@ -61,3 +61,11 @@ Invisible anonymous authentication:
 6. The client joins the realtime room by emitting `list:subscribe` with `{ listId: "<list-id>" }`.
 7. When list changes occur, the server broadcasts `list.changed`. Subscribed clients pull updated snapshots via `GET /api/v1/lists/:listId`.
 8. When offline, mutations are recorded in the local SQLite `pending_operations` table. Once connectivity resumes, `ApiSyncService` replays queued operations via `PUT` and `DELETE` requests.
+
+## Render Free Tier Warmup & Keep-Alive Strategy
+
+When hosting the backend worker on Render's free tier, inactive services automatically spin down after 15 minutes of idle time. To prevent 30–60 second cold-start delays:
+
+1. **Automated Scheduled Workflow**: `.github/workflows/keep_alive.yml` pings the backend every 14 minutes (`*/14 * * * *`) via GitHub Actions.
+2. **Third-Party Uptime Monitors**: Services such as UptimeRobot or Better Uptime can also ping `https://listix-worker.onrender.com/` every 10–14 minutes.
+3. **Client-Side Non-Blocking Initialization**: The Flutter app bootstrap (`lib/main.dart`) never blocks `runApp()` on cloud backend availability, preserving immediate (< 400ms) local-first launch speeds.
