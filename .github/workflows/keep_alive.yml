@@ -1,0 +1,21 @@
+name: Backend Keep-Alive
+
+on:
+  schedule:
+    # Ping every 14 minutes to prevent Render free-tier instance spin-down
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: keep-alive-ping
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping backend endpoint
+        run: |
+          curl -sS -m 30 -o /dev/null -w "HTTP Status: %{http_code} | Total Time: %{time_total}s\n" https://listix-worker.onrender.com/

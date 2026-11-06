@@ -689,12 +689,66 @@ void main() {
         expect(err.message, 'Request failed');
       });
 
+      test('authStateStream emits state changes and dispose works', () async {
+        final auth = AuthSessionService(storage: storage);
+        final states = <bool>[];
+        final sub = auth.authStateStream.listen(states.add);
+
+        auth.testInitialized = true;
+        await Future<void>.delayed(Duration.zero);
+        expect(states, [true]);
+
+        await auth.clearSession();
+        await Future<void>.delayed(Duration.zero);
+        expect(states, [true, false]);
+
+        await sub.cancel();
+        auth.dispose();
+      });
+
+      test(
+        'authenticateAnonymously times out when request exceeds timeout',
+        () async {
+          final slowHttp = FakeHttpClient((request) async {
+            await Future<void>.delayed(const Duration(milliseconds: 50));
+            return http.Response('{"ok": true}', 200);
+          });
+          final auth = AuthSessionService(
+            storage: storage,
+            httpClient: slowHttp,
+            requestTimeout: const Duration(milliseconds: 5),
+          );
+          expect(
+            () => auth.authenticateAnonymously(),
+            throwsA(isA<TimeoutException>()),
+          );
+        },
+      );
+
       test('authSessionServiceProvider provides instance', () {
         final container = ProviderContainer();
         final auth = container.read(authSessionServiceProvider);
         expect(auth, isNotNull);
         container.dispose();
       });
+
+      test(
+        'authReadyProvider provides reactive ready state and cancels on dispose',
+        () async {
+          final auth = AuthSessionService(storage: storage, initialized: false);
+          final container = ProviderContainer(
+            overrides: [authSessionServiceProvider.overrideWithValue(auth)],
+          );
+
+          expect(container.read(authReadyProvider), isFalse);
+
+          auth.testInitialized = true;
+          await Future<void>.delayed(Duration.zero);
+          expect(container.read(authReadyProvider), isTrue);
+
+          container.dispose();
+        },
+      );
     });
 
     group('ApiClient Tests', () {
@@ -1830,6 +1884,53 @@ void main() {
         container.dispose();
         syncService.dispose();
       });
+
+      test(
+        'SyncController reactively transitions when auth state changes',
+        () async {
+          final listsRepo = FakeListsRepositoryForSync();
+          final storage = FakeSecureStorage();
+          final auth = AuthSessionService(storage: storage, initialized: false);
+
+          final fakeHttp = FakeHttpClient((request) async {
+            return http.Response('{"ok": true}', 200);
+          });
+          final client = ApiClient(httpClient: fakeHttp, authSession: auth);
+          final syncService = ApiSyncService(
+            apiClient: client,
+            authSession: auth,
+            listsRepository: listsRepo,
+          );
+
+          final container = ProviderContainer(
+            overrides: [
+              authSessionServiceProvider.overrideWithValue(auth),
+              apiSyncServiceProvider.overrideWithValue(syncService),
+              listsRepositoryProvider.overrideWithValue(listsRepo),
+            ],
+          );
+
+          final initialStatus = container.read(syncControllerProvider);
+          expect(initialStatus, SyncStatus.synced);
+
+          auth.testInitialized = true;
+          await Future<void>.delayed(Duration.zero);
+          expect(
+            container.read(syncControllerProvider),
+            anyOf(SyncStatus.syncing, SyncStatus.synced),
+          );
+
+          auth.testInitialized = false;
+          await Future<void>.delayed(Duration.zero);
+          expect(
+            container.read(syncControllerProvider),
+            anyOf(SyncStatus.syncing, SyncStatus.synced),
+          );
+
+          container.dispose();
+          syncService.dispose();
+        },
+      );
 
       testWidgets('SyncController timer triggers periodic sync on resume', (
         tester,

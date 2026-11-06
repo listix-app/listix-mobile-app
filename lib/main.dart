@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +10,7 @@ import 'src/core/config/api_config.dart';
 import 'src/core/config/app_environment.dart';
 import 'src/core/network/auth_session_service.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   SystemChrome.setSystemUIOverlayStyle(
@@ -18,19 +20,20 @@ void main() async {
       systemNavigationBarContrastEnforced: false,
     ),
   );
+  runApp(const ProviderScope(child: ListixApp()));
   if (AppEnvironmentConfig.adsEnabled) {
-    try {
-      await MobileAds.instance.initialize();
-    } catch (e) {
-      debugPrint('[MobileAds] Initialization failed: $e');
-    }
+    unawaited(
+      MobileAds.instance.initialize().catchError((e) {
+        debugPrint('[MobileAds] Initialization failed: $e');
+        return InitializationStatus({});
+      }),
+    );
   }
   if (ApiConfig.isConfigured) {
-    try {
-      await AuthSessionService.instance.initialize();
-    } catch (e) {
-      debugPrint('[AuthSessionService] Initialization failed: $e');
-    }
+    unawaited(
+      AuthSessionService.instance.initialize().catchError((e) {
+        debugPrint('[AuthSessionService] Initialization failed: $e');
+      }),
+    );
   }
-  runApp(const ProviderScope(child: ListixApp()));
 }
