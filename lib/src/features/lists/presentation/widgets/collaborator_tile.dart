@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/collaborator.dart';
 
 class CollaboratorTile extends StatelessWidget {
@@ -11,6 +12,7 @@ class CollaboratorTile extends StatelessWidget {
   final String adminLabel;
   final String memberLabel;
   final String removeTooltip;
+  final String changeRoleTooltip;
 
   const CollaboratorTile({
     super.key,
@@ -21,6 +23,7 @@ class CollaboratorTile extends StatelessWidget {
     this.adminLabel = 'Admin',
     this.memberLabel = 'Colaborador',
     this.removeTooltip = 'Quitar colaborador',
+    this.changeRoleTooltip = 'Cambiar rol',
   });
 
   Widget _buildRoleBadge() {
@@ -34,7 +37,7 @@ class CollaboratorTile extends StatelessWidget {
         child: Text(
           ownerLabel,
           style: const TextStyle(
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
             color: AppColors.primaryDark,
           ),
@@ -46,7 +49,7 @@ class CollaboratorTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: isAdmin ? const Color(0xFFF3E8FF) : const Color(0xFFF1F5F9),
+        color: isAdmin ? AppColors.roleAdminSubtle : AppColors.offlineSubtle,
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
@@ -55,11 +58,9 @@ class CollaboratorTile extends StatelessWidget {
           Text(
             isAdmin ? adminLabel : memberLabel,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isAdmin
-                  ? const Color(0xFF7E22CE)
-                  : const Color(0xFF475569),
+              color: isAdmin ? AppColors.roleAdmin : AppColors.roleMember,
             ),
           ),
           if (onRoleChanged != null) ...[
@@ -67,9 +68,7 @@ class CollaboratorTile extends StatelessWidget {
             Icon(
               Icons.arrow_drop_down_rounded,
               size: 14,
-              color: isAdmin
-                  ? const Color(0xFF7E22CE)
-                  : const Color(0xFF475569),
+              color: isAdmin ? AppColors.roleAdmin : AppColors.roleMember,
             ),
           ],
         ],
@@ -91,9 +90,7 @@ class CollaboratorTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.cardDark : AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.borderLight,
-        ),
+        border: Border.all(color: context.borderColor),
       ),
       child: Row(
         children: [
@@ -150,7 +147,7 @@ class CollaboratorTile extends StatelessWidget {
             if (onRoleChanged != null)
               PopupMenuButton<CollaboratorRole>(
                 key: ValueKey('change_role_${collaborator.id}'),
-                tooltip: 'Cambiar rol',
+                tooltip: changeRoleTooltip,
                 initialValue: collaborator.role,
                 onSelected: onRoleChanged,
                 itemBuilder: (context) => [
@@ -175,7 +172,7 @@ class CollaboratorTile extends StatelessWidget {
                         const Icon(
                           Icons.shield_rounded,
                           size: 16,
-                          color: Color(0xFF7E22CE),
+                          color: AppColors.roleAdmin,
                         ),
                         const SizedBox(width: 8),
                         Text(adminLabel),
@@ -189,7 +186,7 @@ class CollaboratorTile extends StatelessWidget {
                         const Icon(
                           Icons.person_rounded,
                           size: 16,
-                          color: Color(0xFF475569),
+                          color: AppColors.roleMember,
                         ),
                         const SizedBox(width: 8),
                         Text(memberLabel),

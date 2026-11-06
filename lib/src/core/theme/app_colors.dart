@@ -37,6 +37,10 @@ abstract final class AppColors {
   static const Color deleteBackground = Color(0xFFFEE2E2);
   static const Color star = Color(0xFFFFB800);
   static const Color coffee = Color(0xFFFF813F);
+  static const Color accentIndigo = Color(0xFF6366F1); // Indigo 500
+  static const Color roleAdmin = Color(0xFF7E22CE); // Purple 700
+  static const Color roleAdminSubtle = Color(0xFFF3E8FF); // Purple 100
+  static const Color roleMember = Color(0xFF475569); // Slate 600
 
   static const List<Color> listColors = [
     Color(0xFF0D9488),

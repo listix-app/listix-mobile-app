@@ -18,6 +18,7 @@ import 'package:listix/src/features/collaboration/data/repositories/api_collabor
 import 'package:listix/src/features/collaboration/domain/entities/collaboration_exceptions.dart';
 import 'package:listix/src/features/lists/domain/entities/collaborator.dart';
 import 'package:listix/src/features/lists/domain/entities/shopping_list.dart';
+import 'package:listix/src/features/lists/domain/entities/list_type.dart';
 import 'package:listix/src/features/lists/domain/entities/todo_item.dart';
 import 'package:listix/src/features/lists/domain/repositories/lists_repository.dart';
 import 'package:listix/src/features/lists/presentation/controllers/lists_controller.dart';
@@ -119,8 +120,17 @@ class FakeListsRepositoryForSync implements ListsRepository {
       lists.where((l) => l.id == id).firstOrNull;
 
   @override
-  Future<ShoppingList> createList(String name, {int? color}) async {
-    final l = ShoppingList(id: 'new_id', name: name, createdAt: DateTime.now());
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  }) async {
+    final l = ShoppingList(
+      id: 'new_id',
+      name: name,
+      type: type,
+      createdAt: DateTime.now(),
+    );
     lists.add(l);
     return l;
   }
@@ -147,6 +157,7 @@ class FakeListsRepositoryForSync implements ListsRepository {
     String id,
     String newName, {
     int? color,
+    ListType? type,
   }) async => throw UnimplementedError();
 
   @override
@@ -188,13 +199,29 @@ class FakeListsRepositoryForSync implements ListsRepository {
   Future<void> reorderLists(List<String> orderedListIds) async {}
 
   @override
-  Future<TodoItem> addItem(String listId, String title, {String? id}) async =>
-      TodoItem(
-        id: id ?? 'item_1',
-        listId: listId,
-        title: title,
-        createdAt: DateTime.now(),
-      );
+  Future<TodoItem> addItem(
+    String listId,
+    String title, {
+    String? id,
+    TodoItem? details,
+  }) async => TodoItem(
+    id: id ?? 'item_1',
+    listId: listId,
+    title: title,
+    createdAt: DateTime.now(),
+  );
+
+  @override
+  Future<TodoItem> updateItemDetails(TodoItem item) async => item;
+
+  @override
+  Future<void> updateListAttributes(
+    String listId,
+    List<String> attributeNames,
+  ) async {}
+
+  @override
+  Future<void> toggleChosenItem(String listId, String itemId) async {}
 
   @override
   Future<TodoItem> toggleItemCompletion(String listId, String itemId) async =>

@@ -496,7 +496,7 @@ void main() {
       testCtrl.toggleResult = false;
       await tester.tap(switchWidget);
       await tester.pumpAndSettle();
-      expect(find.textContaining('Authentication failed'), findsOneWidget);
+      expect(find.textContaining('Falló la autenticación'), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 15));
       await tester.pumpAndSettle();

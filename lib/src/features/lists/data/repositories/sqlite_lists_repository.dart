@@ -5,9 +5,11 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/storage/app_database.dart';
 import '../../domain/entities/collaborator.dart';
+import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/todo_item.dart';
 import '../../domain/repositories/lists_repository.dart';
+import '../mappers/todo_item_row_mapper.dart';
 import '../../../sync/domain/pending_operation.dart';
 
 class SqliteListsRepository implements ListsRepository {
@@ -72,19 +74,7 @@ class SqliteListsRepository implements ListsRepository {
       final listId = item['list_id'] as String;
       itemsByList
           .putIfAbsent(listId, () => [])
-          .add(
-            TodoItem(
-              id: item['id'] as String,
-              listId: listId,
-              title: item['title'] as String,
-              isCompleted: (item['is_completed'] as int) == 1,
-              isSynced: (item['is_synced'] as int) == 1,
-              position: (item['position'] as int?) ?? 0,
-              createdAt: DateTime.fromMillisecondsSinceEpoch(
-                item['created_at'] as int,
-              ),
-            ),
-          );
+          .add(TodoItemRowMapper.fromRow(item));
     }
 
     final collaboratorsByList = <String, List<Collaborator>>{};
@@ -114,6 +104,10 @@ class SqliteListsRepository implements ListsRepository {
       return ShoppingList(
         id: id,
         name: list['name'] as String,
+        type: ListType.fromName(list['list_type'] as String?),
+        attributeNames: TodoItemRowMapper.decodeNames(
+          list['option_attributes'] as String?,
+        ),
         isSynced: (list['is_synced'] as int) == 1,
         isStarred: (list['is_starred'] as int) == 1,
         isShared: (list['is_shared'] as int) == 1,
@@ -142,7 +136,11 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
-  Future<ShoppingList> createList(String name, {int? color}) async {
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  }) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = _uuid.v4();
@@ -155,6 +153,7 @@ class SqliteListsRepository implements ListsRepository {
     await db.insert('lists', {
       'id': id,
       'name': name.trim(),
+      'list_type': type.name,
       'is_synced': 0,
       'is_starred': 0,
       'is_shared': 0,
@@ -170,6 +169,7 @@ class SqliteListsRepository implements ListsRepository {
     return ShoppingList(
       id: id,
       name: name.trim(),
+      type: type,
       isSynced: false,
       isStarred: false,
       isShared: false,
@@ -189,6 +189,7 @@ class SqliteListsRepository implements ListsRepository {
     String id,
     String newName, {
     int? color,
+    ListType? type,
   }) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
@@ -202,6 +203,9 @@ class SqliteListsRepository implements ListsRepository {
       if (color != null) {
         values['color'] = color;
       }
+      if (type != null) {
+        values['list_type'] = type.name;
+      }
       await txn.update('lists', values, where: 'id = ?', whereArgs: [id]);
 
       final isShared = await _isListShared(txn, id);
@@ -211,6 +215,7 @@ class SqliteListsRepository implements ListsRepository {
           'updated_at': now,
         };
         if (color != null) payloadMap['color'] = color;
+        if (type != null) payloadMap['list_type'] = type.name;
         await txn.insert('pending_operations', {
           'id': _uuid.v4(),
           'list_id': id,
@@ -417,6 +422,8 @@ class SqliteListsRepository implements ListsRepository {
       await txn.insert('lists', {
         'id': list.id,
         'name': list.name,
+        'list_type': list.type.name,
+        'option_attributes': TodoItemRowMapper.encodeNames(list.attributeNames),
         'is_synced': list.isSynced ? 1 : 0,
         'is_starred': list.isStarred ? 1 : 0,
         'is_shared': list.isShared ? 1 : 0,
@@ -434,6 +441,7 @@ class SqliteListsRepository implements ListsRepository {
           'id': item.id,
           'list_id': list.id,
           'title': item.title,
+          ...TodoItemRowMapper.detailColumns(item),
           'is_completed': item.isCompleted ? 1 : 0,
           'is_synced': item.isSynced ? 1 : 0,
           'position': item.position,
@@ -515,7 +523,12 @@ class SqliteListsRepository implements ListsRepository {
   }
 
   @override
-  Future<TodoItem> addItem(String listId, String title, {String? id}) async {
+  Future<TodoItem> addItem(
+    String listId,
+    String title, {
+    String? id,
+    TodoItem? details,
+  }) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
     final itemId = id ?? _uuid.v4();
@@ -531,6 +544,7 @@ class SqliteListsRepository implements ListsRepository {
         'id': itemId,
         'list_id': listId,
         'title': title.trim(),
+        if (details != null) ...TodoItemRowMapper.detailColumns(details),
         'is_completed': 0,
         'is_synced': 0,
         'position': nextPosition,
@@ -557,6 +571,7 @@ class SqliteListsRepository implements ListsRepository {
             'id': itemId,
             'list_id': listId,
             'title': title.trim(),
+            if (details != null) ...TodoItemRowMapper.detailColumns(details),
             'is_completed': 0,
             'position': nextPosition,
             'created_at': now,
@@ -567,15 +582,156 @@ class SqliteListsRepository implements ListsRepository {
       }
     });
 
-    return TodoItem(
-      id: itemId,
-      listId: listId,
-      title: title.trim(),
-      isCompleted: false,
-      isSynced: false,
-      position: nextPosition,
-      createdAt: DateTime.fromMillisecondsSinceEpoch(now),
+    return (details ??
+            TodoItem(
+              id: itemId,
+              listId: listId,
+              title: '',
+              createdAt: DateTime.fromMillisecondsSinceEpoch(now),
+            ))
+        .copyWith(
+          id: itemId,
+          listId: listId,
+          title: title.trim(),
+          isCompleted: false,
+          isSynced: false,
+          position: nextPosition,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(now),
+        );
+  }
+
+  @override
+  Future<TodoItem> updateItemDetails(TodoItem item) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      final columns = {
+        'title': item.title.trim(),
+        ...TodoItemRowMapper.detailColumns(item),
+        'is_completed': item.isCompleted ? 1 : 0,
+        'is_synced': 0,
+        'updated_at': now,
+      };
+      await txn.update(
+        'items',
+        columns,
+        where: 'id = ? AND list_id = ?',
+        whereArgs: [item.id, item.listId],
+      );
+      await _touchListAndEnqueueItem(txn, item.listId, item.id, now);
+    });
+
+    final list = await getListById(item.listId);
+    return list!.items.firstWhere((i) => i.id == item.id);
+  }
+
+  @override
+  Future<void> updateListAttributes(
+    String listId,
+    List<String> attributeNames,
+  ) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.transaction((txn) async {
+      await txn.update(
+        'lists',
+        {
+          'option_attributes': TodoItemRowMapper.encodeNames(attributeNames),
+          'is_synced': 0,
+          'updated_at': now,
+        },
+        where: 'id = ?',
+        whereArgs: [listId],
+      );
+      if (await _isListShared(txn, listId)) {
+        await txn.insert('pending_operations', {
+          'id': _uuid.v4(),
+          'list_id': listId,
+          'entity_type': PendingEntityType.list.name,
+          'entity_id': listId,
+          'op_type': PendingOpType.upsert.name,
+          'payload': jsonEncode({
+            'option_attributes': attributeNames,
+            'updated_at': now,
+          }),
+          'created_at': now,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
+      }
+    });
+  }
+
+  @override
+  Future<void> toggleChosenItem(String listId, String itemId) async {
+    final db = await _db;
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    await db.transaction((txn) async {
+      final rows = await txn.query(
+        'items',
+        columns: ['id', 'is_chosen'],
+        where: 'list_id = ?',
+        whereArgs: [listId],
+      );
+      for (final row in rows) {
+        final id = row['id'] as String;
+        final wasChosen = (row['is_chosen'] as int? ?? 0) == 1;
+        final shouldBeChosen = id == itemId && !wasChosen;
+        if (shouldBeChosen == wasChosen) continue;
+        await txn.update(
+          'items',
+          {
+            'is_chosen': shouldBeChosen ? 1 : 0,
+            'is_synced': 0,
+            'updated_at': now,
+          },
+          where: 'id = ?',
+          whereArgs: [id],
+        );
+        await _touchListAndEnqueueItem(txn, listId, id, now);
+      }
+    });
+  }
+
+  Future<void> _touchListAndEnqueueItem(
+    DatabaseExecutor txn,
+    String listId,
+    String itemId,
+    int now,
+  ) async {
+    await txn.update(
+      'lists',
+      {'is_synced': 0, 'updated_at': now},
+      where: 'id = ?',
+      whereArgs: [listId],
     );
+    if (!await _isListShared(txn, listId)) return;
+    final rows = await txn.query(
+      'items',
+      where: 'id = ? AND list_id = ?',
+      whereArgs: [itemId, listId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return;
+    final item = TodoItemRowMapper.fromRow(rows.first);
+    await txn.insert('pending_operations', {
+      'id': _uuid.v4(),
+      'list_id': listId,
+      'entity_type': PendingEntityType.item.name,
+      'entity_id': itemId,
+      'op_type': PendingOpType.upsert.name,
+      'payload': jsonEncode({
+        'id': itemId,
+        'list_id': listId,
+        'title': item.title,
+        'is_completed': item.isCompleted ? 1 : 0,
+        'position': item.position,
+        'created_at': item.createdAt.millisecondsSinceEpoch,
+        ...TodoItemRowMapper.detailColumns(item),
+        'updated_at': now,
+      }),
+      'created_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   @override
@@ -600,6 +756,7 @@ class SqliteListsRepository implements ListsRepository {
         'items',
         {
           'is_completed': newCompleted ? 1 : 0,
+          'in_progress': 0,
           'is_synced': 0,
           'updated_at': now,
         },
@@ -691,19 +848,7 @@ class SqliteListsRepository implements ListsRepository {
         whereArgs: [listId],
       );
       for (final row in rows) {
-        deleted.add(
-          TodoItem(
-            id: row['id'] as String,
-            listId: row['list_id'] as String,
-            title: row['title'] as String,
-            isCompleted: (row['is_completed'] as int) == 1,
-            isSynced: (row['is_synced'] as int) == 1,
-            position: (row['position'] as int?) ?? 0,
-            createdAt: DateTime.fromMillisecondsSinceEpoch(
-              row['created_at'] as int,
-            ),
-          ),
-        );
+        deleted.add(TodoItemRowMapper.fromRow(row));
       }
       if (deleted.isEmpty) return;
 
@@ -791,6 +936,7 @@ class SqliteListsRepository implements ListsRepository {
         'id': item.id,
         'list_id': item.listId,
         'title': item.title,
+        ...TodoItemRowMapper.detailColumns(item),
         'is_completed': item.isCompleted ? 1 : 0,
         'is_synced': 0,
         'position': item.position,
@@ -817,6 +963,7 @@ class SqliteListsRepository implements ListsRepository {
             'id': item.id,
             'list_id': item.listId,
             'title': item.title,
+            ...TodoItemRowMapper.detailColumns(item),
             'is_completed': item.isCompleted ? 1 : 0,
             'position': item.position,
             'created_at': item.createdAt.millisecondsSinceEpoch,
@@ -839,6 +986,7 @@ class SqliteListsRepository implements ListsRepository {
           'id': item.id,
           'list_id': item.listId,
           'title': item.title,
+          ...TodoItemRowMapper.detailColumns(item),
           'is_completed': item.isCompleted ? 1 : 0,
           'is_synced': 0,
           'position': item.position,
@@ -858,6 +1006,7 @@ class SqliteListsRepository implements ListsRepository {
               'id': item.id,
               'list_id': item.listId,
               'title': item.title,
+              ...TodoItemRowMapper.detailColumns(item),
               'is_completed': item.isCompleted ? 1 : 0,
               'position': item.position,
               'created_at': item.createdAt.millisecondsSinceEpoch,
@@ -1011,6 +1160,29 @@ class SqliteListsRepository implements ListsRepository {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     await db.transaction((txn) async {
+      final localListRows = await txn.query(
+        'lists',
+        columns: ['list_type', 'option_attributes'],
+        where: 'id = ?',
+        whereArgs: [list.id],
+        limit: 1,
+      );
+      final localType = localListRows.isEmpty
+          ? ListType.custom
+          : ListType.fromName(localListRows.first['list_type'] as String?);
+      final localAttributeNames = localListRows.isEmpty
+          ? const <String>[]
+          : TodoItemRowMapper.decodeNames(
+              localListRows.first['option_attributes'] as String?,
+            );
+      final localItems = {
+        for (final row in await txn.query(
+          'items',
+          where: 'list_id = ?',
+          whereArgs: [list.id],
+        ))
+          row['id'] as String: TodoItemRowMapper.fromRow(row),
+      };
       await txn.delete('items', where: 'list_id = ?', whereArgs: [list.id]);
       await txn.delete(
         'collaborators',
@@ -1020,6 +1192,13 @@ class SqliteListsRepository implements ListsRepository {
       await txn.insert('lists', {
         'id': list.id,
         'name': list.name,
+        'list_type':
+            (list.type == ListType.custom ? localType : list.type).name,
+        'option_attributes': TodoItemRowMapper.encodeNames(
+          list.attributeNames.isEmpty
+              ? localAttributeNames
+              : list.attributeNames,
+        ),
         'is_synced': 1,
         'is_starred': list.isStarred ? 1 : 0,
         'is_shared': 1,
@@ -1051,6 +1230,9 @@ class SqliteListsRepository implements ListsRepository {
           'id': item.id,
           'list_id': list.id,
           'title': item.title,
+          ...TodoItemRowMapper.detailColumns(
+            item.hasDetails ? item : (localItems[item.id] ?? item),
+          ),
           'is_completed': item.isCompleted ? 1 : 0,
           'is_synced': 1,
           'position': item.position,
@@ -1066,10 +1248,20 @@ class SqliteListsRepository implements ListsRepository {
   Future<void> applyRemoteItem(TodoItem item) async {
     final db = await _db;
     final now = DateTime.now().millisecondsSinceEpoch;
+    final localRows = await db.query(
+      'items',
+      where: 'id = ?',
+      whereArgs: [item.id],
+      limit: 1,
+    );
+    final detailsSource = item.hasDetails || localRows.isEmpty
+        ? item
+        : TodoItemRowMapper.fromRow(localRows.first);
     await db.insert('items', {
       'id': item.id,
       'list_id': item.listId,
       'title': item.title,
+      ...TodoItemRowMapper.detailColumns(detailsSource),
       'is_completed': item.isCompleted ? 1 : 0,
       'is_synced': 1,
       'position': item.position,
@@ -1209,6 +1401,10 @@ class SqliteListsRepository implements ListsRepository {
       'payload': jsonEncode({
         'id': listId,
         'name': l['name'] as String,
+        'list_type': l['list_type'] as String? ?? ListType.custom.name,
+        'option_attributes': TodoItemRowMapper.decodeNames(
+          l['option_attributes'] as String?,
+        ),
         'is_starred': l['is_starred'] as int,
         'position': l['position'] as int,
         'updated_at': now,
@@ -1234,6 +1430,7 @@ class SqliteListsRepository implements ListsRepository {
           'title': item['title'] as String,
           'is_completed': item['is_completed'] as int,
           'position': item['position'] as int? ?? 0,
+          ...TodoItemRowMapper.detailColumns(TodoItemRowMapper.fromRow(item)),
           'updated_at': item['updated_at'] as int? ?? now,
         }),
         'created_at': now,

@@ -6,6 +6,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/services/url_launcher_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/widgets/listix_logo.dart';
 
@@ -27,8 +28,8 @@ class AboutScreen extends ConsumerWidget {
     final urlService = ref.read(urlLauncherServiceProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final cardBg = isDark ? AppColors.cardDark : Colors.white;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final cardBg = context.cardSurface;
+    final borderColor = context.borderColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
@@ -112,7 +113,7 @@ class AboutScreen extends ConsumerWidget {
           _ActionCard(
             key: const Key('send_feedback_card'),
             icon: Icons.feedback_outlined,
-            iconColor: const Color(0xFF6366F1),
+            iconColor: AppColors.accentIndigo,
             title: tr.sendFeedback,
             subtitle: tr.sendFeedbackSubtitle,
             onTap: () {
@@ -127,7 +128,7 @@ class AboutScreen extends ConsumerWidget {
           _ActionCard(
             key: const Key('rate_app_card'),
             icon: Icons.star_rate_rounded,
-            iconColor: const Color(0xFFFFB800),
+            iconColor: AppColors.star,
             title: tr.rateApp,
             subtitle: tr.rateAppSubtitle,
             onTap: () {
@@ -256,7 +257,9 @@ class AboutScreen extends ConsumerWidget {
                     }),
                     foregroundColor: WidgetStateProperty.resolveWith((states) {
                       if (states.contains(WidgetState.selected)) {
-                        return isDark ? Colors.white : AppColors.primaryDark;
+                        return isDark
+                            ? AppColors.onPrimary
+                            : AppColors.primaryDark;
                       }
                       return textSubColor;
                     }),
@@ -290,7 +293,7 @@ class AboutScreen extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                color: context.mutedTextColor,
               ),
             ),
           ),
@@ -394,8 +397,8 @@ class _InfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardBg = isDark ? AppColors.cardDark : Colors.white;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final cardBg = context.cardSurface;
+    final borderColor = context.borderColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;

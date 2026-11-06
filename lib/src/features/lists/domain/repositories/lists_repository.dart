@@ -1,4 +1,5 @@
 import '../entities/collaborator.dart';
+import '../entities/list_type.dart';
 import '../entities/shopping_list.dart';
 import '../entities/todo_item.dart';
 import '../../../sync/domain/pending_operation.dart';
@@ -6,8 +7,17 @@ import '../../../sync/domain/pending_operation.dart';
 abstract interface class ListsRepository {
   Future<List<ShoppingList>> getLists();
   Future<ShoppingList?> getListById(String id);
-  Future<ShoppingList> createList(String name, {int? color});
-  Future<ShoppingList> updateListName(String id, String newName, {int? color});
+  Future<ShoppingList> createList(
+    String name, {
+    int? color,
+    ListType type = ListType.custom,
+  });
+  Future<ShoppingList> updateListName(
+    String id,
+    String newName, {
+    int? color,
+    ListType? type,
+  });
   Future<void> archiveList(String listId);
   Future<void> unarchiveList(String listId);
   Future<void> deleteList(String id);
@@ -16,7 +26,15 @@ abstract interface class ListsRepository {
   Future<void> reorderLists(List<String> orderedListIds);
   Future<void> restoreList(ShoppingList list);
 
-  Future<TodoItem> addItem(String listId, String title, {String? id});
+  Future<TodoItem> addItem(
+    String listId,
+    String title, {
+    String? id,
+    TodoItem? details,
+  });
+  Future<TodoItem> updateItemDetails(TodoItem item);
+  Future<void> toggleChosenItem(String listId, String itemId);
+  Future<void> updateListAttributes(String listId, List<String> attributeNames);
   Future<TodoItem> updateItemTitle(
     String listId,
     String itemId,

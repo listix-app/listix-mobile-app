@@ -1,11 +1,14 @@
 import 'package:flutter/foundation.dart';
 
 import 'collaborator.dart';
+import 'list_type.dart';
 import 'todo_item.dart';
 
 class ShoppingList {
   final String id;
   final String name;
+  final ListType? _type;
+  final List<String> attributeNames;
   final bool isSynced;
   final bool isStarred;
   final bool isShared;
@@ -21,6 +24,8 @@ class ShoppingList {
   const ShoppingList({
     required this.id,
     required this.name,
+    ListType type = ListType.custom,
+    this.attributeNames = const [],
     this.isSynced = false,
     this.isStarred = false,
     this.isShared = false,
@@ -32,7 +37,9 @@ class ShoppingList {
     this.items = const [],
     this.collaborators = const [],
     required this.createdAt,
-  });
+  }) : _type = type;
+
+  ListType get type => _type ?? ListType.custom;
 
   int get totalCount => items.length;
   int get completedCount => items.where((item) => item.isCompleted).length;
@@ -42,12 +49,17 @@ class ShoppingList {
   double get completionProgress =>
       totalCount == 0 ? 0.0 : completedCount / totalCount;
 
+  double get totalPrice =>
+      items.fold(0.0, (sum, item) => sum + (item.price ?? 0.0));
+
   bool get canSyncAndShare =>
       isShared && (hasInvite || collaborators.isNotEmpty);
 
   ShoppingList copyWith({
     String? id,
     String? name,
+    ListType? type,
+    List<String>? attributeNames,
     bool? isSynced,
     bool? isStarred,
     bool? isShared,
@@ -63,6 +75,8 @@ class ShoppingList {
     return ShoppingList(
       id: id ?? this.id,
       name: name ?? this.name,
+      type: type ?? this.type,
+      attributeNames: attributeNames ?? this.attributeNames,
       isSynced: isSynced ?? this.isSynced,
       isStarred: isStarred ?? this.isStarred,
       isShared: isShared ?? this.isShared,
@@ -80,6 +94,8 @@ class ShoppingList {
   Map<String, dynamic> toJson() => {
     'id': id,
     'name': name,
+    'type': type.name,
+    if (attributeNames.isNotEmpty) 'attributeNames': attributeNames,
     'isSynced': isSynced,
     'isStarred': isStarred,
     'isShared': isShared,
@@ -97,6 +113,10 @@ class ShoppingList {
     return ShoppingList(
       id: json['id'] as String,
       name: json['name'] as String,
+      type: ListType.fromName(json['type'] as String?),
+      attributeNames: List<String>.from(
+        (json['attributeNames'] as List?) ?? const <String>[],
+      ),
       isSynced: json['isSynced'] as bool? ?? false,
       isStarred: json['isStarred'] as bool? ?? false,
       isShared: json['isShared'] as bool? ?? false,
@@ -126,6 +146,8 @@ class ShoppingList {
           runtimeType == other.runtimeType &&
           id == other.id &&
           name == other.name &&
+          type == other.type &&
+          listEquals(attributeNames, other.attributeNames) &&
           isSynced == other.isSynced &&
           isStarred == other.isStarred &&
           isShared == other.isShared &&
@@ -142,6 +164,8 @@ class ShoppingList {
   int get hashCode => Object.hash(
     id,
     name,
+    type,
+    Object.hashAll(attributeNames),
     isSynced,
     isStarred,
     isShared,

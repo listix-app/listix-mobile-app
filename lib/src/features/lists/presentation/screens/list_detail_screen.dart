@@ -5,7 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/localization/locale_controller.dart';
+import '../../../../core/localization/app_strings.dart';
+import '../../../../core/services/link_preview_service.dart';
+import '../../../../core/services/url_launcher_service.dart';
+import '../../../../core/widgets/content_width.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../ads/data/interstitial_ad_service.dart';
 import '../../../ads/presentation/controllers/banner_ad_controller.dart';
@@ -13,9 +18,13 @@ import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/controllers/collaboration_controller.dart';
 import '../../../collaboration/presentation/widgets/realtime_presence_badge.dart';
 import '../../../sync/data/api_sync_service.dart';
+import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../../domain/entities/todo_item.dart';
 import '../controllers/lists_controller.dart';
+import '../widgets/item_editor_sheet.dart';
+import '../widgets/list_type_presentation.dart';
+import '../widgets/options_tools.dart';
 import '../widgets/quick_add_input.dart';
 import '../widgets/todo_item_tile.dart';
 import 'share_list_sheet.dart';
@@ -33,6 +42,8 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
   bool _isCompletedExpanded = true;
   bool _isSearching = false;
   String _itemSearchQuery = '';
+  ItemSort _sort = ItemSort.manual;
+  bool _favoritesOnly = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -79,107 +90,152 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     }
   }
 
-  Future<void> _showItemActionsSheet(
-    BuildContext context,
-    TodoItem item,
-  ) async {
-    final tr = ref.read(stringsProvider);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: isDark ? AppColors.cardDark : Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+  Widget _buildSortMenu(
+    ShoppingList list,
+    AppStrings tr,
+    ItemSort sort,
+    bool favoritesOnly,
+  ) {
+    return PopupMenuButton<Object>(
+      key: const Key('item_sort_menu_button'),
+      icon: Icon(
+        Icons.sort_rounded,
+        size: 21,
+        color: (sort != ItemSort.manual || favoritesOnly)
+            ? AppColors.primary
+            : null,
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  item.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: Icon(
-                  item.isCompleted
-                      ? Icons.radio_button_unchecked_rounded
-                      : Icons.check_circle_outline_rounded,
-                  color: AppColors.primary,
-                ),
-                title: Text(
-                  item.isCompleted
-                      ? 'Marcar como pendiente'
-                      : 'Marcar como completado',
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary,
-                  ),
-                ),
-                onTap: () {
-                  ctx.pop();
-                  ref
-                      .read(listsControllerProvider.notifier)
-                      .toggleItem(widget.listId, item.id);
-                },
-              ),
-              if (!item.isCompleted)
-                ListTile(
-                  leading: const Icon(
-                    Icons.edit_outlined,
-                    color: AppColors.textSecondary,
-                  ),
-                  title: Text(
-                    tr.rename,
-                    style: TextStyle(
-                      color: isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimary,
-                    ),
-                  ),
-                  onTap: () {
-                    ctx.pop();
-                    _showEditItemDialog(context, item);
-                  },
-                ),
-              ListTile(
-                leading: const Icon(
-                  Icons.delete_outline_rounded,
-                  color: AppColors.delete,
-                ),
-                title: Text(
-                  tr.delete,
-                  style: const TextStyle(
-                    color: AppColors.delete,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                onTap: () {
-                  ctx.pop();
-                  _handleDeleteItem(widget.listId, item.id);
-                },
-              ),
-            ],
+      tooltip: tr.sortItems,
+      onSelected: (value) => setState(() {
+        if (value is ItemSort) {
+          _sort = value;
+        } else {
+          _favoritesOnly = !_favoritesOnly;
+        }
+      }),
+      itemBuilder: (_) => [
+        if (list.type.sortOptions.length > 1)
+          for (final option in list.type.sortOptions)
+            CheckedPopupMenuItem<Object>(
+              key: Key('sort_${option.name}'),
+              value: option,
+              checked: option == sort,
+              child: Text(tr.sortName(option)),
+            ),
+        if (list.type.supportsFavoritesFilter)
+          CheckedPopupMenuItem<Object>(
+            key: const Key('filter_favorites'),
+            value: 'favorites',
+            checked: favoritesOnly,
+            child: Text(tr.favoritesOnly),
+          ),
+      ],
+    );
+  }
+
+  ListType get _listType =>
+      ref.read(shoppingListProvider(widget.listId))?.type ?? ListType.custom;
+
+  List<String> get _attributeNames =>
+      ref.read(shoppingListProvider(widget.listId))?.attributeNames ?? const [];
+
+  Future<void> _editItem(TodoItem item) async {
+    final updated = await showItemEditorSheet(
+      context,
+      type: _listType,
+      strings: ref.read(stringsProvider),
+      draft: item,
+      attributeNames: _attributeNames,
+      resolvePreview: ref.read(linkPreviewServiceProvider).fetchImageUrl,
+    );
+    if (updated == null || !mounted) return;
+    await ref.read(listsControllerProvider.notifier).updateItemDetails(updated);
+  }
+
+  Future<void> _addItemWithDetails(String title) async {
+    final created = await showItemEditorSheet(
+      context,
+      type: _listType,
+      strings: ref.read(stringsProvider),
+      draft: TodoItem(
+        id: '',
+        listId: widget.listId,
+        title: title,
+        createdAt: DateTime.now(),
+      ),
+      attributeNames: _attributeNames,
+      isNew: true,
+      resolvePreview: ref.read(linkPreviewServiceProvider).fetchImageUrl,
+    );
+    if (created == null || !mounted) return;
+    await ref
+        .read(listsControllerProvider.notifier)
+        .addItem(widget.listId, created.title, details: created);
+  }
+
+  Widget _buildItemTile(
+    ShoppingList list,
+    TodoItem item,
+    Color listColor, {
+    int? reorderIndex,
+  }) {
+    final notifier = ref.read(listsControllerProvider.notifier);
+    return TodoItemTile(
+      key: ValueKey(item.id),
+      item: item,
+      reorderIndex: reorderIndex,
+      listType: list.type,
+      attributeNames: list.attributeNames,
+      strings: ref.read(stringsProvider),
+      activeColor: listColor,
+      onToggle: () => list.type == ListType.options
+          ? notifier.toggleChosenItem(list.id, item.id)
+          : notifier.toggleItem(list.id, item.id),
+      onDelete: () => _handleDeleteItem(list.id, item.id),
+      onEdit: () => _editItem(item),
+      onToggleFavorite: () => notifier.updateItemDetails(
+        item.copyWith(isFavorite: !item.isFavorite),
+      ),
+      onOpenLink: () =>
+          ref.read(urlLauncherServiceProvider).openUrl(item.url ?? ''),
+    );
+  }
+
+  List<Widget> _buildCategoryGroups(
+    ShoppingList list,
+    List<TodoItem> pending,
+    Color listColor,
+    AppStrings tr,
+    bool isDark,
+  ) {
+    final order = MarketCatalog.categories;
+    String keyOf(TodoItem item) => order.contains(item.category)
+        ? item.category!
+        : MarketCatalog.uncategorized;
+    final groups = <String, List<TodoItem>>{};
+    for (final item in pending) {
+      groups.putIfAbsent(keyOf(item), () => []).add(item);
+    }
+    final sortedKeys = groups.keys.toList()
+      ..sort((a, b) => order.indexOf(a).compareTo(order.indexOf(b)));
+    return [
+      for (final key in sortedKeys) ...[
+        Padding(
+          key: Key('category_header_$key'),
+          padding: const EdgeInsets.fromLTRB(4, 12, 4, 6),
+          child: Text(
+            tr.categoryName(key).toUpperCase(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: context.mutedTextColor,
+            ),
           ),
         ),
-      ),
-    );
+        for (final item in groups[key]!) _buildItemTile(list, item, listColor),
+      ],
+    ];
   }
 
   Future<void> _handleDeleteItem(String listId, String itemId) async {
@@ -265,78 +321,6 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     }
   }
 
-  Future<void> _showEditItemDialog(BuildContext context, TodoItem item) async {
-    final tr = ref.read(stringsProvider);
-    final controller = TextEditingController(text: item.title);
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr.editItemTitle),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            key: const Key('edit_item_title_input'),
-            controller: controller,
-            autofocus: true,
-            maxLength: 100,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              labelText: tr.itemTitleLabel,
-              hintText: tr.itemTitleHint,
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return tr.itemTitleValidation;
-              }
-              return null;
-            },
-            onFieldSubmitted: (_) {
-              if (formKey.currentState!.validate()) {
-                ref
-                    .read(listsControllerProvider.notifier)
-                    .updateItem(widget.listId, item.id, controller.text);
-                ctx.pop();
-              }
-            },
-          ),
-        ),
-        actions: [
-          TextButton.icon(
-            key: const Key('delete_item_from_dialog_button'),
-            onPressed: () {
-              ctx.pop();
-              _handleDeleteItem(widget.listId, item.id);
-            },
-            icon: const Icon(
-              Icons.delete_outline_rounded,
-              color: AppColors.delete,
-              size: 18,
-            ),
-            label: Text(
-              tr.delete,
-              style: const TextStyle(color: AppColors.delete),
-            ),
-          ),
-          TextButton(onPressed: () => ctx.pop(), child: Text(tr.cancel)),
-          FilledButton(
-            key: const Key('save_edit_item_button'),
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                ref
-                    .read(listsControllerProvider.notifier)
-                    .updateItem(widget.listId, item.id, controller.text);
-                ctx.pop();
-              }
-            },
-            child: Text(tr.saveChanges),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.listen<ShoppingList?>(shoppingListProvider(widget.listId), (
@@ -397,11 +381,21 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     final query = _itemSearchQuery.trim().toLowerCase();
     final pendingItems = list.items.where((i) => !i.isCompleted).toList();
     final completedItems = list.items.where((i) => i.isCompleted).toList();
-    final filteredPending = query.isEmpty
-        ? pendingItems
-        : pendingItems
-              .where((i) => i.title.toLowerCase().contains(query))
-              .toList();
+    final favoritesOnly = list.type.supportsFavoritesFilter && _favoritesOnly;
+    final sort = list.type.sortOptions.contains(_sort)
+        ? _sort
+        : ItemSort.manual;
+    final canReorder =
+        query.isEmpty && sort == ItemSort.manual && !favoritesOnly;
+    final filteredPending = sort.apply(
+      pendingItems
+          .where(
+            (i) =>
+                (query.isEmpty || i.title.toLowerCase().contains(query)) &&
+                (!favoritesOnly || i.isFavorite),
+          )
+          .toList(),
+    );
     final filteredCompleted = query.isEmpty
         ? completedItems
         : completedItems
@@ -414,6 +408,74 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
     final listColor = list.color != null
         ? Color(list.color!)
         : AppColors.primary;
+
+    final Widget? completedFooter = filteredCompleted.isEmpty
+        ? null
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 12),
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _isCompletedExpanded = !_isCompletedExpanded;
+                  });
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 6.0,
+                    horizontal: 4.0,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _isCompletedExpanded
+                            ? Icons.expand_more
+                            : Icons.chevron_right,
+                        size: 18,
+                        color: context.mutedTextColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        tr.completedGroup(filteredCompleted.length),
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: context.mutedTextColor,
+                        ),
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        key: const Key('delete_completed_items_button'),
+                        onPressed: () => _handleDeleteCompletedItems(
+                          list.id,
+                          filteredCompleted.length,
+                        ),
+                        icon: const Icon(
+                          Icons.delete_sweep_outlined,
+                          size: 16,
+                          color: AppColors.delete,
+                        ),
+                        label: Text(
+                          tr.deleteCompletedItems,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.delete,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_isCompletedExpanded)
+                ...filteredCompleted.map(
+                  (item) => _buildItemTile(list, item, listColor),
+                ),
+            ],
+          );
 
     return Scaffold(
       appBar: AppBar(
@@ -430,11 +492,7 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                 decoration: InputDecoration(
                   hintText: tr.searchItemsHint,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(
-                    color: isDark
-                        ? AppColors.textMutedDark
-                        : AppColors.textMuted,
-                  ),
+                  hintStyle: TextStyle(color: context.mutedTextColor),
                 ),
                 style: TextStyle(
                   fontSize: 16,
@@ -480,6 +538,9 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
             },
           ),
           if (!_isSearching) ...[
+            if (list.type.sortOptions.length > 1 ||
+                list.type.supportsFavoritesFilter)
+              _buildSortMenu(list, tr, sort, favoritesOnly),
             if (completedItems.isNotEmpty)
               IconButton(
                 key: const Key('delete_completed_items_app_bar_button'),
@@ -509,302 +570,240 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
-              border: Border(
-                bottom: BorderSide(
-                  color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                  width: 1,
+      body: ContentWidth(
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: context.surfaceColor,
+                border: Border(
+                  bottom: BorderSide(color: context.borderColor, width: 1),
                 ),
               ),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      list.items.isEmpty
-                          ? tr.noItemsYet
-                          : tr.pendingCountText(
-                              list.pendingCount,
-                              list.totalCount,
-                            ),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppColors.textSecondaryDark
-                            : AppColors.textSecondary,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (list.totalCount > 0)
-                      Text(
-                        tr.percentCompleted((progress * 100).toInt()),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: isDark
-                              ? AppColors.textMutedDark
-                              : AppColors.textMuted,
-                        ),
-                      ),
-                  ],
-                ),
-                if (list.totalCount > 0) ...[
-                  const SizedBox(height: 6),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: isDark
-                          ? AppColors.borderDark
-                          : AppColors.borderLight,
-                      valueColor: AlwaysStoppedAnimation<Color>(listColor),
-                      minHeight: 4,
-                    ),
-                  ),
-                ],
-                if (list.collaborators.isNotEmpty) ...[
-                  const SizedBox(height: 8),
+              child: Column(
+                children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.group_outlined,
-                        size: 14,
-                        color: isDark
-                            ? AppColors.textMutedDark
-                            : AppColors.textMuted,
-                      ),
-                      const SizedBox(width: 6),
                       Text(
-                        '${tr.collaborators}:',
+                        list.items.isEmpty
+                            ? tr.noItemsYet
+                            : list.type == ListType.options
+                            ? tr.optionsCount(list.totalCount)
+                            : tr.pendingCountText(
+                                list.pendingCount,
+                                list.totalCount,
+                              ),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: isDark
-                              ? AppColors.textMutedDark
-                              : AppColors.textMuted,
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondary,
+                          letterSpacing: -0.2,
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: SizedBox(
-                          height: 22,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: list.collaborators.map((c) {
-                              return Container(
-                                margin: const EdgeInsets.only(right: 6),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.cardDark
-                                      : AppColors.primaryLight,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  c.name,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDark
-                                        ? AppColors.textPrimaryDark
-                                        : AppColors.primaryDark,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
+                      const Spacer(),
+                      if (list.totalCount > 0 && list.type.tracksCompletion)
+                        Text(
+                          list.type == ListType.shopping && list.totalPrice > 0
+                              ? tr.shoppingTotal(
+                                  tr.formatPrice(list.totalPrice),
+                                )
+                              : tr.percentCompleted((progress * 100).toInt()),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: context.mutedTextColor,
                           ),
                         ),
-                      ),
                     ],
                   ),
-                ],
-              ],
-            ),
-          ),
-
-          Expanded(
-            child: list.items.isEmpty
-                ? EmptyStateWidget(
-                    icon: Icons.add_task_rounded,
-                    title: tr.emptyItemsTitle,
-                    message: tr.emptyItemsMessage,
-                  )
-                : (query.isNotEmpty &&
-                      filteredPending.isEmpty &&
-                      filteredCompleted.isEmpty)
-                ? EmptyStateWidget(
-                    icon: Icons.search_off_rounded,
-                    title: tr.noSearchResults,
-                    message: tr.searchItemsHint,
-                  )
-                : RefreshIndicator(
-                    onRefresh: () async {
-                      await ref
-                          .read(listsControllerProvider.notifier)
-                          .manualSync();
-                    },
-                    color: listColor,
-                    child: ReorderableListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
+                  if (list.totalCount > 0 && list.type.tracksCompletion) ...[
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: context.borderColor,
+                        valueColor: AlwaysStoppedAnimation<Color>(listColor),
+                        minHeight: 4,
                       ),
-                      itemCount: filteredPending.length,
-                      buildDefaultDragHandles: false,
-                      proxyDecorator: (child, index, animation) {
-                        return Material(
-                          elevation: 4,
-                          shadowColor: Colors.black.withValues(alpha: 0.25),
-                          borderRadius: BorderRadius.circular(12),
-                          color: Colors.transparent,
-                          child: child,
-                        );
-                      },
-                      onReorderItem: (oldIndex, newIndex) {
-                        if (query.isNotEmpty) return;
-                        HapticFeedback.selectionClick();
-                        ref
+                    ),
+                  ],
+                  if (list.type == ListType.options) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      children: [
+                        TextButton.icon(
+                          key: const Key('compare_options_button'),
+                          onPressed: () => showCompareSheet(context, list.id),
+                          icon: const Icon(
+                            Icons.table_chart_outlined,
+                            size: 18,
+                          ),
+                          label: Text(tr.compareOptions),
+                        ),
+                        TextButton.icon(
+                          key: const Key('manage_attributes_button'),
+                          onPressed: () =>
+                              showAttributesDialog(context, list.id),
+                          icon: const Icon(Icons.tune_rounded, size: 18),
+                          label: Text(tr.manageAttributes),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (list.collaborators.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.group_outlined,
+                          size: 14,
+                          color: context.mutedTextColor,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${tr.collaborators}:',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: context.mutedTextColor,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: SizedBox(
+                            height: 28,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: list.collaborators.map((c) {
+                                return Container(
+                                  margin: const EdgeInsets.only(right: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppColors.cardDark
+                                        : AppColors.primaryLight,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    c.name,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark
+                                          ? AppColors.textPrimaryDark
+                                          : AppColors.primaryDark,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+
+            Expanded(
+              child: list.items.isEmpty
+                  ? EmptyStateWidget(
+                      icon: list.type.icon,
+                      title: tr.emptyItemsTitle,
+                      message: tr.emptyItemsMessageFor(list.type),
+                    )
+                  : (query.isNotEmpty &&
+                        filteredPending.isEmpty &&
+                        filteredCompleted.isEmpty)
+                  ? EmptyStateWidget(
+                      icon: Icons.search_off_rounded,
+                      title: tr.noSearchResults,
+                      message: tr.searchItemsHint,
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        await ref
                             .read(listsControllerProvider.notifier)
-                            .reorderItems(list.id, oldIndex, newIndex);
+                            .manualSync();
                       },
-                      itemBuilder: (context, index) {
-                        final item = filteredPending[index];
-                        return TodoItemTile(
-                          key: ValueKey(item.id),
-                          item: item,
-                          reorderIndex: query.isEmpty ? index : null,
-                          activeColor: listColor,
-                          onToggle: () {
-                            ref
-                                .read(listsControllerProvider.notifier)
-                                .toggleItem(list.id, item.id);
-                          },
-                          onDelete: () => _handleDeleteItem(list.id, item.id),
-                          onEdit: () => _showEditItemDialog(context, item),
-                          onLongPress: () =>
-                              _showItemActionsSheet(context, item),
-                        );
-                      },
-                      footer: filteredCompleted.isEmpty
-                          ? null
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                      color: listColor,
+                      child: list.type.isGroupedByCategory
+                          ? ListView(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               children: [
-                                const SizedBox(height: 12),
-                                InkWell(
-                                  onTap: () {
-                                    setState(() {
-                                      _isCompletedExpanded =
-                                          !_isCompletedExpanded;
-                                    });
-                                  },
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 6.0,
-                                      horizontal: 4.0,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Icon(
-                                          _isCompletedExpanded
-                                              ? Icons.expand_more
-                                              : Icons.chevron_right,
-                                          size: 18,
-                                          color: isDark
-                                              ? AppColors.textMutedDark
-                                              : AppColors.textMuted,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          tr.completedGroup(
-                                            filteredCompleted.length,
-                                          ),
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                            color: isDark
-                                                ? AppColors.textMutedDark
-                                                : AppColors.textMuted,
-                                          ),
-                                        ),
-                                        const Spacer(),
-                                        TextButton.icon(
-                                          key: const Key(
-                                            'delete_completed_items_button',
-                                          ),
-                                          onPressed: () =>
-                                              _handleDeleteCompletedItems(
-                                                list.id,
-                                                filteredCompleted.length,
-                                              ),
-                                          icon: const Icon(
-                                            Icons.delete_sweep_outlined,
-                                            size: 16,
-                                            color: AppColors.delete,
-                                          ),
-                                          label: Text(
-                                            tr.deleteCompletedItems,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: AppColors.delete,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                ..._buildCategoryGroups(
+                                  list,
+                                  filteredPending,
+                                  listColor,
+                                  tr,
+                                  isDark,
                                 ),
-                                if (_isCompletedExpanded)
-                                  ...filteredCompleted.map(
-                                    (item) => TodoItemTile(
-                                      key: ValueKey(item.id),
-                                      item: item,
-                                      activeColor: listColor,
-                                      onToggle: () {
-                                        ref
-                                            .read(
-                                              listsControllerProvider.notifier,
-                                            )
-                                            .toggleItem(list.id, item.id);
-                                      },
-                                      onDelete: () =>
-                                          _handleDeleteItem(list.id, item.id),
-                                      onEdit: () =>
-                                          _showEditItemDialog(context, item),
-                                      onLongPress: () =>
-                                          _showItemActionsSheet(context, item),
-                                    ),
-                                  ),
+                                ?completedFooter,
                               ],
+                            )
+                          : ReorderableListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                              itemCount: filteredPending.length,
+                              buildDefaultDragHandles: false,
+                              proxyDecorator: (child, index, animation) {
+                                return Material(
+                                  elevation: 4,
+                                  shadowColor: Colors.black.withValues(
+                                    alpha: 0.25,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: Colors.transparent,
+                                  child: child,
+                                );
+                              },
+                              onReorderItem: (oldIndex, newIndex) {
+                                if (!canReorder) return;
+                                HapticFeedback.selectionClick();
+                                ref
+                                    .read(listsControllerProvider.notifier)
+                                    .reorderItems(list.id, oldIndex, newIndex);
+                              },
+                              itemBuilder: (context, index) {
+                                return _buildItemTile(
+                                  list,
+                                  filteredPending[index],
+                                  listColor,
+                                  reorderIndex: canReorder ? index : null,
+                                );
+                              },
+                              footer: completedFooter,
                             ),
                     ),
-                  ),
-          ),
+            ),
 
-          QuickAddInput(
-            autoFocus: false,
-            hintText: tr.quickAddHint,
-            tooltip: tr.quickAddTooltip,
-            onAdd: (title) {
-              ref
-                  .read(listsControllerProvider.notifier)
-                  .addItem(list.id, title);
-            },
-          ),
-        ],
+            QuickAddInput(
+              autoFocus: list.items.isEmpty,
+              hintText: tr.quickAddHint,
+              tooltip: tr.quickAddTooltip,
+              onAdd: (title) {
+                ref
+                    .read(listsControllerProvider.notifier)
+                    .addItem(list.id, title);
+              },
+              onAddWithDetails: _addItemWithDetails,
+              detailsTooltip: tr.addWithDetails,
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: switch (ref.watch(detailBannerAdProvider)) {
         BannerAdStatus.loaded ||

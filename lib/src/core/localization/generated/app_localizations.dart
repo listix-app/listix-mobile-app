@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Delete'**
   String get delete;
 
+  /// No description provided for @editAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editAction;
+
   /// No description provided for @listCountSuffix.
   ///
   /// In en, this message translates to:
@@ -325,6 +331,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create list'**
   String get createListAction;
+
+  /// No description provided for @createItemAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create item'**
+  String get createItemAction;
 
   /// No description provided for @shareHeading.
   ///
@@ -1591,6 +1603,510 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Item actions'**
   String get itemActions;
+
+  /// No description provided for @listTypePickerHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'What kind of list do you need?'**
+  String get listTypePickerHeading;
+
+  /// No description provided for @listTypePickerSubheading.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a structure, then give your list a name.'**
+  String get listTypePickerSubheading;
+
+  /// No description provided for @changeListType.
+  ///
+  /// In en, this message translates to:
+  /// **'Change type'**
+  String get changeListType;
+
+  /// No description provided for @listTypeMarket.
+  ///
+  /// In en, this message translates to:
+  /// **'Groceries'**
+  String get listTypeMarket;
+
+  /// No description provided for @listTypeMarketDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Products by category, with quantities and units.'**
+  String get listTypeMarketDesc;
+
+  /// No description provided for @listTypeShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get listTypeShopping;
+
+  /// No description provided for @listTypeShoppingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Items with price, store, link and priority.'**
+  String get listTypeShoppingDesc;
+
+  /// No description provided for @listTypeOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Options'**
+  String get listTypeOptions;
+
+  /// No description provided for @listTypeOptionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare alternatives and pick one: universities, phones, apartments.'**
+  String get listTypeOptionsDesc;
+
+  /// No description provided for @listTypeTasks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tasks'**
+  String get listTypeTasks;
+
+  /// No description provided for @listTypeTasksDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Activities with status, priority and due date.'**
+  String get listTypeTasksDesc;
+
+  /// No description provided for @listTypeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get listTypeCustom;
+
+  /// No description provided for @listTypeCustomDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'A flexible list with basic items.'**
+  String get listTypeCustomDesc;
+
+  /// No description provided for @newItemTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New item'**
+  String get newItemTitle;
+
+  /// No description provided for @itemDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Item details'**
+  String get itemDetailsTitle;
+
+  /// No description provided for @addWithDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Add with details'**
+  String get addWithDetails;
+
+  /// No description provided for @quantityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantityLabel;
+
+  /// No description provided for @unitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get unitLabel;
+
+  /// No description provided for @categoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get categoryLabel;
+
+  /// No description provided for @priorityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get priorityLabel;
+
+  /// No description provided for @priorityLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get priorityLow;
+
+  /// No description provided for @priorityMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get priorityMedium;
+
+  /// No description provided for @priorityHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get priorityHigh;
+
+  /// No description provided for @priceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get priceLabel;
+
+  /// No description provided for @linkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Link'**
+  String get linkLabel;
+
+  /// No description provided for @linkInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid http(s) link'**
+  String get linkInvalid;
+
+  /// No description provided for @numberInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get numberInvalid;
+
+  /// No description provided for @notesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesLabel;
+
+  /// No description provided for @favoriteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite'**
+  String get favoriteLabel;
+
+  /// No description provided for @chosenBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Chosen'**
+  String get chosenBadge;
+
+  /// No description provided for @markChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as chosen'**
+  String get markChosen;
+
+  /// No description provided for @unmarkChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove choice'**
+  String get unmarkChosen;
+
+  /// No description provided for @addFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as favorite'**
+  String get addFavorite;
+
+  /// No description provided for @removeFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove favorite'**
+  String get removeFavorite;
+
+  /// No description provided for @dueDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get dueDateLabel;
+
+  /// No description provided for @noDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No date'**
+  String get noDueDate;
+
+  /// No description provided for @clearDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear date'**
+  String get clearDate;
+
+  /// No description provided for @inProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'In progress'**
+  String get inProgressLabel;
+
+  /// No description provided for @openLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get openLink;
+
+  /// No description provided for @categoryProduce.
+  ///
+  /// In en, this message translates to:
+  /// **'Produce'**
+  String get categoryProduce;
+
+  /// No description provided for @categoryDairy.
+  ///
+  /// In en, this message translates to:
+  /// **'Dairy & eggs'**
+  String get categoryDairy;
+
+  /// No description provided for @categoryMeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Meat & fish'**
+  String get categoryMeat;
+
+  /// No description provided for @categoryBakery.
+  ///
+  /// In en, this message translates to:
+  /// **'Bakery'**
+  String get categoryBakery;
+
+  /// No description provided for @categoryPantry.
+  ///
+  /// In en, this message translates to:
+  /// **'Pantry'**
+  String get categoryPantry;
+
+  /// No description provided for @categoryBeverages.
+  ///
+  /// In en, this message translates to:
+  /// **'Beverages'**
+  String get categoryBeverages;
+
+  /// No description provided for @categoryCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get categoryCleaning;
+
+  /// No description provided for @categoryOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get categoryOther;
+
+  /// No description provided for @optionsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 option} other{{count} options}}'**
+  String optionsCount(int count);
+
+  /// No description provided for @shoppingTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total: {amount}'**
+  String shoppingTotal(String amount);
+
+  /// No description provided for @descriptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get descriptionLabel;
+
+  /// No description provided for @estimatedPriceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated price'**
+  String get estimatedPriceLabel;
+
+  /// No description provided for @evaluationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluation'**
+  String get evaluationLabel;
+
+  /// No description provided for @evaluationPending.
+  ///
+  /// In en, this message translates to:
+  /// **'To evaluate'**
+  String get evaluationPending;
+
+  /// No description provided for @evaluationEvaluated.
+  ///
+  /// In en, this message translates to:
+  /// **'Evaluated'**
+  String get evaluationEvaluated;
+
+  /// No description provided for @evaluationDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Discarded'**
+  String get evaluationDiscarded;
+
+  /// No description provided for @manageAttributes.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison attributes'**
+  String get manageAttributes;
+
+  /// No description provided for @attributeNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New attribute'**
+  String get attributeNameLabel;
+
+  /// No description provided for @attributeNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Tuition, Area, Battery'**
+  String get attributeNameHint;
+
+  /// No description provided for @addAttribute.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addAttribute;
+
+  /// No description provided for @removeAttribute.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove attribute'**
+  String get removeAttribute;
+
+  /// No description provided for @attributesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No attributes yet. Add the traits you want to compare.'**
+  String get attributesEmpty;
+
+  /// No description provided for @compareOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare options'**
+  String get compareOptions;
+
+  /// No description provided for @compareNeedsTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two options to compare them.'**
+  String get compareNeedsTwo;
+
+  /// No description provided for @optionColumn.
+  ///
+  /// In en, this message translates to:
+  /// **'Option'**
+  String get optionColumn;
+
+  /// No description provided for @sortItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort'**
+  String get sortItems;
+
+  /// No description provided for @sortManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual order'**
+  String get sortManual;
+
+  /// No description provided for @sortPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get sortPrice;
+
+  /// No description provided for @sortPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get sortPriority;
+
+  /// No description provided for @sortDueDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Due date'**
+  String get sortDueDate;
+
+  /// No description provided for @favoritesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites only'**
+  String get favoritesOnly;
+
+  /// No description provided for @emptyMarketMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first product below. Set quantity, unit and category with the details button.'**
+  String get emptyMarketMessage;
+
+  /// No description provided for @emptyShoppingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first item below. Track its price, store and link with the details button.'**
+  String get emptyShoppingMessage;
+
+  /// No description provided for @emptyOptionsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first option below, then add notes and attributes to compare alternatives.'**
+  String get emptyOptionsMessage;
+
+  /// No description provided for @emptyTasksMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your first task below. Set a due date and priority with the details button.'**
+  String get emptyTasksMessage;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @goHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Go home'**
+  String get goHome;
+
+  /// No description provided for @openList.
+  ///
+  /// In en, this message translates to:
+  /// **'Open list'**
+  String get openList;
+
+  /// No description provided for @changeRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Change role'**
+  String get changeRole;
+
+  /// No description provided for @authenticationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication failed'**
+  String get authenticationFailed;
+
+  /// No description provided for @generatingInviteLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating invite link...'**
+  String get generatingInviteLink;
+
+  /// No description provided for @shareLinkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Share link'**
+  String get shareLinkAction;
+
+  /// No description provided for @copyLinkAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy link'**
+  String get copyLinkAction;
+
+  /// No description provided for @inviteLinkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not generate the link: {error}'**
+  String inviteLinkError(String error);
+
+  /// No description provided for @inviteLinkCreateError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the invite link: {error}'**
+  String inviteLinkCreateError(String error);
 }
 
 class _AppLocalizationsDelegate

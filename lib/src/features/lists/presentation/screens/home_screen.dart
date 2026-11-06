@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/content_width.dart';
 
+import '../../../../core/config/app_environment.dart';
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/listix_logo.dart';
 import '../../../ads/presentation/controllers/banner_ad_controller.dart';
@@ -253,11 +257,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 decoration: InputDecoration(
                   hintText: tr.searchListsHint,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(
-                    color: isDark
-                        ? AppColors.textMutedDark
-                        : AppColors.textMuted,
-                  ),
+                  hintStyle: TextStyle(color: context.mutedTextColor),
                 ),
                 style: TextStyle(
                   fontSize: 16,
@@ -271,7 +271,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   });
                 },
               )
-            : const ListixLogo(size: 28, showWordmark: true, fontSize: 22),
+            : const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListixLogo(size: 28, showWordmark: true, fontSize: 22),
+                  _EnvironmentBadge(),
+                ],
+              ),
         actions: [
           IconButton(
             key: const Key('list_search_toggle_button'),
@@ -557,121 +563,136 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             );
           }
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              await ref.read(listsControllerProvider.notifier).manualSync();
-            },
-            color: AppColors.primary,
-            child: ReorderableListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              itemCount: displayedLists.length,
-              buildDefaultDragHandles: _selectedTab == 0 && query.isEmpty,
-              onReorderItem: (oldIndex, newIndex) {
-                if (_selectedTab != 0 || query.isNotEmpty) return;
-                ref
-                    .read(listsControllerProvider.notifier)
-                    .reorderLists(oldIndex, newIndex);
+          return ContentWidth(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await ref.read(listsControllerProvider.notifier).manualSync();
               },
-              header: topSection,
-              itemBuilder: (context, index) {
-                final list = displayedLists[index];
-                return Dismissible(
-                  key: ValueKey(list.id),
-                  direction: DismissDirection.endToStart,
-                  confirmDismiss: (_) async {
-                    final title = list.isOwner
-                        ? tr.deleteListTitle
-                        : tr.leaveListTitle;
-                    final message = list.isOwner
-                        ? tr.deleteListMessage(list.name)
-                        : tr.leaveListMessage(list.name);
-                    final actionLabel = list.isOwner ? tr.delete : tr.leave;
+              color: AppColors.primary,
+              child: ReorderableListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+                itemCount: displayedLists.length,
+                buildDefaultDragHandles: false,
+                proxyDecorator: (child, index, animation) {
+                  return Material(
+                    elevation: 4,
+                    shadowColor: Colors.black.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(16),
+                    color: Colors.transparent,
+                    child: child,
+                  );
+                },
+                onReorderItem: (oldIndex, newIndex) {
+                  if (_selectedTab != 0 || query.isNotEmpty) return;
+                  HapticFeedback.selectionClick();
+                  ref
+                      .read(listsControllerProvider.notifier)
+                      .reorderLists(oldIndex, newIndex);
+                },
+                header: topSection,
+                itemBuilder: (context, index) {
+                  final list = displayedLists[index];
+                  return Dismissible(
+                    key: ValueKey(list.id),
+                    direction: DismissDirection.endToStart,
+                    confirmDismiss: (_) async {
+                      final title = list.isOwner
+                          ? tr.deleteListTitle
+                          : tr.leaveListTitle;
+                      final message = list.isOwner
+                          ? tr.deleteListMessage(list.name)
+                          : tr.leaveListMessage(list.name);
+                      final actionLabel = list.isOwner ? tr.delete : tr.leave;
 
-                    return await showDialog<bool>(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: Text(title),
-                            content: Text(message),
-                            actions: [
-                              TextButton(
-                                onPressed: () => ctx.pop(false),
-                                child: Text(tr.cancel),
-                              ),
-                              FilledButton(
-                                onPressed: () => ctx.pop(true),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: AppColors.delete,
+                      return await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text(title),
+                              content: Text(message),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => ctx.pop(false),
+                                  child: Text(tr.cancel),
                                 ),
-                                child: Text(actionLabel),
-                              ),
-                            ],
+                                FilledButton(
+                                  onPressed: () => ctx.pop(true),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.delete,
+                                  ),
+                                  child: Text(actionLabel),
+                                ),
+                              ],
+                            ),
+                          ) ??
+                          false;
+                    },
+                    onDismissed: (_) async {
+                      final deleted = await ref
+                          .read(listsControllerProvider.notifier)
+                          .deleteListWithUndo(list.id);
+                      if (deleted != null && context.mounted) {
+                        final messenger = ScaffoldMessenger.of(context);
+                        messenger.clearSnackBars();
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(tr.listDeleted(deleted.name)),
+                            behavior: SnackBarBehavior.floating,
+                            showCloseIcon: true,
+                            dismissDirection: DismissDirection.horizontal,
+                            action: SnackBarAction(
+                              label: tr.undo,
+                              textColor: AppColors.primaryLight,
+                              onPressed: () {
+                                messenger.hideCurrentSnackBar();
+                                ref
+                                    .read(listsControllerProvider.notifier)
+                                    .restoreList(deleted);
+                              },
+                            ),
+                            duration: const Duration(seconds: 4),
                           ),
-                        ) ??
-                        false;
-                  },
-                  onDismissed: (_) async {
-                    final deleted = await ref
-                        .read(listsControllerProvider.notifier)
-                        .deleteListWithUndo(list.id);
-                    if (deleted != null && context.mounted) {
-                      final messenger = ScaffoldMessenger.of(context);
-                      messenger.clearSnackBars();
-                      messenger.showSnackBar(
-                        SnackBar(
-                          content: Text(tr.listDeleted(deleted.name)),
-                          behavior: SnackBarBehavior.floating,
-                          showCloseIcon: true,
-                          dismissDirection: DismissDirection.horizontal,
-                          action: SnackBarAction(
-                            label: tr.undo,
-                            textColor: AppColors.primaryLight,
-                            onPressed: () {
-                              messenger.hideCurrentSnackBar();
+                        );
+                      }
+                    },
+                    background: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.deleteBackground,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.delete_outline,
+                        color: AppColors.delete,
+                        size: 24,
+                      ),
+                    ),
+                    child: ListCard(
+                      key: ValueKey('card_${list.id}'),
+                      list: list,
+                      strings: tr,
+                      reorderIndex: (_selectedTab == 0 && query.isEmpty)
+                          ? index
+                          : null,
+                      onTap: () => context.push('/list/${list.id}'),
+                      onToggleStar: _selectedTab == 0
+                          ? () {
                               ref
                                   .read(listsControllerProvider.notifier)
-                                  .restoreList(deleted);
-                            },
-                          ),
-                          duration: const Duration(seconds: 4),
-                        ),
-                      );
-                    }
-                  },
-                  background: Container(
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.deleteBackground,
-                      borderRadius: BorderRadius.circular(16),
+                                  .toggleStar(list.id);
+                            }
+                          : null,
+                      onArchive: (_selectedTab == 0 && list.isOwner)
+                          ? () => _handleArchiveList(context, list, tr)
+                          : null,
+                      onUnarchive: _selectedTab == 1
+                          ? () => _handleUnarchiveList(context, list, tr)
+                          : null,
                     ),
-                    child: const Icon(
-                      Icons.delete_outline,
-                      color: AppColors.delete,
-                      size: 24,
-                    ),
-                  ),
-                  child: ListCard(
-                    key: ValueKey('card_${list.id}'),
-                    list: list,
-                    strings: tr,
-                    onTap: () => context.push('/list/${list.id}'),
-                    onToggleStar: _selectedTab == 0
-                        ? () {
-                            ref
-                                .read(listsControllerProvider.notifier)
-                                .toggleStar(list.id);
-                          }
-                        : null,
-                    onArchive: (_selectedTab == 0 && list.isOwner)
-                        ? () => _handleArchiveList(context, list, tr)
-                        : null,
-                    onUnarchive: _selectedTab == 1
-                        ? () => _handleUnarchiveList(context, list, tr)
-                        : null,
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
           );
         },
@@ -697,6 +718,36 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             letterSpacing: -0.2,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EnvironmentBadge extends StatelessWidget {
+  const _EnvironmentBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final label = AppEnvironmentConfig.current.badgeLabel;
+    if (label == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.4,
+            color: AppColors.primary,
           ),
         ),
       ),

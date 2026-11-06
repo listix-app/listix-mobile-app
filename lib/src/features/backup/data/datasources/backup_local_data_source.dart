@@ -4,6 +4,8 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../../../core/storage/app_database.dart';
 import '../../../lists/domain/entities/collaborator.dart';
 import '../../../lists/domain/entities/shopping_list.dart';
+import '../../../lists/data/mappers/todo_item_row_mapper.dart';
+import '../../../lists/domain/entities/list_type.dart';
 import '../../../lists/domain/entities/todo_item.dart';
 import '../../domain/entities/backup_result.dart';
 import '../../domain/failures/backup_failure.dart';
@@ -55,19 +57,7 @@ class BackupLocalDataSourceImpl implements BackupLocalDataSource {
         final listId = item['list_id'] as String;
         itemsByList
             .putIfAbsent(listId, () => [])
-            .add(
-              TodoItem(
-                id: item['id'] as String,
-                listId: listId,
-                title: item['title'] as String,
-                isCompleted: (item['is_completed'] as int) == 1,
-                isSynced: (item['is_synced'] as int) == 1,
-                position: (item['position'] as int?) ?? 0,
-                createdAt: DateTime.fromMillisecondsSinceEpoch(
-                  item['created_at'] as int,
-                ),
-              ),
-            );
+            .add(TodoItemRowMapper.fromRow(item));
       }
 
       final collaboratorsByList = <String, List<Collaborator>>{};
@@ -97,6 +87,10 @@ class BackupLocalDataSourceImpl implements BackupLocalDataSource {
         return ShoppingList(
           id: id,
           name: row['name'] as String,
+          type: ListType.fromName(row['list_type'] as String?),
+          attributeNames: TodoItemRowMapper.decodeNames(
+            row['option_attributes'] as String?,
+          ),
           isSynced: (row['is_synced'] as int) == 1,
           isStarred: (row['is_starred'] as int) == 1,
           isShared: (row['is_shared'] as int) == 1,
@@ -149,6 +143,10 @@ class BackupLocalDataSourceImpl implements BackupLocalDataSource {
           await txn.insert('lists', {
             'id': list.id,
             'name': list.name,
+            'list_type': list.type.name,
+            'option_attributes': TodoItemRowMapper.encodeNames(
+              list.attributeNames,
+            ),
             'is_synced': list.isSynced ? 1 : 0,
             'is_starred': list.isStarred ? 1 : 0,
             'is_shared': list.isShared ? 1 : 0,
@@ -165,6 +163,7 @@ class BackupLocalDataSourceImpl implements BackupLocalDataSource {
               'id': item.id,
               'list_id': list.id,
               'title': item.title,
+              ...TodoItemRowMapper.detailColumns(item),
               'is_completed': item.isCompleted ? 1 : 0,
               'is_synced': item.isSynced ? 1 : 0,
               'position': item.position,

@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_colors_context.dart';
 
 class QuickAddInput extends StatefulWidget {
   final ValueChanged<String> onAdd;
   final bool autoFocus;
   final String? hintText;
   final String? tooltip;
+  final ValueChanged<String>? onAddWithDetails;
+  final String? detailsTooltip;
 
   const QuickAddInput({
     super.key,
@@ -15,6 +18,8 @@ class QuickAddInput extends StatefulWidget {
     this.autoFocus = true,
     this.hintText,
     this.tooltip,
+    this.onAddWithDetails,
+    this.detailsTooltip,
   });
 
   @override
@@ -52,6 +57,13 @@ class _QuickAddInputState extends State<QuickAddInput> {
     _focusNode.requestFocus();
   }
 
+  void _openDetails() {
+    final text = _controller.text.trim();
+    _controller.clear();
+    setState(() => _canSubmit = false);
+    widget.onAddWithDetails!(text);
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -62,18 +74,14 @@ class _QuickAddInputState extends State<QuickAddInput> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final barBg = isDark ? AppColors.cardDark : Colors.white;
-    final inputBg = isDark ? AppColors.surfaceDark : AppColors.surfaceLight;
-    final borderColor = isDark ? AppColors.borderDark : AppColors.borderLight;
+    final barBg = context.cardSurface;
+    final inputBg = context.surfaceColor;
+    final borderColor = context.borderColor;
     final textTitleColor = isDark
         ? AppColors.textPrimaryDark
         : AppColors.textPrimary;
-    final unselectedButtonBg = isDark
-        ? AppColors.surfaceDark
-        : AppColors.surfaceLight;
-    final unselectedIconColor = isDark
-        ? AppColors.textMutedDark
-        : AppColors.textMuted;
+    final unselectedButtonBg = context.surfaceColor;
+    final unselectedIconColor = context.mutedTextColor;
 
     final mediaQuery = MediaQuery.of(context);
     final bottomInset = mediaQuery.viewInsets.bottom;
@@ -145,6 +153,19 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 ),
               ),
             ),
+            if (widget.onAddWithDetails != null) ...[
+              const SizedBox(width: 4),
+              IconButton(
+                key: const Key('quick_add_details_button'),
+                onPressed: _openDetails,
+                icon: Icon(
+                  Icons.tune_rounded,
+                  size: 22,
+                  color: unselectedIconColor,
+                ),
+                tooltip: widget.detailsTooltip,
+              ),
+            ],
             const SizedBox(width: 8),
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
@@ -159,7 +180,7 @@ class _QuickAddInputState extends State<QuickAddInput> {
                 icon: Icon(
                   Icons.check,
                   size: 22,
-                  color: _canSubmit ? Colors.white : unselectedIconColor,
+                  color: _canSubmit ? AppColors.onPrimary : unselectedIconColor,
                 ),
                 splashRadius: 24,
                 tooltip: widget.tooltip ?? 'Agregar item',

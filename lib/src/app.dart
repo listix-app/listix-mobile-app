@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/config/app_environment.dart';
 import 'core/localization/generated/app_localizations.dart';
 import 'core/localization/locale_controller.dart';
 import 'core/theme/app_theme.dart';
@@ -20,7 +21,7 @@ class ListixApp extends ConsumerWidget {
     ref.watch(syncControllerProvider);
 
     return MaterialApp.router(
-      title: 'Listix',
+      title: AppEnvironmentConfig.current.appTitle,
       debugShowCheckedModeBanner: false,
       themeMode: themeMode,
       theme: AppTheme.lightTheme,
@@ -29,7 +30,15 @@ class ListixApp extends ConsumerWidget {
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      builder: (context, child) => AppLockWrapper(child: child!),
+      builder: (context, child) => AppLockWrapper(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: child!,
+          ),
+        ),
+      ),
     );
   }
 }
