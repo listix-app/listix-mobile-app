@@ -1,5 +1,7 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:cupertino_ui/cupertino_ui.dart'
+    show GlobalCupertinoLocalizations;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'core/config/app_environment.dart';
 import 'core/localization/generated/app_localizations.dart';
@@ -29,7 +31,11 @@ class ListixApp extends ConsumerWidget {
       routerConfig: router,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: const [
+        ...AppLocalizations.localizationsDelegates,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       builder: (context, child) => AppLockWrapper(
         child: Align(
           alignment: Alignment.topCenter,
