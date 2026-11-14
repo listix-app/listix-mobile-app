@@ -21,6 +21,8 @@ class TodoItemTile extends StatelessWidget {
   final List<String> attributeNames;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onOpenLink;
+  final void Function(double delta)? onAdjustQuantity;
+  final void Function(String subtaskId)? onToggleSubtask;
 
   const TodoItemTile({
     super.key,
@@ -36,6 +38,8 @@ class TodoItemTile extends StatelessWidget {
     this.attributeNames = const [],
     this.onToggleFavorite,
     this.onOpenLink,
+    this.onAdjustQuantity,
+    this.onToggleSubtask,
   });
 
   AppStrings get _tr => strings ?? AppStrings(AppLanguage.es);
@@ -68,12 +72,14 @@ class _CheckableItemCard extends StatelessWidget {
   final Widget? leadingExtra;
   final List<Widget> content;
   final List<Widget> actions;
+  final bool extraDimmed;
 
   const _CheckableItemCard({
     required this.tile,
     required this.content,
     this.leadingExtra,
     this.actions = const [],
+    this.extraDimmed = false,
   });
 
   @override
@@ -86,7 +92,7 @@ class _CheckableItemCard extends StatelessWidget {
     );
     return ItemCardBase(
       itemId: item.id,
-      isDimmed: item.isCompleted,
+      isDimmed: item.isCompleted || extraDimmed,
       isChecked: item.isCompleted,
       showDeleteAction: item.isCompleted,
       showEditAction: !item.isCompleted,
@@ -149,8 +155,10 @@ class MarketItemTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final item = tile.item;
+    final tr = tile._tr;
     final quantity = item.quantity;
     final price = item.price;
+    final canStepQuantity = tile.onAdjustQuantity != null && !item.isCompleted;
     return _CheckableItemCard(
       tile: tile,
       content: [
@@ -158,9 +166,35 @@ class MarketItemTile extends StatelessWidget {
           entries: [
             if (quantity != null)
               ('${formatNumber(quantity)} ${item.unit ?? ''}'.trim(), null),
-            if (price != null) (tile._tr.formatPrice(price), null),
+            if (price != null) (tr.formatPrice(price), null),
           ],
         ),
+      ],
+      actions: [
+        if (canStepQuantity)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                key: ValueKey('qty_dec_${item.id}'),
+                tooltip: tr.decreaseQuantity,
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: const EdgeInsets.all(4),
+                icon: const Icon(Icons.remove_circle_outline_rounded, size: 18),
+                onPressed: () => tile.onAdjustQuantity!(-1),
+              ),
+              IconButton(
+                key: ValueKey('qty_inc_${item.id}'),
+                tooltip: tr.increaseQuantity,
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                padding: const EdgeInsets.all(4),
+                icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                onPressed: () => tile.onAdjustQuantity!(1),
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -177,8 +211,10 @@ class ShoppingItemTile extends StatelessWidget {
     final tr = tile._tr;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final price = item.price;
+    final isDiscarded = item.evaluation == ItemEvaluation.discarded;
     return _CheckableItemCard(
       tile: tile,
+      extraDimmed: isDiscarded,
       leadingExtra: item.imageUrl == null
           ? null
           : ItemThumbnail(
@@ -189,6 +225,7 @@ class ShoppingItemTile extends StatelessWidget {
       content: [
         ItemMetaLine(
           entries: [
+            if (isDiscarded) (tr.statusDiscarded, AppColors.offline),
             if (item.store != null) (item.store!, null),
             if (item.priority != null)
               (tr.priorityName(item.priority!), priorityColor(item.priority!)),
@@ -299,9 +336,16 @@ class OptionItemTile extends StatelessWidget {
           ItemMetaLine(
             entries: [
               if (item.isChosen) (tr.chosenBadge, AppColors.primary),
+              if (item.price != null) (tr.formatPrice(item.price!), null),
+              if (item.rating != null)
+                ('★ ${item.rating}/5', const Color(0xFFF59E0B)),
               if (evaluation != null && evaluation != ItemEvaluation.pending)
                 (tr.evaluationName(evaluation), null),
               ...attributeEntries,
+              if ((item.pros ?? '').isNotEmpty)
+                ('+ ${item.pros}', AppColors.primary),
+              if ((item.cons ?? '').isNotEmpty)
+                ('- ${item.cons}', AppColors.delete),
             ],
           ),
         ],
@@ -358,6 +402,9 @@ class TaskItemTile extends StatelessWidget {
           dueDate.day,
         ).isBefore(DateTime(today.year, today.month, today.day));
     final description = item.description ?? item.notes;
+    final subtasks = item.subtasks;
+    final completedSubtasks = subtasks.where((s) => s.isCompleted).length;
+
     return _CheckableItemCard(
       tile: tile,
       content: [
@@ -372,8 +419,59 @@ class TaskItemTile extends StatelessWidget {
                 MaterialLocalizations.of(context).formatMediumDate(dueDate),
                 isOverdue ? AppColors.delete : null,
               ),
+            if (subtasks.isNotEmpty)
+              ('$completedSubtasks/${subtasks.length}', null),
           ],
         ),
+        if (subtasks.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final subtask in subtasks)
+                  InkWell(
+                    key: ValueKey('subtask_${item.id}_${subtask.id}'),
+                    onTap: tile.onToggleSubtask == null
+                        ? null
+                        : () => tile.onToggleSubtask!(subtask.id),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            subtask.isCompleted
+                                ? Icons.check_box_rounded
+                                : Icons.check_box_outline_blank_rounded,
+                            size: 15,
+                            color: subtask.isCompleted
+                                ? tile._color
+                                : context.mutedTextColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              subtask.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                decoration: subtask.isCompleted
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                                color: context.mutedTextColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
       ],
     );
   }

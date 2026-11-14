@@ -44,13 +44,16 @@ class AppLockState {
 class AppLockController extends Notifier<AppLockState> {
   final AppDatabase _db;
   bool _isDisposed = false;
+  DateTime? _pausedAt;
   static const String settingKey = 'app_lock_enabled';
+  static const Duration backgroundGracePeriod = Duration(minutes: 1);
 
   AppLockController([AppDatabase? db]) : _db = db ?? AppDatabase.instance;
 
   @override
   AppLockState build() {
     _isDisposed = false;
+    _pausedAt = null;
     ref.onDispose(() => _isDisposed = true);
     _loadFromDatabase();
     return const AppLockState();
@@ -77,6 +80,7 @@ class AppLockController extends Notifier<AppLockState> {
     if (_isDisposed) return authenticated;
 
     if (authenticated) {
+      _pausedAt = null;
       state = state.copyWith(isLocked: false, isAuthenticating: false);
       return true;
     } else {
@@ -97,6 +101,7 @@ class AppLockController extends Notifier<AppLockState> {
 
     await _db.setSetting(settingKey, enabled ? '1' : '0');
     if (!_isDisposed) {
+      _pausedAt = null;
       state = state.copyWith(isEnabled: enabled, isLocked: false);
     }
     return true;
@@ -104,7 +109,28 @@ class AppLockController extends Notifier<AppLockState> {
 
   void lock() {
     if (state.isEnabled && !state.isLocked) {
+      _pausedAt = null;
       state = state.copyWith(isLocked: true);
+    }
+  }
+
+  void onAppBackgrounded({DateTime? now}) {
+    if (state.isEnabled && !state.isLocked && !state.isAuthenticating) {
+      _pausedAt ??= now ?? DateTime.now();
+    }
+  }
+
+  void onAppResumed({DateTime? now}) {
+    final pausedAt = _pausedAt;
+    _pausedAt = null;
+    if (pausedAt != null &&
+        state.isEnabled &&
+        !state.isLocked &&
+        !state.isAuthenticating) {
+      final currentTime = now ?? DateTime.now();
+      if (currentTime.difference(pausedAt) >= backgroundGracePeriod) {
+        lock();
+      }
     }
   }
 }

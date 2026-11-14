@@ -2107,6 +2107,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not create the invite link: {error}'**
   String inviteLinkCreateError(String error);
+
+  /// No description provided for @prosLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Advantages'**
+  String get prosLabel;
+
+  /// No description provided for @consLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Disadvantages'**
+  String get consLabel;
+
+  /// No description provided for @ratingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal rating'**
+  String get ratingLabel;
+
+  /// No description provided for @sortRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get sortRating;
+
+  /// No description provided for @subtasksLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtasks'**
+  String get subtasksLabel;
+
+  /// No description provided for @subtaskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a subtask...'**
+  String get subtaskHint;
+
+  /// No description provided for @addSubtask.
+  ///
+  /// In en, this message translates to:
+  /// **'Add subtask'**
+  String get addSubtask;
+
+  /// No description provided for @removeSubtask.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove subtask'**
+  String get removeSubtask;
+
+  /// No description provided for @duplicateListAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate list'**
+  String get duplicateListAction;
+
+  /// No description provided for @listDuplicated.
+  ///
+  /// In en, this message translates to:
+  /// **'List duplicated'**
+  String get listDuplicated;
+
+  /// No description provided for @templatesHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick templates (optional)'**
+  String get templatesHeading;
+
+  /// No description provided for @filterAllTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAllTypes;
+
+  /// No description provided for @filterCompletedLists.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get filterCompletedLists;
+
+  /// No description provided for @decreaseQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease quantity'**
+  String get decreaseQuantity;
+
+  /// No description provided for @increaseQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Increase quantity'**
+  String get increaseQuantity;
+
+  /// No description provided for @statusPurchased.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchased'**
+  String get statusPurchased;
+
+  /// No description provided for @statusDiscarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Discarded'**
+  String get statusDiscarded;
 }
 
 class _AppLocalizationsDelegate

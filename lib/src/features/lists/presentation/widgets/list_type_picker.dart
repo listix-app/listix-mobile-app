@@ -53,6 +53,7 @@ class _ListTypeCard extends StatelessWidget {
     final bodyColor = isDark
         ? AppColors.textSecondaryDark
         : AppColors.textSecondary;
+    final accent = type.accentColor;
 
     return Card(
       elevation: 0,
@@ -73,17 +74,10 @@ class _ListTypeCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.surfaceDark
-                      : AppColors.primaryLight,
+                  color: accent.withValues(alpha: isDark ? 0.2 : 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  type.icon,
-                  color: isDark
-                      ? AppColors.primaryLight
-                      : AppColors.primaryDark,
-                ),
+                child: Icon(type.icon, color: accent),
               ),
               const SizedBox(width: 14),
               Expanded(

@@ -563,5 +563,23 @@
         "type": "String"
       }
     }
-  }
+  },
+  "prosLabel": "Advantages",
+  "consLabel": "Disadvantages",
+  "ratingLabel": "Personal rating",
+  "sortRating": "Rating",
+  "subtasksLabel": "Subtasks",
+  "subtaskHint": "Add a subtask...",
+  "addSubtask": "Add subtask",
+  "removeSubtask": "Remove subtask",
+  "duplicateListAction": "Duplicate list",
+  "listDuplicated": "List duplicated",
+  "templatesHeading": "Quick templates (optional)",
+  "filterAllTypes": "All",
+  "filterCompletedLists": "Completed",
+  "decreaseQuantity": "Decrease quantity",
+  "increaseQuantity": "Increase quantity",
+  "statusPending": "Pending",
+  "statusPurchased": "Purchased",
+  "statusDiscarded": "Discarded"
 }

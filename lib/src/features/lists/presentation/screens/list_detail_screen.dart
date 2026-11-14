@@ -198,6 +198,12 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
       ),
       onOpenLink: () =>
           ref.read(urlLauncherServiceProvider).openUrl(item.url ?? ''),
+      onAdjustQuantity: list.type == ListType.market
+          ? (delta) => notifier.adjustItemQuantity(list.id, item.id, delta)
+          : null,
+      onToggleSubtask: list.type == ListType.tasks
+          ? (subtaskId) => notifier.toggleSubtask(list.id, item.id, subtaskId)
+          : null,
     );
   }
 
@@ -562,6 +568,24 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                 onPressed: () => context.push('/list/${list.id}/edit'),
               ),
             IconButton(
+              key: const Key('duplicate_list_app_bar_button'),
+              icon: const Icon(Icons.copy_all_outlined, size: 20),
+              tooltip: tr.duplicateListAction,
+              onPressed: () async {
+                final duplicated = await ref
+                    .read(listsControllerProvider.notifier)
+                    .duplicateList(list.id);
+                if (duplicated != null && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr.listDuplicated),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.group_add_outlined, size: 21),
               tooltip: tr.shareList,
               onPressed: () => ShareListSheet.show(context, list.id),
@@ -606,7 +630,9 @@ class _ListDetailScreenState extends ConsumerState<ListDetailScreen> {
                       const Spacer(),
                       if (list.totalCount > 0 && list.type.tracksCompletion)
                         Text(
-                          list.type == ListType.shopping && list.totalPrice > 0
+                          (list.type == ListType.shopping ||
+                                      list.type == ListType.market) &&
+                                  list.totalPrice > 0
                               ? tr.shoppingTotal(
                                   tr.formatPrice(list.totalPrice),
                                 )

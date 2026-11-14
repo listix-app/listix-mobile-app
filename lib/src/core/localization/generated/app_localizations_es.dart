@@ -1131,4 +1131,55 @@ class AppLocalizationsEs extends AppLocalizations {
   String inviteLinkCreateError(String error) {
     return 'No se pudo crear el enlace de invitación: $error';
   }
+
+  @override
+  String get prosLabel => 'Ventajas';
+
+  @override
+  String get consLabel => 'Desventajas';
+
+  @override
+  String get ratingLabel => 'Calificación personal';
+
+  @override
+  String get sortRating => 'Calificación';
+
+  @override
+  String get subtasksLabel => 'Subtareas';
+
+  @override
+  String get subtaskHint => 'Agregar subtarea...';
+
+  @override
+  String get addSubtask => 'Agregar subtarea';
+
+  @override
+  String get removeSubtask => 'Quitar subtarea';
+
+  @override
+  String get duplicateListAction => 'Duplicar lista';
+
+  @override
+  String get listDuplicated => 'Lista duplicada';
+
+  @override
+  String get templatesHeading => 'Plantillas rápidas (opcional)';
+
+  @override
+  String get filterAllTypes => 'Todas';
+
+  @override
+  String get filterCompletedLists => 'Completadas';
+
+  @override
+  String get decreaseQuantity => 'Disminuir cantidad';
+
+  @override
+  String get increaseQuantity => 'Aumentar cantidad';
+
+  @override
+  String get statusPurchased => 'Comprado';
+
+  @override
+  String get statusDiscarded => 'Descartado';
 }

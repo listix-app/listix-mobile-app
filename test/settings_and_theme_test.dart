@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
+import 'package:listix/src/core/storage/app_database.dart';
 import 'package:listix/src/core/theme/theme_controller.dart';
 import 'package:listix/src/features/notifications/data/services/notification_service.dart';
 import 'package:listix/src/features/notifications/presentation/controllers/notifications_controller.dart';
@@ -39,6 +40,7 @@ void main() {
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
+    AppDatabase.overrideDbPath = inMemoryDatabasePath;
   });
 
   group('ThemeModeController Unit Tests', () {

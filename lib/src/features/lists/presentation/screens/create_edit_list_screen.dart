@@ -6,6 +6,7 @@ import '../../../../core/localization/app_strings.dart';
 import '../../../../core/localization/locale_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/list_type.dart';
+import '../../domain/entities/todo_item.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/list_type_picker.dart';
 import '../widgets/list_type_presentation.dart';
@@ -28,6 +29,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
   late final TextEditingController _nameController;
   int? _selectedColor;
   ListType? _selectedType;
+  ListTemplate? _selectedTemplate;
   bool _isLoading = false;
 
   @override
@@ -65,6 +67,17 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
     super.dispose();
   }
 
+  void _selectTemplate(ListTemplate template, bool isSpanish) {
+    setState(() {
+      if (_selectedTemplate?.id == template.id) {
+        _selectedTemplate = null;
+      } else {
+        _selectedTemplate = template;
+        _nameController.text = template.name(isSpanish);
+      }
+    });
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -73,6 +86,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
     try {
       final name = _nameController.text.trim();
       final notifier = ref.read(listsControllerProvider.notifier);
+      final isSpanish = ref.read(stringsProvider).isSpanish;
 
       if (widget.isEditing) {
         await notifier.updateListName(
@@ -88,6 +102,30 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
           color: _selectedColor,
           type: _selectedType ?? ListType.custom,
         );
+        final template = _selectedTemplate;
+        if (template != null && template.type == _selectedType) {
+          final attrs = template.attributeNames(isSpanish);
+          if (attrs.isNotEmpty) {
+            await notifier.updateListAttributes(created.id, attrs);
+          }
+          for (final seed in template.starterItems) {
+            final itemTitle = seed.title(isSpanish);
+            await notifier.addItem(
+              created.id,
+              itemTitle,
+              details: TodoItem(
+                id: '',
+                listId: created.id,
+                title: itemTitle,
+                createdAt: DateTime.now(),
+                quantity: seed.quantity,
+                unit: seed.unit,
+                category: seed.category,
+                priority: seed.priority,
+              ),
+            );
+          }
+        }
         ref.read(interstitialAdServiceProvider).showInterstitialIfAllowed();
         if (mounted) {
           context.pushReplacement('/list/${created.id}');
@@ -102,7 +140,10 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
 
   void _handleBack() {
     if (!widget.isEditing && _selectedType != null) {
-      setState(() => _selectedType = null);
+      setState(() {
+        _selectedType = null;
+        _selectedTemplate = null;
+      });
       return;
     }
     context.pop();
@@ -135,7 +176,10 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
           const SizedBox(height: 24),
           ListTypePicker(
             strings: tr,
-            onSelected: (type) => setState(() => _selectedType = type),
+            onSelected: (type) => setState(() {
+              _selectedType = type;
+              _selectedTemplate = null;
+            }),
           ),
         ],
       ),
@@ -156,6 +200,9 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
     final actionButtonText = widget.isEditing
         ? tr.saveChanges
         : tr.createListAction;
+    final templates = (!widget.isEditing && _selectedType != null)
+        ? ListTemplate.templatesFor(_selectedType!)
+        : const <ListTemplate>[];
 
     return PopScope(
       canPop: widget.isEditing || _selectedType == null,
@@ -178,11 +225,11 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                     return SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24.0,
-                        vertical: 20.0,
+                        vertical: 14.0,
                       ),
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          minHeight: (constraints.maxHeight - 40.0).clamp(
+                          minHeight: (constraints.maxHeight - 28.0).clamp(
                             0.0,
                             double.infinity,
                           ),
@@ -207,7 +254,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                       letterSpacing: -0.4,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 6),
                                   Text(
                                     widget.isEditing
                                         ? tr.editListSubheading
@@ -218,7 +265,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                       height: 1.4,
                                     ),
                                   ),
-                                  const SizedBox(height: 20),
+                                  const SizedBox(height: 14),
                                   if (widget.isEditing &&
                                       _selectedType != null) ...[
                                     Wrap(
@@ -239,7 +286,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                           ),
                                       ],
                                     ),
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 14),
                                   ] else if (_selectedType != null) ...[
                                     _SelectedTypeChip(
                                       type: _selectedType!,
@@ -247,7 +294,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                       changeLabel: tr.changeListType,
                                       onChange: _handleBack,
                                     ),
-                                    const SizedBox(height: 20),
+                                    const SizedBox(height: 14),
                                   ],
                                   TextFormField(
                                     controller: _nameController,
@@ -271,7 +318,43 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                       return null;
                                     },
                                   ),
-                                  const SizedBox(height: 24),
+                                  if (templates.isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      tr.templatesHeading,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark
+                                            ? AppColors.textSecondaryDark
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 6,
+                                      children: [
+                                        for (final template in templates)
+                                          ChoiceChip(
+                                            key: Key('template_${template.id}'),
+                                            label: Text(
+                                              template.name(tr.isSpanish),
+                                            ),
+                                            selected:
+                                                _selectedTemplate?.id ==
+                                                template.id,
+                                            onSelected: (_) => _selectTemplate(
+                                              template,
+                                              tr.isSpanish,
+                                            ),
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                  const SizedBox(height: 12),
                                   Text(
                                     tr.pickColor,
                                     style: TextStyle(
@@ -282,7 +365,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                           : AppColors.textSecondary,
                                     ),
                                   ),
-                                  const SizedBox(height: 12),
+                                  const SizedBox(height: 8),
                                   Wrap(
                                     spacing: 12,
                                     runSpacing: 12,
@@ -338,7 +421,7 @@ class _CreateEditListScreenState extends ConsumerState<CreateEditListScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 14),
                               FilledButton(
                                 onPressed: _isLoading ? null : _submit,
                                 style: FilledButton.styleFrom(
@@ -403,7 +486,7 @@ class _SelectedTypeChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(type.icon, size: 20, color: AppColors.primary),
+          Icon(type.icon, size: 20, color: type.accentColor),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

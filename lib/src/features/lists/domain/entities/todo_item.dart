@@ -1,6 +1,53 @@
 import 'package:flutter/foundation.dart';
 
 import 'list_type.dart';
+import 'typed_item_data.dart';
+
+export 'typed_item_data.dart';
+
+class Subtask {
+  final String id;
+  final String title;
+  final bool isCompleted;
+
+  const Subtask({
+    required this.id,
+    required this.title,
+    this.isCompleted = false,
+  });
+
+  Subtask copyWith({String? id, String? title, bool? isCompleted}) {
+    return Subtask(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      isCompleted: isCompleted ?? this.isCompleted,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'isCompleted': isCompleted,
+  };
+
+  factory Subtask.fromJson(Map<String, dynamic> json) => Subtask(
+    id: json['id'] as String,
+    title: json['title'] as String,
+    isCompleted: json['isCompleted'] as bool? ?? false,
+  );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Subtask &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          title == other.title &&
+          isCompleted == other.isCompleted;
+
+  @override
+  int get hashCode => Object.hash(id, title, isCompleted);
+}
 
 class TodoItem {
   final String id;
@@ -26,6 +73,10 @@ class TodoItem {
   final String? imageUrl;
   final Map<String, String> attributes;
   final ItemEvaluation? evaluation;
+  final String? pros;
+  final String? cons;
+  final int? rating;
+  final List<Subtask> subtasks;
 
   const TodoItem({
     required this.id,
@@ -51,6 +102,10 @@ class TodoItem {
     this.imageUrl,
     this.attributes = const {},
     this.evaluation,
+    this.pros,
+    this.cons,
+    this.rating,
+    this.subtasks = const [],
   });
 
   bool get hasDetails =>
@@ -69,7 +124,19 @@ class TodoItem {
       description != null ||
       imageUrl != null ||
       attributes.isNotEmpty ||
-      evaluation != null;
+      evaluation != null ||
+      pros != null ||
+      cons != null ||
+      rating != null ||
+      subtasks.isNotEmpty;
+
+  TypedItemData typedDataFor(ListType type) => switch (type) {
+    ListType.market => MarketItemData.fromTodoItem(this),
+    ListType.shopping => ShoppingItemData.fromTodoItem(this),
+    ListType.options => OptionItemData.fromTodoItem(this),
+    ListType.tasks => TaskItemData.fromTodoItem(this),
+    ListType.custom => CustomItemData.fromTodoItem(this),
+  };
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -95,6 +162,11 @@ class TodoItem {
     if (imageUrl != null) 'imageUrl': imageUrl,
     if (attributes.isNotEmpty) 'attributes': attributes,
     if (evaluation != null) 'evaluation': evaluation!.name,
+    if (pros != null) 'pros': pros,
+    if (cons != null) 'cons': cons,
+    if (rating != null) 'rating': rating,
+    if (subtasks.isNotEmpty)
+      'subtasks': subtasks.map((s) => s.toJson()).toList(),
   };
 
   factory TodoItem.fromJson(Map<String, dynamic> json) => TodoItem(
@@ -127,6 +199,14 @@ class TodoItem {
       (json['attributes'] as Map?) ?? const <String, String>{},
     ),
     evaluation: ItemEvaluation.fromName(json['evaluation'] as String?),
+    pros: json['pros'] as String?,
+    cons: json['cons'] as String?,
+    rating: (json['rating'] as num?)?.toInt(),
+    subtasks:
+        (json['subtasks'] as List<dynamic>?)
+            ?.map((s) => Subtask.fromJson(Map<String, dynamic>.from(s as Map)))
+            .toList() ??
+        const [],
   );
 
   TodoItem copyWith({
@@ -154,6 +234,11 @@ class TodoItem {
     bool clearImageUrl = false,
     Map<String, String>? attributes,
     ItemEvaluation? evaluation,
+    String? pros,
+    String? cons,
+    int? rating,
+    bool clearRating = false,
+    List<Subtask>? subtasks,
   }) {
     return TodoItem(
       id: id ?? this.id,
@@ -179,6 +264,10 @@ class TodoItem {
       imageUrl: clearImageUrl ? null : (imageUrl ?? this.imageUrl),
       attributes: attributes ?? this.attributes,
       evaluation: evaluation ?? this.evaluation,
+      pros: pros ?? this.pros,
+      cons: cons ?? this.cons,
+      rating: clearRating ? null : (rating ?? this.rating),
+      subtasks: subtasks ?? this.subtasks,
     );
   }
 
@@ -208,7 +297,11 @@ class TodoItem {
           description == other.description &&
           imageUrl == other.imageUrl &&
           mapEquals(attributes, other.attributes) &&
-          evaluation == other.evaluation;
+          evaluation == other.evaluation &&
+          pros == other.pros &&
+          cons == other.cons &&
+          rating == other.rating &&
+          listEquals(subtasks, other.subtasks);
 
   @override
   int get hashCode => Object.hashAll([
@@ -236,5 +329,9 @@ class TodoItem {
       attributes.entries.map((e) => Object.hash(e.key, e.value)),
     ),
     evaluation,
+    pros,
+    cons,
+    rating,
+    Object.hashAll(subtasks),
   ]);
 }

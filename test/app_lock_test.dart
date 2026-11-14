@@ -345,6 +345,31 @@ void main() {
         expect(container.read(appLockControllerProvider).isLocked, isTrue);
       },
     );
+
+    test(
+      'onAppBackgrounded and onAppResumed only lock after backgroundGracePeriod',
+      () async {
+        final fake = FakeAppLockService();
+        final container = ProviderContainer(
+          overrides: [appLockServiceProvider.overrideWithValue(fake)],
+        );
+        addTearDown(container.dispose);
+
+        final ctrl = container.read(appLockControllerProvider.notifier);
+        await ctrl.toggleAppLock(enabled: true, localizedReason: 'test');
+        expect(container.read(appLockControllerProvider).isLocked, isFalse);
+
+        final t0 = DateTime(2026, 1, 1, 12, 0, 0);
+        ctrl.onAppBackgrounded(now: t0);
+        ctrl.onAppResumed(now: t0.add(const Duration(seconds: 15)));
+        expect(container.read(appLockControllerProvider).isLocked, isFalse);
+
+        ctrl.onAppBackgrounded(now: t0);
+        ctrl.onAppBackgrounded(now: t0.add(const Duration(seconds: 30)));
+        ctrl.onAppResumed(now: t0.add(AppLockController.backgroundGracePeriod));
+        expect(container.read(appLockControllerProvider).isLocked, isTrue);
+      },
+    );
   });
 
   group('AppLockScreen & AppLockWrapper Widget Tests', () {
@@ -441,19 +466,27 @@ void main() {
       expect(find.byType(AppLockScreen), findsNothing);
 
       final ctrl = container.read(appLockControllerProvider.notifier);
+      ctrl.state = ctrl.state.copyWith(isEnabled: true, isLocked: false);
+      await tester.pumpAndSettle();
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pump();
+      expect(find.byType(AppLockScreen), findsNothing);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+      await tester.pump();
+      expect(find.byType(AppLockScreen), findsNothing);
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(find.byType(AppLockScreen), findsNothing);
+
       ctrl.state = ctrl.state.copyWith(isEnabled: true, isLocked: true);
       await tester.pumpAndSettle();
 
       expect(find.byType(AppLockScreen), findsOneWidget);
-
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
-      await tester.pump();
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
-      await tester.pump();
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
-      await tester.pump();
-      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-      await tester.pump();
     });
 
     testWidgets('SettingsScreen Security AppLock toggle succeeds and fails', (

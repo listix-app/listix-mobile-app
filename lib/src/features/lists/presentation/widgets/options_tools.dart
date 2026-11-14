@@ -209,11 +209,20 @@ class _CompareTable extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tr = strings;
     final names = list.attributeNames;
+    final showPrice = list.items.any((item) => item.price != null);
+    final showRating = list.items.any((item) => item.rating != null);
+    final showPros = list.items.any((item) => (item.pros ?? '').isNotEmpty);
+    final showCons = list.items.any((item) => (item.cons ?? '').isNotEmpty);
+
     return DataTable(
       columnSpacing: 20,
       columns: [
         DataColumn(label: Text(tr.optionColumn)),
+        if (showPrice) DataColumn(label: Text(tr.priceLabel)),
+        if (showRating) DataColumn(label: Text(tr.ratingLabel)),
         for (final name in names) DataColumn(label: Text(name)),
+        if (showPros) DataColumn(label: Text(tr.prosLabel)),
+        if (showCons) DataColumn(label: Text(tr.consLabel)),
         DataColumn(label: Text(tr.evaluationLabel)),
         const DataColumn(label: SizedBox.shrink()),
       ],
@@ -240,8 +249,18 @@ class _CompareTable extends ConsumerWidget {
                   ],
                 ),
               ),
+              if (showPrice)
+                DataCell(
+                  Text(item.price == null ? '—' : tr.formatPrice(item.price!)),
+                ),
+              if (showRating)
+                DataCell(
+                  Text(item.rating == null ? '—' : '★ ${item.rating}/5'),
+                ),
               for (final name in names)
                 DataCell(Text(item.attributes[name] ?? '—')),
+              if (showPros) DataCell(Text(item.pros ?? '—')),
+              if (showCons) DataCell(Text(item.cons ?? '—')),
               DataCell(
                 Text(
                   item.evaluation == null

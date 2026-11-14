@@ -69,6 +69,9 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
   late final TextEditingController _price;
   late final TextEditingController _url;
   late final TextEditingController _description;
+  late final TextEditingController _pros;
+  late final TextEditingController _cons;
+  late final TextEditingController _subtaskController;
   late final PriceInput _priceInput;
   late final Map<String, TextEditingController> _attributes;
   late final TextEditingController _notes;
@@ -76,9 +79,12 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
   String? _category;
   ItemPriority? _priority;
   DateTime? _dueDate;
+  bool _isCompleted = false;
   bool _isFavorite = false;
   bool _isInProgress = false;
   ItemEvaluation? _evaluation;
+  int? _rating;
+  late List<Subtask> _subtasks;
   Timer? _previewDebounce;
   String? _previewUrl;
   String? _resolvedLink;
@@ -98,16 +104,22 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     _price = TextEditingController(text: _priceInput.format(d.price));
     _url = TextEditingController(text: d.url ?? '');
     _description = TextEditingController(text: d.description ?? '');
+    _pros = TextEditingController(text: d.pros ?? '');
+    _cons = TextEditingController(text: d.cons ?? '');
+    _subtaskController = TextEditingController();
     _attributes = {
       for (final name in widget.attributeNames)
         name: TextEditingController(text: d.attributes[name] ?? ''),
     };
     _evaluation = d.evaluation;
+    _rating = d.rating;
+    _subtasks = List<Subtask>.from(d.subtasks);
     _notes = TextEditingController(text: d.notes ?? '');
     _unit = d.unit;
     _category = d.category;
     _priority = d.priority;
     _dueDate = d.dueDate;
+    _isCompleted = d.isCompleted;
     _isFavorite = d.isFavorite;
     _isInProgress = d.isInProgress;
     _previewUrl = d.imageUrl;
@@ -123,6 +135,9 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
       _price,
       _url,
       _description,
+      _pros,
+      _cons,
+      _subtaskController,
       _notes,
       ..._attributes.values,
     ]) {
@@ -234,6 +249,20 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     return collected;
   }
 
+  void _addSubtask() {
+    final title = _subtaskController.text.trim();
+    if (title.isEmpty) return;
+    setState(() {
+      _subtasks.add(
+        Subtask(
+          id: 'sub_${DateTime.now().microsecondsSinceEpoch}_${_subtasks.length}',
+          title: title,
+        ),
+      );
+      _subtaskController.clear();
+    });
+  }
+
   Future<void> _pickDate() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -263,7 +292,7 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
         id: d.id,
         listId: d.listId,
         title: _title.text.trim(),
-        isCompleted: d.isCompleted,
+        isCompleted: _isCompleted,
         isSynced: false,
         position: d.position,
         createdAt: d.createdAt,
@@ -279,10 +308,14 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
         imageUrl: link == null ? null : _previewUrl,
         attributes: _collectAttributes(),
         evaluation: _evaluation,
+        pros: _textOrNull(_pros),
+        cons: _textOrNull(_cons),
+        rating: _rating,
+        subtasks: List<Subtask>.unmodifiable(_subtasks),
         isFavorite: _isFavorite,
         isChosen: d.isChosen,
         dueDate: _dueDate,
-        isInProgress: _isInProgress && !d.isCompleted,
+        isInProgress: _isInProgress && !_isCompleted,
       ),
     );
   }
@@ -485,12 +518,53 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     _priceField(),
   ];
 
+  ShoppingItemStatus get _shoppingStatus {
+    if (_evaluation == ItemEvaluation.discarded) {
+      return ShoppingItemStatus.discarded;
+    }
+    if (_isCompleted) {
+      return ShoppingItemStatus.purchased;
+    }
+    return ShoppingItemStatus.pending;
+  }
+
+  void _setShoppingStatus(ShoppingItemStatus? status) {
+    final target = status ?? ShoppingItemStatus.pending;
+    setState(() {
+      switch (target) {
+        case ShoppingItemStatus.pending:
+          _isCompleted = false;
+          _evaluation = null;
+        case ShoppingItemStatus.purchased:
+          _isCompleted = true;
+          _evaluation = null;
+        case ShoppingItemStatus.discarded:
+          _isCompleted = false;
+          _evaluation = ItemEvaluation.discarded;
+      }
+    });
+  }
+
+  String _shoppingStatusLabel(ShoppingItemStatus status) => switch (status) {
+    ShoppingItemStatus.pending => _tr.statusPending,
+    ShoppingItemStatus.purchased => _tr.statusPurchased,
+    ShoppingItemStatus.discarded => _tr.statusDiscarded,
+  };
+
   List<Widget> _shoppingFields(Color labelColor) => [
     const SizedBox(height: 12),
     _priceField(),
     const SizedBox(height: 12),
     _linkField(),
     ..._priorityFields(labelColor),
+    _SectionLabel(_tr.evaluationLabel, labelColor),
+    _ChoiceWrap<ShoppingItemStatus>(
+      keyPrefix: 'shopping_status',
+      values: ShoppingItemStatus.values,
+      selected: _shoppingStatus,
+      labelOf: _shoppingStatusLabel,
+      onChanged: _setShoppingStatus,
+    ),
   ];
 
   List<Widget> _optionsFields(Color labelColor) => [
@@ -498,6 +572,8 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
     _linkField(),
     const SizedBox(height: 12),
     _descriptionField(),
+    const SizedBox(height: 12),
+    _priceField(),
     for (final entry in _attributes.entries) ...[
       const SizedBox(height: 12),
       TextFormField(
@@ -506,6 +582,40 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
         decoration: InputDecoration(labelText: entry.key),
       ),
     ],
+    const SizedBox(height: 12),
+    TextFormField(
+      key: const Key('item_editor_pros'),
+      controller: _pros,
+      maxLines: 2,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(labelText: _tr.prosLabel),
+    ),
+    const SizedBox(height: 12),
+    TextFormField(
+      key: const Key('item_editor_cons'),
+      controller: _cons,
+      maxLines: 2,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: InputDecoration(labelText: _tr.consLabel),
+    ),
+    _SectionLabel(_tr.ratingLabel, labelColor),
+    Row(
+      children: [
+        for (var star = 1; star <= 5; star++)
+          IconButton(
+            key: Key('item_editor_rating_$star'),
+            visualDensity: VisualDensity.compact,
+            onPressed: () =>
+                setState(() => _rating = _rating == star ? null : star),
+            icon: Icon(
+              (_rating != null && star <= _rating!)
+                  ? Icons.star_rounded
+                  : Icons.star_border_rounded,
+              color: const Color(0xFFF59E0B),
+            ),
+          ),
+      ],
+    ),
     _SectionLabel(_tr.evaluationLabel, labelColor),
     _ChoiceWrap<ItemEvaluation>(
       keyPrefix: 'evaluation',
@@ -553,7 +663,66 @@ class _ItemEditorSheetState extends State<ItemEditorSheet> {
           ),
       ],
     ),
-    if (!widget.draft.isCompleted)
+    _SectionLabel(_tr.subtasksLabel, labelColor),
+    Row(
+      children: [
+        Expanded(
+          child: TextField(
+            key: const Key('item_editor_subtask_input'),
+            controller: _subtaskController,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _addSubtask(),
+            decoration: InputDecoration(
+              hintText: _tr.subtaskHint,
+              isDense: true,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        IconButton(
+          key: const Key('item_editor_subtask_add'),
+          tooltip: _tr.addSubtask,
+          onPressed: _addSubtask,
+          icon: const Icon(Icons.add_circle_outline_rounded),
+        ),
+      ],
+    ),
+    if (_subtasks.isNotEmpty) ...[
+      const SizedBox(height: 8),
+      for (var i = 0; i < _subtasks.length; i++)
+        Row(
+          children: [
+            Checkbox(
+              key: Key('item_editor_subtask_toggle_${_subtasks[i].id}'),
+              value: _subtasks[i].isCompleted,
+              visualDensity: VisualDensity.compact,
+              onChanged: (checked) => setState(() {
+                _subtasks[i] = _subtasks[i].copyWith(
+                  isCompleted: checked ?? false,
+                );
+              }),
+            ),
+            Expanded(
+              child: Text(
+                _subtasks[i].title,
+                style: TextStyle(
+                  decoration: _subtasks[i].isCompleted
+                      ? TextDecoration.lineThrough
+                      : null,
+                ),
+              ),
+            ),
+            IconButton(
+              key: Key('item_editor_subtask_remove_${_subtasks[i].id}'),
+              tooltip: _tr.removeSubtask,
+              visualDensity: VisualDensity.compact,
+              icon: const Icon(Icons.close_rounded, size: 18),
+              onPressed: () => setState(() => _subtasks.removeAt(i)),
+            ),
+          ],
+        ),
+    ],
+    if (!_isCompleted)
       SwitchListTile(
         key: const Key('item_editor_in_progress'),
         contentPadding: EdgeInsets.zero,
