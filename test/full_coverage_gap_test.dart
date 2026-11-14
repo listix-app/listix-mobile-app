@@ -11,7 +11,7 @@ import 'package:listix/src/features/collaboration/domain/services/invite_token_s
 import 'package:listix/src/features/collaboration/domain/entities/collaboration_event.dart';
 import 'package:listix/src/features/lists/presentation/widgets/todo_item_tile.dart';
 import 'package:listix/src/core/localization/generated/app_localizations.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:listix/src/features/lists/domain/entities/list_type.dart';
