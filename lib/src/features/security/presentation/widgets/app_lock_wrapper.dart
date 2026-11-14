@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../controllers/app_lock_controller.dart';
@@ -29,10 +29,10 @@ class _AppLockWrapperState extends ConsumerState<AppLockWrapper>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive ||
-        state == AppLifecycleState.hidden) {
-      ref.read(appLockControllerProvider.notifier).lock();
+    if (state == AppLifecycleState.paused) {
+      ref.read(appLockControllerProvider.notifier).onAppBackgrounded();
+    } else if (state == AppLifecycleState.resumed) {
+      ref.read(appLockControllerProvider.notifier).onAppResumed();
     }
   }
 

@@ -49,8 +49,22 @@ class ShoppingList {
   double get completionProgress =>
       totalCount == 0 ? 0.0 : completedCount / totalCount;
 
-  double get totalPrice =>
-      items.fold(0.0, (sum, item) => sum + (item.price ?? 0.0));
+  bool get isFullyCompleted =>
+      type.tracksCompletion && totalCount > 0 && pendingCount == 0;
+
+  TodoItem? get chosenOption {
+    for (final item in items) {
+      if (item.isChosen) return item;
+    }
+    return null;
+  }
+
+  double get totalPrice => items.fold(
+    0.0,
+    (sum, item) => item.evaluation == ItemEvaluation.discarded
+        ? sum
+        : sum + (item.price ?? 0.0),
+  );
 
   bool get canSyncAndShare =>
       isShared && (hasInvite || collaborators.isNotEmpty);

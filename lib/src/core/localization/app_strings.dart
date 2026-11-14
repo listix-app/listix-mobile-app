@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
 
 import 'generated/app_localizations.dart';
@@ -380,9 +380,26 @@ class AppStrings {
   String get sortPrice => _l10n.sortPrice;
   String get sortPriority => _l10n.sortPriority;
   String get sortDueDate => _l10n.sortDueDate;
+  String get sortRating => _l10n.sortRating;
   String get favoritesOnly => _l10n.favoritesOnly;
   String get emptyMarketMessage => _l10n.emptyMarketMessage;
   String get emptyShoppingMessage => _l10n.emptyShoppingMessage;
   String get emptyOptionsMessage => _l10n.emptyOptionsMessage;
   String get emptyTasksMessage => _l10n.emptyTasksMessage;
+  String get prosLabel => _l10n.prosLabel;
+  String get consLabel => _l10n.consLabel;
+  String get ratingLabel => _l10n.ratingLabel;
+  String get subtasksLabel => _l10n.subtasksLabel;
+  String get subtaskHint => _l10n.subtaskHint;
+  String get addSubtask => _l10n.addSubtask;
+  String get removeSubtask => _l10n.removeSubtask;
+  String get duplicateListAction => _l10n.duplicateListAction;
+  String get listDuplicated => _l10n.listDuplicated;
+  String get templatesHeading => _l10n.templatesHeading;
+  String get filterAllTypes => _l10n.filterAllTypes;
+  String get filterCompletedLists => _l10n.filterCompletedLists;
+  String get decreaseQuantity => _l10n.decreaseQuantity;
+  String get increaseQuantity => _l10n.increaseQuantity;
+  String get statusPurchased => _l10n.statusPurchased;
+  String get statusDiscarded => _l10n.statusDiscarded;
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,11 +14,13 @@ import '../../../../core/widgets/listix_logo.dart';
 import '../../../ads/presentation/controllers/banner_ad_controller.dart';
 import '../../../ads/presentation/widgets/banner_ad_widget.dart';
 import '../../../collaboration/presentation/widgets/join_list_dialog.dart';
+import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
 import '../controllers/list_layout_controller.dart';
 import '../controllers/lists_controller.dart';
 import '../widgets/list_card.dart';
 import '../widgets/list_grid_card.dart';
+import '../widgets/list_type_presentation.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -32,11 +34,46 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isSearching = false;
   String _searchQuery = '';
   int _selectedTab = 0;
+  ListType? _selectedTypeFilter;
+  bool _onlyCompletedFilter = false;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  bool _matchesSearch(ShoppingList list, String query) {
+    if (list.name.toLowerCase().contains(query)) return true;
+    for (final item in list.items) {
+      if (item.title.toLowerCase().contains(query)) return true;
+      if ((item.description ?? '').toLowerCase().contains(query)) return true;
+      if ((item.notes ?? '').toLowerCase().contains(query)) return true;
+    }
+    return false;
+  }
+
+  Future<void> _handleDuplicateList(
+    BuildContext context,
+    ShoppingList list,
+    AppStrings tr,
+  ) async {
+    final copyName = '${list.name} (2)';
+    final copy = await ref
+        .read(listsControllerProvider.notifier)
+        .duplicateList(list.id, customName: copyName);
+    if (copy != null && context.mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.clearSnackBars();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(tr.listDuplicated),
+          behavior: SnackBarBehavior.floating,
+          showCloseIcon: true,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Future<void> _handleDeleteList(
@@ -360,14 +397,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               : archivedLists;
 
           final query = _searchQuery.trim().toLowerCase();
-          final displayedLists = query.isEmpty
-              ? currentTabLists
-              : currentTabLists
-                    .where((l) => l.name.toLowerCase().contains(query))
-                    .toList();
+          final isFiltering =
+              query.isNotEmpty ||
+              _selectedTypeFilter != null ||
+              _onlyCompletedFilter;
+
+          final displayedLists = currentTabLists.where((l) {
+            if (_selectedTypeFilter != null && l.type != _selectedTypeFilter) {
+              return false;
+            }
+            if (_onlyCompletedFilter && !l.isFullyCompleted) {
+              return false;
+            }
+            if (query.isNotEmpty && !_matchesSearch(l, query)) {
+              return false;
+            }
+            return true;
+          }).toList();
 
           final segmentedTabs = Padding(
-            padding: const EdgeInsets.only(left: 4, right: 4, bottom: 12),
+            padding: const EdgeInsets.only(left: 4, right: 4, bottom: 8),
             child: SizedBox(
               width: double.infinity,
               child: SegmentedButton<int>(
@@ -393,6 +442,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   });
                 },
               ),
+            ),
+          );
+
+          final filterBar = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: 4, right: 4, bottom: 12),
+            child: Row(
+              children: [
+                FilterChip(
+                  key: const Key('home_filter_all'),
+                  label: Text(tr.filterAllTypes),
+                  selected:
+                      _selectedTypeFilter == null && !_onlyCompletedFilter,
+                  onSelected: (_) {
+                    setState(() {
+                      _selectedTypeFilter = null;
+                      _onlyCompletedFilter = false;
+                    });
+                  },
+                  visualDensity: VisualDensity.compact,
+                ),
+                const SizedBox(width: 6),
+                FilterChip(
+                  key: const Key('home_filter_completed'),
+                  avatar: const Icon(Icons.task_alt_rounded, size: 16),
+                  label: Text(tr.filterCompletedLists),
+                  selected: _onlyCompletedFilter,
+                  onSelected: (selected) {
+                    setState(() {
+                      _onlyCompletedFilter = selected;
+                    });
+                  },
+                  visualDensity: VisualDensity.compact,
+                ),
+                const SizedBox(width: 6),
+                for (final type in ListType.primaryTypes) ...[
+                  FilterChip(
+                    key: Key('home_filter_type_${type.name}'),
+                    avatar: Icon(type.icon, size: 16, color: type.accentColor),
+                    label: Text(tr.listTypeName(type)),
+                    selected: _selectedTypeFilter == type,
+                    onSelected: (selected) {
+                      setState(() {
+                        _selectedTypeFilter = selected ? type : null;
+                      });
+                    },
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  const SizedBox(width: 6),
+                ],
+              ],
             ),
           );
 
@@ -461,10 +561,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           final topSection = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [header, segmentedTabs],
+            children: [header, segmentedTabs, filterBar],
           );
 
-          if (query.isNotEmpty && displayedLists.isEmpty) {
+          if (isFiltering && displayedLists.isEmpty) {
             return ListView(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               children: [
@@ -540,6 +640,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           list: list,
                           strings: tr,
                           onTap: () => context.push('/list/${list.id}'),
+                          onDuplicate: () =>
+                              _handleDuplicateList(context, list, tr),
                           onToggleStar: _selectedTab == 0
                               ? () {
                                   ref
@@ -583,7 +685,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   );
                 },
                 onReorderItem: (oldIndex, newIndex) {
-                  if (_selectedTab != 0 || query.isNotEmpty) return;
+                  if (_selectedTab != 0 || isFiltering) return;
                   HapticFeedback.selectionClick();
                   ref
                       .read(listsControllerProvider.notifier)
@@ -672,10 +774,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       key: ValueKey('card_${list.id}'),
                       list: list,
                       strings: tr,
-                      reorderIndex: (_selectedTab == 0 && query.isEmpty)
+                      reorderIndex: (_selectedTab == 0 && !isFiltering)
                           ? index
                           : null,
                       onTap: () => context.push('/list/${list.id}'),
+                      onDuplicate: () =>
+                          _handleDuplicateList(context, list, tr),
                       onToggleStar: _selectedTab == 0
                           ? () {
                               ref

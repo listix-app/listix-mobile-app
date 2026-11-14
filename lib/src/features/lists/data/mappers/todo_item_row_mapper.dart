@@ -32,6 +32,10 @@ abstract final class TodoItemRowMapper {
       imageUrl: row['image_url'] as String?,
       attributes: decodeAttributes(row['attributes'] as String?),
       evaluation: ItemEvaluation.fromName(row['evaluation'] as String?),
+      pros: row['pros'] as String?,
+      cons: row['cons'] as String?,
+      rating: (row['rating'] as num?)?.toInt(),
+      subtasks: decodeSubtasks(row['subtasks'] as String?),
     );
   }
 
@@ -56,6 +60,24 @@ abstract final class TodoItemRowMapper {
   static String? encodeNames(List<String> names) =>
       names.isEmpty ? null : jsonEncode(names);
 
+  static List<Subtask> decodeSubtasks(String? raw) {
+    if (raw == null || raw.isEmpty) return const [];
+    try {
+      final decoded = jsonDecode(raw) as List;
+      return decoded
+          .map(
+            (item) => Subtask.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  static String? encodeSubtasks(List<Subtask> subtasks) => subtasks.isEmpty
+      ? null
+      : jsonEncode(subtasks.map((s) => s.toJson()).toList());
+
   static Map<String, Object?> detailColumns(TodoItem item) => {
     'quantity': item.quantity,
     'unit': item.unit,
@@ -73,5 +95,9 @@ abstract final class TodoItemRowMapper {
     'image_url': item.imageUrl,
     'attributes': item.attributes.isEmpty ? null : jsonEncode(item.attributes),
     'evaluation': item.evaluation?.name,
+    'pros': item.pros,
+    'cons': item.cons,
+    'rating': item.rating,
+    'subtasks': encodeSubtasks(item.subtasks),
   };
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -13,6 +13,7 @@ class ListCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onArchive;
   final VoidCallback? onUnarchive;
+  final VoidCallback? onDuplicate;
   final VoidCallback? onToggleStar;
   final AppStrings? strings;
   final int? reorderIndex;
@@ -23,6 +24,7 @@ class ListCard extends StatelessWidget {
     required this.onTap,
     this.onArchive,
     this.onUnarchive,
+    this.onDuplicate,
     this.onToggleStar,
     this.strings,
     this.reorderIndex,
@@ -51,9 +53,13 @@ class ListCard extends StatelessWidget {
     final listColor = list.color != null
         ? Color(list.color!)
         : AppColors.primary;
+    final typeAccent = list.color != null
+        ? Color(list.color!)
+        : list.type.accentColor;
     final badgeBg = list.pendingCount == 0 && list.totalCount > 0
         ? listColor.withValues(alpha: 0.16)
         : (context.surfaceColor);
+    final secondarySummary = tr.listCardSecondarySummary(list);
 
     final card = Card(
       elevation: 0,
@@ -101,6 +107,18 @@ class ListCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    if (onDuplicate != null)
+                      IconButton(
+                        key: ValueKey('duplicate_card_${list.id}'),
+                        icon: const Icon(Icons.copy_all_outlined, size: 19),
+                        tooltip: tr.duplicateListAction,
+                        onPressed: onDuplicate,
+                        constraints: const BoxConstraints(
+                          minWidth: 40,
+                          minHeight: 40,
+                        ),
+                        padding: const EdgeInsets.all(6),
+                      ),
                     if (onArchive != null)
                       IconButton(
                         icon: const Icon(Icons.archive_outlined, size: 20),
@@ -187,7 +205,7 @@ class ListCard extends StatelessWidget {
                         list.type.icon,
                         key: const Key('list_type_icon'),
                         size: 18,
-                        color: listColor,
+                        color: typeAccent,
                       ),
                       const SizedBox(width: 8),
                     ],
@@ -218,7 +236,24 @@ class ListCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const Spacer(),
+                    if (secondarySummary != null) ...[
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          secondarySummary,
+                          key: ValueKey('card_summary_${list.id}'),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: typeAccent,
+                          ),
+                        ),
+                      ),
+                    ] else
+                      const Spacer(),
+                    if (secondarySummary != null) const Spacer(),
                     if (list.isShared) ...[
                       _CollaboratorAvatars(collaborators: list.collaborators),
                     ],

@@ -121,6 +121,56 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
     return created;
   }
 
+  Future<ShoppingList?> duplicateList(
+    String listId, {
+    String? customName,
+  }) async {
+    final repository = ref.read(listsRepositoryProvider);
+    final beforeLists = state.value ?? await repository.getLists();
+    final source =
+        beforeLists.where((l) => l.id == listId).firstOrNull ??
+        await repository.getListById(listId);
+    if (source == null) return null;
+
+    final targetName = (customName != null && customName.trim().isNotEmpty)
+        ? customName.trim()
+        : '${source.name} (copia)';
+    final created = await repository.createList(
+      targetName,
+      color: source.color,
+      type: source.type,
+    );
+    if (source.isStarred) {
+      await repository.toggleListStar(created.id);
+    }
+    if (source.isArchived) {
+      await repository.archiveList(created.id);
+    }
+    if (source.attributeNames.isNotEmpty) {
+      await repository.updateListAttributes(created.id, source.attributeNames);
+    }
+    for (final item in source.items) {
+      final createdItem = await repository.addItem(
+        created.id,
+        item.title,
+        details: item.copyWith(isChosen: false),
+      );
+      if (item.isCompleted) {
+        await repository.toggleItemCompletion(created.id, createdItem.id);
+      }
+    }
+    final orderedIds = [
+      for (final list in beforeLists) ...[
+        list.id,
+        if (list.id == source.id) created.id,
+      ],
+    ];
+    await repository.reorderLists(orderedIds);
+    final refreshed = await repository.getLists();
+    state = AsyncData(refreshed);
+    return refreshed.where((l) => l.id == created.id).firstOrNull ?? created;
+  }
+
   Future<ShoppingList> joinList(
     String listId,
     String name, {
@@ -599,6 +649,47 @@ class ListsController extends AsyncNotifier<List<ShoppingList>> {
       state = AsyncData(await repository.getLists());
       rethrow;
     }
+  }
+
+  Future<void> adjustItemQuantity(
+    String listId,
+    String itemId,
+    double delta,
+  ) async {
+    final item = state.value
+        ?.where((l) => l.id == listId)
+        .firstOrNull
+        ?.items
+        .where((i) => i.id == itemId)
+        .firstOrNull;
+    if (item == null) return;
+    final currentQuantity = item.quantity ?? 1.0;
+    final nextQuantity = currentQuantity + delta;
+    await updateItemDetails(
+      item.copyWith(quantity: nextQuantity < 1.0 ? 1.0 : nextQuantity),
+    );
+  }
+
+  Future<void> toggleSubtask(
+    String listId,
+    String itemId,
+    String subtaskId,
+  ) async {
+    final item = state.value
+        ?.where((l) => l.id == listId)
+        .firstOrNull
+        ?.items
+        .where((i) => i.id == itemId)
+        .firstOrNull;
+    if (item == null) return;
+    final updatedSubtasks = item.subtasks
+        .map(
+          (subtask) => subtask.id == subtaskId
+              ? subtask.copyWith(isCompleted: !subtask.isCompleted)
+              : subtask,
+        )
+        .toList();
+    await updateItemDetails(item.copyWith(subtasks: updatedSubtasks));
   }
 
   void _replaceItemInState(TodoItem updated) {

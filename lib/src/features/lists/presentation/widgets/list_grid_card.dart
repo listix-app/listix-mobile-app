@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/localization/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_colors_context.dart';
 import '../../domain/entities/list_type.dart';
 import '../../domain/entities/shopping_list.dart';
+import 'list_type_presentation.dart';
 
 class ListGridCard extends StatelessWidget {
   final ShoppingList list;
@@ -13,6 +14,7 @@ class ListGridCard extends StatelessWidget {
   final VoidCallback? onArchive;
   final VoidCallback? onUnarchive;
   final VoidCallback? onToggleStar;
+  final VoidCallback? onDuplicate;
   final AppStrings? strings;
 
   const ListGridCard({
@@ -23,6 +25,7 @@ class ListGridCard extends StatelessWidget {
     this.onArchive,
     this.onUnarchive,
     this.onToggleStar,
+    this.onDuplicate,
     this.strings,
   });
 
@@ -52,7 +55,8 @@ class ListGridCard extends StatelessWidget {
 
     final listColor = list.color != null
         ? Color(list.color!)
-        : AppColors.primary;
+        : list.type.accentColor;
+    final secondarySummary = tr.listCardSecondarySummary(list);
 
     return Card(
       elevation: 0,
@@ -77,6 +81,17 @@ class ListGridCard extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    if (list.type != ListType.custom) ...[
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: listColor.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(list.type.icon, size: 14, color: listColor),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
                     Expanded(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -124,36 +139,54 @@ class ListGridCard extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Row(
+                const SizedBox(height: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (list.color != null) ...[
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: Color(list.color!),
-                          shape: BoxShape.circle,
+                    Row(
+                      children: [
+                        if (list.color != null) ...[
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: Color(list.color!),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Expanded(
+                          child: Text(
+                            list.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: -0.2,
+                              color: textTitleColor,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    Expanded(
-                      child: Text(
-                        list.name,
-                        maxLines: 2,
+                      ],
+                    ),
+                    if (secondarySummary != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        secondarySummary,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          letterSpacing: -0.2,
-                          color: textTitleColor,
+                          color: listColor,
                         ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -181,6 +214,18 @@ class ListGridCard extends StatelessWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
+                            if (onDuplicate != null)
+                              IconButton(
+                                key: ValueKey('duplicate_grid_${list.id}'),
+                                icon: const Icon(
+                                  Icons.copy_all_rounded,
+                                  size: 18,
+                                ),
+                                tooltip: tr.duplicateListAction,
+                                onPressed: onDuplicate,
+                                constraints: const BoxConstraints(),
+                                padding: const EdgeInsets.only(right: 6),
+                              ),
                             if (onArchive != null)
                               IconButton(
                                 icon: const Icon(

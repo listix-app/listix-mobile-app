@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/localization/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/list_type.dart';
+import '../../domain/entities/shopping_list.dart';
 
 extension ListTypeIcon on ListType {
   IconData get icon => switch (this) {
@@ -10,6 +12,14 @@ extension ListTypeIcon on ListType {
     ListType.options => Icons.compare_arrows_rounded,
     ListType.tasks => Icons.checklist_rounded,
     ListType.custom => Icons.dashboard_customize_outlined,
+  };
+
+  Color get accentColor => switch (this) {
+    ListType.market => AppColors.primary,
+    ListType.shopping => const Color(0xFF2563EB),
+    ListType.options => const Color(0xFF7C3AED),
+    ListType.tasks => const Color(0xFFD97706),
+    ListType.custom => AppColors.primary,
   };
 }
 
@@ -58,6 +68,7 @@ extension ListTypeStrings on AppStrings {
     ItemSort.price => sortPrice,
     ItemSort.priority => sortPriority,
     ItemSort.dueDate => sortDueDate,
+    ItemSort.rating => sortRating,
   };
 
   String emptyItemsMessageFor(ListType type) => switch (type) {
@@ -67,4 +78,19 @@ extension ListTypeStrings on AppStrings {
     ListType.tasks => emptyTasksMessage,
     ListType.custom => emptyItemsMessage,
   };
+
+  String? listCardSecondarySummary(ShoppingList list) {
+    if ((list.type == ListType.market || list.type == ListType.shopping) &&
+        list.totalPrice > 0) {
+      return shoppingTotal(formatPrice(list.totalPrice));
+    }
+    if (list.type == ListType.options && list.chosenOption != null) {
+      return '$chosenBadge: ${list.chosenOption!.title}';
+    }
+    if (list.type == ListType.tasks &&
+        list.items.any((item) => item.isInProgress && !item.isCompleted)) {
+      return inProgressLabel;
+    }
+    return null;
+  }
 }

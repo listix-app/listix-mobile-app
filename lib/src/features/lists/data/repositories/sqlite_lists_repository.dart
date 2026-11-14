@@ -184,6 +184,49 @@ class SqliteListsRepository implements ListsRepository {
     );
   }
 
+  Future<ShoppingList> duplicateList(String listId, {String? newName}) async {
+    final beforeLists = await getLists();
+    final source = beforeLists.where((l) => l.id == listId).firstOrNull;
+    if (source == null) {
+      throw Exception('Lista no encontrada');
+    }
+    final targetName = (newName != null && newName.trim().isNotEmpty)
+        ? newName.trim()
+        : '${source.name} (copia)';
+    final created = await createList(
+      targetName,
+      color: source.color,
+      type: source.type,
+    );
+    if (source.isStarred) {
+      await toggleListStar(created.id);
+    }
+    if (source.isArchived) {
+      await archiveList(created.id);
+    }
+    if (source.attributeNames.isNotEmpty) {
+      await updateListAttributes(created.id, source.attributeNames);
+    }
+    for (final item in source.items) {
+      final createdItem = await addItem(
+        created.id,
+        item.title,
+        details: item.copyWith(isChosen: false),
+      );
+      if (item.isCompleted) {
+        await toggleItemCompletion(created.id, createdItem.id);
+      }
+    }
+    final orderedIds = [
+      for (final list in beforeLists) ...[
+        list.id,
+        if (list.id == source.id) created.id,
+      ],
+    ];
+    await reorderLists(orderedIds);
+    return (await getListById(created.id))!;
+  }
+
   @override
   Future<ShoppingList> updateListName(
     String id,

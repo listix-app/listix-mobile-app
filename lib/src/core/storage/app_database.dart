@@ -111,6 +111,10 @@ class AppDatabase {
     ('image_url', 'TEXT'),
     ('attributes', 'TEXT'),
     ('evaluation', 'TEXT'),
+    ('pros', 'TEXT'),
+    ('cons', 'TEXT'),
+    ('rating', 'INTEGER'),
+    ('subtasks', 'TEXT'),
   ];
 
   Future<void> _ensureColumns(
@@ -176,6 +180,10 @@ class AppDatabase {
         image_url TEXT,
         attributes TEXT,
         evaluation TEXT,
+        pros TEXT,
+        cons TEXT,
+        rating INTEGER,
+        subtasks TEXT,
         FOREIGN KEY (list_id) REFERENCES lists (id) ON DELETE CASCADE
       );
     ''');
